@@ -367,6 +367,7 @@ FodyWeavers.xsd
 *.csproj
 *.vbproj
 *.vcxproj
+*.vcxproj.filters
 *.vcproj
 *.dbproj
 *.fsproj
