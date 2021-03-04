@@ -5,7 +5,7 @@ except:
     from distutils import setup, Extension
 
 ext_modules = [Extension('cdiffer',
-        sources = ['_cdiffer.c'],
+        sources = ['cdiffer.c'],
         #include_dirs=['.'],
         )]
 

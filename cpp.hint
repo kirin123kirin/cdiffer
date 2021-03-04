@@ -1,2 +1,0 @@
-#define CDIFFER_API __declspec(dllexport)
-#define CDIFFER_API __declspec(dllimport)
