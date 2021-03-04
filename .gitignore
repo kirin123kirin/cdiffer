@@ -361,3 +361,17 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# VS projectfiles
+*.sln
+*.csproj
+*.vbproj
+*.vcxproj
+*.vcproj
+*.dbproj
+*.fsproj
+*.lsproj
+*.wixproj
+*.modelproj
+*.sqlproj
+*.wwaproj
