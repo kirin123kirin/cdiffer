@@ -261,6 +261,8 @@ UpgradeLog*.XML
 UpgradeLog*.htm
 ServiceFabricBackup/
 *.rptproj.bak
+*.bak
+*.old
 
 # SQL Server files
 *.mdf
@@ -367,9 +369,9 @@ FodyWeavers.xsd
 *.sln
 *.csproj
 *.vbproj
-*.vcxproj
-*.vcxproj.*
-*.vcproj
+#*.vcxproj
+*.vcxproj.filters
+#*.vcproj
 *.dbproj
 *.fsproj
 *.lsproj
