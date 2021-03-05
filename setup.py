@@ -13,7 +13,7 @@ def read(fname1="README.rst", fname2="README.md"):
     return ""
 
 
-__version__ = '0.0.6'
+__version__ = '0.0.7'
 
 
 ext_modules = [Extension('cdiffer',
@@ -51,7 +51,7 @@ Operating System :: Unix
 setup(name="cdiffer",
     version=__version__,
     description="Usefull differ function with Levenshtein distance.",
-#    long_description_content_type='text/markdown',
+    long_description_content_type='text/markdown',
     long_description=codecs.open(pjoin(dirname(__file__), "README.md"), encoding="utf-8").read(),
     url='https://github.com/kirin123kirin/cdiffer',
     author='kirin123kirin',
