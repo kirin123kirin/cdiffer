@@ -15,7 +15,7 @@ jobs:
       max-parallel: 15
       matrix:
         platform: [
-            manylinux2014,
+            dockcross/manylinux2014-x64,
             #ubuntu-latest,
             #windows-latest,
             #macos-latest
