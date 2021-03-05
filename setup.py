@@ -14,7 +14,7 @@ def read(fname="README.md"):
     return ""
 
 
-__version__ == '0.0.4'
+__version__ = '0.0.4'
 
 
 ext_modules = [Extension('cdiffer',
