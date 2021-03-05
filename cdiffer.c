@@ -72,9 +72,9 @@
 #  ifdef _MSC_VER
 #    define inline __inline
 #  else
-#    define inline /* */
+#    define inline
 #  endif
-#  define __attribute__(x) /* */
+#  define __attribute__(x)
 #endif
 
 #define LEV_EPSILON 1e-14
@@ -1977,4 +1977,3 @@ lev_init_rng(unsigned long int seed)
 
 	taus113_set(&state, seed);
 }
-

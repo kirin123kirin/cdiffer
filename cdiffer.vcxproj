@@ -176,6 +176,7 @@
     <None Include=".gitattributes" />
     <None Include=".github\workflows\build.yml" />
     <None Include=".gitignore" />
+    <None Include="MANIFEST.in" />
     <None Include="README.md" />
     <None Include="setup.py">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -187,6 +188,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cdiffer.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="PKG-INFO.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

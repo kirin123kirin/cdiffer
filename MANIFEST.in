@@ -1,0 +1,11 @@
+recursive-include docs *
+include README.rst
+include HISTORY.txt
+global-exclude *pyc
+global-exclude *.vcxproj.user
+global-exclude *.vcxproj.filters
+global-exclude *.sln
+global-exclude x64/*
+global-exclude x86/*
+global-exclude build/*
+global-exclude .github
