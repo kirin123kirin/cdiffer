@@ -10,7 +10,7 @@ ext_modules = [Extension('cdiffer',
         )]
 
 setup(name="cdiffer",
-    version='0.0.1',
+    version='0.0.2',
     description="Usefull differ function with Levenshtein distance.",
     long_description='',
     author='kirin123kirin',
