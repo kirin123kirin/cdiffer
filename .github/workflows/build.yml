@@ -29,15 +29,15 @@ jobs:
             ]
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         python -m pip install -U pip 
-        pip install setuptools wheel twine #m2r
+        pip install setuptools wheel twine
         #m2r --overwrite README.md
     - name: Build and publish
       env:
@@ -54,7 +54,7 @@ jobs:
 
     - name: Copyartifact Linux build wheel
     #  run: mkdir -p pkg && cp -af dist/*.whl pkg/
-    - uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: dist_${{ matrix.platform }}
         path: dist_${{ matrix.platform }}
