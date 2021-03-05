@@ -8,8 +8,8 @@
 #endif
 
 /* A bit dirty. */
-#ifndef _LEV_STATIC_PY
-#  define _LEV_STATIC_PY /* */
+#ifndef _STATIC_PY
+#  define _STATIC_PY /* */
 #endif
 
 /* In C, this is just wchar_t and unsigned char, in Python, lev_wchar can
@@ -87,66 +87,66 @@ typedef struct {
 	size_t len;
 } LevMatchingBlock;
 
-_LEV_STATIC_PY
+_STATIC_PY
 size_t
-lev_edit_distance(size_t len1,
+dist_s(size_t len1,
 	const lev_byte* string1,
 	size_t len2,
 	const lev_byte* string2,
 	int xcost);
 
-_LEV_STATIC_PY
+_STATIC_PY
 size_t
-lev_u_edit_distance(size_t len1,
+dist_u(size_t len1,
 	const lev_wchar* string1,
 	size_t len2,
 	const lev_wchar* string2,
 	int xcost);
 
-_LEV_STATIC_PY
+_STATIC_PY
 size_t
-lev_o_edit_distance(size_t len1,
+dist_o(size_t len1,
 	PyObject* string1,
 	size_t len2,
 	PyObject* string2,
 	int xcost);
 
 
-_LEV_STATIC_PY
+_STATIC_PY
 LevEditOp*
-lev_editops_find(size_t len1,
+differ_op_s(size_t len1,
 	const lev_byte* string1,
 	size_t len2,
 	const lev_byte* string2,
 	size_t* n);
 
-_LEV_STATIC_PY
+_STATIC_PY
 LevEditOp*
-lev_u_editops_find(size_t len1,
+differ_op_u(size_t len1,
 	const lev_wchar* string1,
 	size_t len2,
 	const lev_wchar* string2,
 	size_t* n);
 
-_LEV_STATIC_PY
+_STATIC_PY
 LevEditOp*
-lev_o_editops_find(size_t len1,
+differ_op_o(size_t len1,
 	PyObject* string1,
 	size_t len2,
 	PyObject* string2,
 	size_t* n);
 
-_LEV_STATIC_PY
+_STATIC_PY
 LevOpCode*
-lev_editops_to_opcodes(size_t n,
+op2opcodes(size_t n,
 	const LevEditOp* ops,
 	size_t* nb,
 	size_t len1,
 	size_t len2);
 
 /* UNUSED yet */
-_LEV_STATIC_PY
+_STATIC_PY
 void
-lev_init_rng(unsigned long int seed);
+init_rng(unsigned long int seed);
 
 #endif /* not CDIFFER_H */

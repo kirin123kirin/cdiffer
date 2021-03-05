@@ -35,13 +35,13 @@
   /* for debugging */
 #include <stdio.h>
 #else /* NO_PYTHON */
-#define _LEV_STATIC_PY static
+#define _STATIC_PY static
 #define lev_wchar Py_UNICODE
 #include <Python.h>
 #endif /* NO_PYTHON */
 
 #if PY_MAJOR_VERSION >= 3
-#define LEV_PYTHON3
+#define _PYTHON3
 #define PyString_Type PyBytes_Type
 #define PyString_GET_SIZE PyBytes_GET_SIZE
 #define PyString_AS_STRING PyBytes_AS_STRING
@@ -77,8 +77,6 @@
 #  define __attribute__(x)
 #endif
 
-#define LEV_EPSILON 1e-14
-#define LEV_INFINITY 1e100
 
    /* Me thinks the second argument of PyArg_UnpackTuple() should be const.
 	* Anyway I habitually pass a constant string.
@@ -104,11 +102,11 @@ taus113_set(taus113_state_t* state,
 #ifndef NO_PYTHON
 /* python interface and wrappers */
 /* declarations and docstrings */
-static PyObject* distance_py(PyObject* self, PyObject* args);
-static PyObject* opcodes_py(PyObject* self, PyObject* args);
-static PyObject* ratio_py(PyObject* self, PyObject* args);
+static PyObject* dist_py(PyObject* self, PyObject* args);
+static PyObject* differ_py(PyObject* self, PyObject* args);
+static PyObject* similar_py(PyObject* self, PyObject* args);
 
-#define Levenshtein_DESC \
+#define cdiffer_DESC \
   "A C extension module for fast computation of:\n" \
   "- Levenshtein (edit) distance and edit sequence manipulation\n" \
   "- string similarity\n" \
@@ -123,7 +121,7 @@ static PyObject* ratio_py(PyObject* self, PyObject* args);
   "arguments to a function (method) have to be of the same type (or its\n" \
   "subclasses).\n"
 
-#define distance_DESC \
+#define dist_DESC \
   "Compute absolute Levenshtein distance of two strings.\n" \
   "\n" \
   "distance(string1, string2)\n" \
@@ -141,7 +139,7 @@ static PyObject* ratio_py(PyObject* self, PyObject* args);
   "\n" \
   "Yeah, we've managed it at last.\n"
 
-#define ratio_DESC \
+#define similar_DESC \
   "Compute similarity of two strings.\n" \
   "\n" \
   "ratio(string1, string2)\n" \
@@ -159,7 +157,7 @@ static PyObject* ratio_py(PyObject* self, PyObject* args);
   "\n" \
   "Really?  I thought there was some similarity.\n"
 
-#define opcodes_DESC \
+#define differ_DESC \
   "Find sequence of edit operations transforming one string to another.\n" \
   "\n" \
   "opcodes(source_string, destination_string, diffonly=False)\n" \
@@ -183,9 +181,9 @@ static PyObject* ratio_py(PyObject* self, PyObject* args);
 
 #define METHODS_ITEM(x) { #x, x##_py, METH_VARARGS, x##_DESC }
 static PyMethodDef methods[] = {
-  METHODS_ITEM(distance),
-  METHODS_ITEM(ratio),
-  METHODS_ITEM(opcodes),
+  METHODS_ITEM(dist),
+  METHODS_ITEM(similar),
+  METHODS_ITEM(differ),
   { NULL, NULL, 0, NULL },
 };
 
@@ -206,7 +204,7 @@ static opcode_names[] = {
 
 
 static long int
-levenshtein_common(PyObject* args,
+dist_handler(PyObject* args,
 	const char* name,
 	size_t xcost,
 	size_t* lensum);
@@ -231,7 +229,7 @@ safe_malloc_3(size_t nmemb1, size_t nmemb2, size_t size) {
 }
 
 static size_t
-get_length_of_anything(PyObject* object)
+length_of(PyObject* object)
 {
 	if (PyInt_Check(object)) {
 		long int len = PyInt_AS_LONG(object);
@@ -251,7 +249,7 @@ get_length_of_anything(PyObject* object)
  ****************************************************************************/
 
 static long int
-levenshtein_common(PyObject* args, const char* name, size_t xcost,
+dist_handler(PyObject* args, const char* name, size_t xcost,
 	size_t* lensum)
 {
 	PyObject* arg1, * arg2;
@@ -306,7 +304,7 @@ levenshtein_common(PyObject* args, const char* name, size_t xcost,
 		string1 = PyString_AS_STRING(arg1);
 		string2 = PyString_AS_STRING(arg2);
 		{
-			size_t d = lev_edit_distance(len1, string1, len2, string2, xcost);
+			size_t d = dist_s(len1, string1, len2, string2, xcost);
 
 			if (d == (size_t)(-1)) {
 				PyErr_NoMemory();
@@ -322,7 +320,7 @@ levenshtein_common(PyObject* args, const char* name, size_t xcost,
 		string1 = PyUnicode_AS_UNICODE(arg1);
 		string2 = PyUnicode_AS_UNICODE(arg2);
 		{
-			size_t d = lev_u_edit_distance(len1, string1, len2, string2, xcost);
+			size_t d = dist_u(len1, string1, len2, string2, xcost);
 
 			if (d == (size_t)(-1)) {
 				PyErr_NoMemory();
@@ -335,7 +333,7 @@ levenshtein_common(PyObject* args, const char* name, size_t xcost,
 	else if (PySequence_Check(arg1) && PySequence_Check(arg2)) {
 
 		{
-			size_t d = lev_o_edit_distance(len1, arg1, len2, arg2, xcost);
+			size_t d = dist_o(len1, arg1, len2, arg2, xcost);
 
 			Py_XDECREF(arg1);
 			Py_XDECREF(arg2);
@@ -363,24 +361,24 @@ levenshtein_common(PyObject* args, const char* name, size_t xcost,
 }
 
 static PyObject*
-distance_py(PyObject* self, PyObject* args)
+dist_py(PyObject* self, PyObject* args)
 {
 	size_t lensum;
 	long int ldist;
 
-	if ((ldist = levenshtein_common(args, "distance", 0, &lensum)) < 0)
+	if ((ldist = dist_handler(args, "distance", 0, &lensum)) < 0)
 		return NULL;
 
 	return PyInt_FromLong((long)ldist);
 }
 
 static PyObject*
-ratio_py(PyObject* self, PyObject* args)
+similar_py(PyObject* self, PyObject* args)
 {
 	size_t lensum;
 	long int ldist;
 
-	if ((ldist = levenshtein_common(args, "ratio", 1, &lensum)) < 0)
+	if ((ldist = dist_handler(args, "ratio", 1, &lensum)) < 0)
 		return NULL;
 
 	if (lensum == 0)
@@ -392,7 +390,7 @@ ratio_py(PyObject* self, PyObject* args)
 
 
 static PyObject*
-opcodes_to_result_list(size_t nb, LevOpCode* bops, 
+differ_result(size_t nb, LevOpCode* bops, 
 	size_t len1, size_t len2,
 	PyObject* arg1, PyObject* arg2, PyObject* arg3)
 {
@@ -461,7 +459,7 @@ opcodes_to_result_list(size_t nb, LevOpCode* bops,
 }
 
 static PyObject*
-opcodes_py(PyObject* self, PyObject* args)
+differ_py(PyObject* self, PyObject* args)
 {
 	PyObject* arg1, * arg2, * arg3 = NULL;
 
@@ -525,7 +523,7 @@ opcodes_py(PyObject* self, PyObject* args)
 
 		string1 = PyString_AS_STRING(arg1);
 		string2 = PyString_AS_STRING(arg2);
-		ops = lev_editops_find(len1, string1, len2, string2, &n);
+		ops = differ_op_s(len1, string1, len2, string2, &n);
 	}
 	else if (PyObject_TypeCheck(arg1, &PyUnicode_Type)
 		&& PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
@@ -533,11 +531,11 @@ opcodes_py(PyObject* self, PyObject* args)
 
 		string1 = PyUnicode_AS_UNICODE(arg1);
 		string2 = PyUnicode_AS_UNICODE(arg2);
-		ops = lev_u_editops_find(len1, string1, len2, string2, &n);
+		ops = differ_op_u(len1, string1, len2, string2, &n);
 	}
 
 	else if (PySequence_Check(arg1) && PySequence_Check(arg2)) {
-		ops = lev_o_editops_find(len1, arg1, len2, arg2, &n);
+		ops = differ_op_o(len1, arg1, len2, arg2, &n);
 	}
 	else {
 		PyErr_Format(PyExc_TypeError,
@@ -553,14 +551,14 @@ opcodes_py(PyObject* self, PyObject* args)
 	if (!ops && n)
 		return PyErr_NoMemory();
 
-	bops = lev_editops_to_opcodes(n, ops, &nb, len1, len2);
+	bops = op2opcodes(n, ops, &nb, len1, len2);
 	if (!bops && nb)
 		return PyErr_NoMemory();
 
 	free(ops);
 	
 	PyObject* oplist;
-	oplist = opcodes_to_result_list(nb, bops, len1, len2, arg1, arg2, arg3);
+	oplist = differ_result(nb, bops, len1, len2, arg1, arg2, arg3);
 
 	//PyObject* ratio = PyFloat_FromDouble((double)(lensum - xcost) / lensum);
 
@@ -577,17 +575,17 @@ opcodes_py(PyObject* self, PyObject* args)
 
 PY_MOD_INIT_FUNC_DEF(cdiffer)
 {
-#ifdef LEV_PYTHON3
+#ifdef _PYTHON3
 	PyObject* module;
 #endif
 	size_t i;
 
-	PY_INIT_MOD(module, "cdiffer", Levenshtein_DESC, methods)
+	PY_INIT_MOD(module, "cdiffer", cdiffer_DESC, methods)
 		/* create intern strings for edit operation names */
 		if (opcode_names[0].pystring)
 			abort();
 	for (i = 0; i < N_OPCODE_NAMES; i++) {
-#ifdef LEV_PYTHON3
+#ifdef _PYTHON3
 		opcode_names[i].pystring
 			= PyUnicode_InternFromString(opcode_names[i].cstring);
 #else
@@ -596,8 +594,8 @@ PY_MOD_INIT_FUNC_DEF(cdiffer)
 #endif
 		opcode_names[i].len = strlen(opcode_names[i].cstring);
 	}
-	lev_init_rng(0);
-#ifdef LEV_PYTHON3
+	init_rng(0);
+#ifdef _PYTHON3
 	return module;
 #endif
 }
@@ -609,7 +607,7 @@ PY_MOD_INIT_FUNC_DEF(cdiffer)
  *
  ****************************************************************************/
 /**
-  * lev_edit_distance:
+  * dist_s:
   * @len1: The length of @string1.
   * @string1: A sequence of bytes of length @len1, may contain NUL characters.
   * @len2: The length of @string2.
@@ -621,8 +619,8 @@ PY_MOD_INIT_FUNC_DEF(cdiffer)
   *
   * Returns: The edit distance.
   **/
-_LEV_STATIC_PY size_t
-lev_edit_distance(size_t len1, const lev_byte* string1,
+_STATIC_PY size_t
+dist_s(size_t len1, const lev_byte* string1,
 	size_t len2, const lev_byte* string2,
 	int xcost)
 {
@@ -765,7 +763,7 @@ lev_edit_distance(size_t len1, const lev_byte* string1,
 
 
 /**
- * lev_u_edit_distance:
+ * dist_u:
  * @len1: The length of @string1.
  * @string1: A sequence of Unicode characters of length @len1, may contain NUL
  *           characters.
@@ -779,8 +777,8 @@ lev_edit_distance(size_t len1, const lev_byte* string1,
  *
  * Returns: The edit distance.
  **/
-_LEV_STATIC_PY size_t
-lev_u_edit_distance(size_t len1, const lev_wchar* string1,
+_STATIC_PY size_t
+dist_u(size_t len1, const lev_wchar* string1,
 	size_t len2, const lev_wchar* string2,
 	int xcost)
 {
@@ -928,7 +926,7 @@ lev_u_edit_distance(size_t len1, const lev_wchar* string1,
 }
 
 /**
- * lev_o_edit_distance:
+ * dist_o:
  * @len1: The length of @string1.
  * @string1: A sequence of Unicode characters of length @len1, may contain NUL
  *           characters.
@@ -942,8 +940,8 @@ lev_u_edit_distance(size_t len1, const lev_wchar* string1,
  *
  * Returns: The edit distance.
  **/
-_LEV_STATIC_PY size_t
-lev_o_edit_distance(size_t len1, PyObject *string1,
+_STATIC_PY size_t
+dist_o(size_t len1, PyObject *string1,
 	size_t len2, PyObject* string2,
 	int xcost)
 {
@@ -1163,7 +1161,7 @@ lev_o_edit_distance(size_t len1, PyObject *string1,
 
 
 /**
- * editops_from_cost_matrix:
+ * cost2op_s:
  * @len1: The length of @string1.
  * @string1: A string of length @len1, may contain NUL characters.
  * @o1: The offset where the matrix starts from the start of @string1.
@@ -1181,7 +1179,7 @@ lev_o_edit_distance(size_t len1, PyObject *string1,
  *          elementary edit operations, it length is stored in @n.
  **/
 static LevEditOp*
-editops_from_cost_matrix(size_t len1, const lev_byte* string1, size_t off1,
+cost2op_s(size_t len1, const lev_byte* string1, size_t off1,
 	size_t len2, const lev_byte* string2, size_t off2,
 	size_t* matrix, size_t* n)
 {
@@ -1269,7 +1267,7 @@ editops_from_cost_matrix(size_t len1, const lev_byte* string1, size_t off1,
 }
 
 /**
- * lev_editops_find:
+ * differ_op_s:
  * @len1: The length of @string1.
  * @string1: A string of length @len1, may contain NUL characters.
  * @len2: The length of @string2.
@@ -1285,8 +1283,8 @@ editops_from_cost_matrix(size_t len1, const lev_byte* string1, size_t off1,
  *          elementary edit operations, it length is stored in @n.
  *          It is normalized, i.e., keep operations are not included.
  **/
-_LEV_STATIC_PY LevEditOp*
-lev_editops_find(size_t len1, const lev_byte* string1,
+_STATIC_PY LevEditOp*
+differ_op_s(size_t len1, const lev_byte* string1,
 	size_t len2, const lev_byte* string2,
 	size_t* n)
 {
@@ -1346,13 +1344,13 @@ lev_editops_find(size_t len1, const lev_byte* string1,
 	}
 
 	/* find the way back */
-	return editops_from_cost_matrix(len1, string1, len1o,
+	return cost2op_s(len1, string1, len1o,
 		len2, string2, len2o,
 		matrix, n);
 }
 
 /**
- * ueditops_from_cost_matrix:
+ * ucost2op_s:
  * @len1: The length of @string1.
  * @string1: A string of length @len1, may contain NUL characters.
  * @o1: The offset where the matrix starts from the start of @string1.
@@ -1370,7 +1368,7 @@ lev_editops_find(size_t len1, const lev_byte* string1,
  *          elementary edit operations, it length is stored in @n.
  **/
 static LevEditOp*
-ueditops_from_cost_matrix(size_t len1, const lev_wchar* string1, size_t o1,
+ucost2op_s(size_t len1, const lev_wchar* string1, size_t o1,
 	size_t len2, const lev_wchar* string2, size_t o2,
 	size_t* matrix, size_t* n)
 {
@@ -1464,7 +1462,7 @@ ueditops_from_cost_matrix(size_t len1, const lev_wchar* string1, size_t o1,
 
 
 /**
- * lev_u_editops_find:
+ * differ_op_u:
  * @len1: The length of @string1.
  * @string1: A string of length @len1, may contain NUL characters.
  * @len2: The length of @string2.
@@ -1481,8 +1479,8 @@ ueditops_from_cost_matrix(size_t len1, const lev_wchar* string1, size_t o1,
  *          It is normalized, i.e., keep operations are not included.
  **/
  
-_LEV_STATIC_PY LevEditOp*
-lev_u_editops_find(size_t len1, const lev_wchar* string1,
+_STATIC_PY LevEditOp*
+differ_op_u(size_t len1, const lev_wchar* string1,
 	size_t len2, const lev_wchar* string2,
 	size_t* n)
 {
@@ -1544,14 +1542,14 @@ lev_u_editops_find(size_t len1, const lev_wchar* string1,
 	}
 
 	/* find the way back */
-	return ueditops_from_cost_matrix(len1, string1, len1o,
+	return ucost2op_s(len1, string1, len1o,
 		len2, string2, len2o,
 		matrix, n);
 }
 
 
-_LEV_STATIC_PY LevEditOp*
-lev_o_editops_find(size_t len1, PyObject* string1,
+_STATIC_PY LevEditOp*
+differ_op_o(size_t len1, PyObject* string1,
 	size_t len2, PyObject* string2,
 	size_t* n)
 {
@@ -1634,7 +1632,7 @@ lev_o_editops_find(size_t len1, PyObject* string1,
 	
 	/* find the way back */
 	/* ***
-	like function "ueditops_from_cost_matrix" for Python Object.
+	like function "ucost2op_s" for Python Object.
 	 * ***
 	*/
 
@@ -1730,7 +1728,7 @@ lev_o_editops_find(size_t len1, PyObject* string1,
 
 
 /**
- * lev_editops_to_opcodes:
+ * op2opcodes:
  * @n: The size of @ops.
  * @ops: An array of elementary edit operations.
  * @nb: Where the number of difflib block operation codes should be stored.
@@ -1745,8 +1743,8 @@ lev_o_editops_find(size_t len1, PyObject* string1,
  * Returns: The converted block operation codes, as a newly allocated array;
  *          its length is stored in @nb.
  **/
-_LEV_STATIC_PY LevOpCode*
-lev_editops_to_opcodes(size_t n, const LevEditOp* ops, size_t* nb,
+_STATIC_PY LevOpCode*
+op2opcodes(size_t n, const LevEditOp* ops, size_t* nb,
 	size_t len1, size_t len2)
 {
 	size_t nbl, i, spos, dpos;
@@ -1963,15 +1961,15 @@ taus113_set(taus113_state_t* state,
 
 
 /**
- * lev_init_rng:
+ * init_rng:
  * @seed: A seed.  If zero, a default value (currently 1) is used instead.
  *
  * Initializes the random generator used by some Levenshtein functions.
  *
  * This does NOT happen automatically when these functions are used.
  **/
-_LEV_STATIC_PY void
-lev_init_rng(unsigned long int seed)
+_STATIC_PY void
+init_rng(unsigned long int seed)
 {
 	static taus113_state_t state;
 
