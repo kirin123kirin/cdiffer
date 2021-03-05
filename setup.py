@@ -11,7 +11,7 @@ ext_modules = [Extension('cdiffer',
 
 setup(name="cdiffer",
     version='0.0.1',
-    description="Usefull differ function with Levenshtein distance",
+    description="Usefull differ function with Levenshtein distance.",
     long_description='',
     author='kirin123kirin',
     ext_modules=ext_modules,
