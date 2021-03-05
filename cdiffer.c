@@ -402,8 +402,7 @@ differ_result(size_t nb, LevOpCode* bops,
 	size_t lensum = len1 + len2;
 
 	for (i = 0; i < nb; i++, bops++) {
-		char* tps = opcode_names[bops->type].cstring;
-		if (arg3 == NULL || strcmp(tps, "equal") != 0) {
+		if (arg3 == NULL || strcmp(opcode_names[bops->type].cstring, "equal") != 0) {
 
 			size_t j = (size_t)bops->sbeg;
 			size_t k= (size_t)bops->dbeg;
@@ -424,14 +423,14 @@ differ_result(size_t nb, LevOpCode* bops,
 					PyList_SetItem(list, l, Py_None);
 				}
 
-				if (strcmp(tps, "delete") == 0) {
+				if (strcmp(opcode_names[bops->type].cstring, "delete") == 0) {
 					if (j < len1) {
 						PyList_SetItem(list, 1, PyInt_FromLong(j));
 						PyList_SetItem(list, 3, PySequence_GetItem(arg1, j));
 						xcost++;
 					}
 				}
-				else if (strcmp(tps, "insert") == 0) {
+				else if (strcmp(opcode_names[bops->type].cstring, "insert") == 0) {
 					if (k < len2) {
 						PyList_SetItem(list, 2, PyInt_FromLong(k));
 						PyList_SetItem(list, 4, PySequence_GetItem(arg2, k));
@@ -447,7 +446,7 @@ differ_result(size_t nb, LevOpCode* bops,
 						PyList_SetItem(list, 2, PyInt_FromLong(k));
 						PyList_SetItem(list, 4, PySequence_GetItem(arg2, k));
 					}
-					if (strcmp(tps, "replace") == 0)
+					if (strcmp(opcode_names[bops->type].cstring, "replace") == 0)
 						xcost++;
 				}
 				PyList_Append(oplist, list);
