@@ -117,7 +117,7 @@ def main():
         for f in glob(sys.argv[1]):
             if f.lower().endswith(".whl") and before in f:
                 dst = f.replace(before, after)
-                print("Rename whl... %s -> %s".format(f, dst))
+                print("Rename whl... {} -> {}".format(f, dst))
                 os.rename(f, dst)
 
 
