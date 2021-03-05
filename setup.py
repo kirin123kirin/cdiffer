@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
-try:
-    from setuptools import setup, Extension
-except:
-    from distutils.core import setup, Extension
+from setuptools import setup, Extension
 
 import codecs
 from os.path import dirname, exists, join as pjoin
@@ -16,7 +13,7 @@ def read(fname1="README.rst", fname2="README.md"):
     return ""
 
 
-__version__ = '0.0.5'
+__version__ = '0.0.6'
 
 
 ext_modules = [Extension('cdiffer',
@@ -24,15 +21,13 @@ ext_modules = [Extension('cdiffer',
         #include_dirs=['.'],
         )]
 
-# Development Status
+# Development Status Example
 #   3 - Alpha
 #   4 - Beta
 #   5 - Production/Stable
+
 CF = """
 Development Status :: 4 - Beta
-Intended Audience :: Developers
-Operating System :: OS Independent
-Topic :: Software Development :: Libraries :: Python Modules
 License :: OSI Approved :: GNU General Public License v2 (GPLv2)
 Programming Language :: C
 Programming Language :: Python
@@ -43,17 +38,21 @@ Programming Language :: Python :: 3.7
 Programming Language :: Python :: 3.8
 Programming Language :: Python :: 3.9
 Programming Language :: Python :: Implementation :: CPython
+Operating System :: OS Independent
 Operating System :: Microsoft :: Windows
 Operating System :: POSIX
-Operating System :: Unix
+"""
+# Not yet
+"""
 Operating System :: MacOS
+Operating System :: Unix
 """
 
 setup(name="cdiffer",
     version=__version__,
     description="Usefull differ function with Levenshtein distance.",
-    long_description_content_type='text/markdown',
-    long_description=read(),
+#    long_description_content_type='text/markdown',
+    long_description=codecs.open(pjoin(dirname(__file__), "README.md"), encoding="utf-8").read(),
     url='https://github.com/kirin123kirin/cdiffer',
     author='kirin123kirin',
     ext_modules=ext_modules,
