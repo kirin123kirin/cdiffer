@@ -8,13 +8,15 @@ except:
 import codecs
 from os.path import dirname, exists, join as pjoin
 
-def read(fname="README.md"):
-    if exists(fname):
-        return codecs.open(pjoin(dirname(__file__), fname), encoding="utf-8").read()
+def read(fname1="README.rst", fname2="README.md"):
+    if exists(fname1):
+        return codecs.open(pjoin(dirname(__file__), fname1), encoding="utf-8").read()
+    if exists(fname2):
+        return codecs.open(pjoin(dirname(__file__), fname2), encoding="utf-8").read()
     return ""
 
 
-__version__ = '0.0.4'
+__version__ = '0.0.5'
 
 
 ext_modules = [Extension('cdiffer',
