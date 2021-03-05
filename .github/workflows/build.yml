@@ -15,7 +15,7 @@ jobs:
       max-parallel: 15
       matrix:
         platform: [
-            #ubuntu-latest,
+            ubuntu-latest,
             windows-latest, 
             #macos-latest
             ]

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 try:
     from setuptools import setup, Extension
 except:
@@ -11,6 +12,10 @@ def read(fname="README.md"):
     if exists(fname):
         return codecs.open(pjoin(dirname(__file__), fname), encoding="utf-8").read()
     return ""
+
+
+__version__ == '0.0.4'
+
 
 ext_modules = [Extension('cdiffer',
         sources = ['cdiffer.c'],
@@ -43,7 +48,7 @@ Operating System :: MacOS
 """
 
 setup(name="cdiffer",
-    version='0.0.2',
+    version=__version__,
     description="Usefull differ function with Levenshtein distance.",
     long_description_content_type='text/markdown',
     long_description=read(),
