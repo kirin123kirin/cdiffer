@@ -2,7 +2,7 @@
 try:
     from setuptools import setup, Extension
 except:
-    from distutils import setup, Extension
+    from distutils.core import setup, Extension
 
 ext_modules = [Extension('cdiffer',
         sources = ['cdiffer.c'],

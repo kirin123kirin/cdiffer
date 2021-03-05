@@ -26,3 +26,9 @@ jobs:
     - name: Build and publish
       run: |
         python setup.py sdist bdist_wheel
+    - name: Copyartifact Linux build wheel
+      run: mkdir -p pkg && cp -af dist/*.whl pkg/
+    - uses: actions/upload-artifact@v1
+      with:
+        name: linux_whl
+        path: pkg
