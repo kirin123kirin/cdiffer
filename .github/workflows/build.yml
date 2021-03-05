@@ -15,8 +15,7 @@ jobs:
       max-parallel: 15
       matrix:
         platform: [
-            manylinux2014,
-            #ubuntu-latest,
+            ubuntu-latest,
             #windows-latest,
             #macos-latest
             ]
@@ -42,6 +41,7 @@ jobs:
         pip install setuptools wheel twine m2r
         m2r --overwrite README.md
         python setup.py sdist bdist_wheel
+        python _rename4pypi.py dist/*.whl
     - name: Save whl file to artifact
       uses: actions/upload-artifact@v2
       with:

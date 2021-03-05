@@ -164,6 +164,7 @@
     <None Include=".github\workflows\build.yml" />
     <None Include=".gitignore" />
     <None Include="MANIFEST.in" />
+    <None Include="_rename4pypi.py" />
     <None Include="README.md" />
     <None Include="setup.py">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
