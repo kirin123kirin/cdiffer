@@ -71,7 +71,7 @@ jobs:
         retention-days: 5
 
   publish:
-    needs: build
+    needs: [build_python3, build_python27]
     runs-on: ubuntu-latest
     steps:
     - name: download dist from artifact
