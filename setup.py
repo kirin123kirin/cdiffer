@@ -7,15 +7,18 @@ from os.path import dirname, join as pjoin
 
 __version__ = '0.0.9'
 
-# Edit for posix platname pypi error
-if os.name == "posix" and not ("--plat-name" in sys.argv or "-p" in sys.argv):
-    if "64" in os.uname()[-1]:
-        from _cross_platform import get_platname_64bit
-        plat = get_platname_64bit()
-    else:
-        from _cross_platform import get_platname_32bit
-        plat = get_platname_32bit()
-    sys.argv.extend(["--plat-name", plat])
+try:
+    # Edit posix platname for pypi upload error
+    if os.name == "posix" and not ("--plat-name" in sys.argv or "-p" in sys.argv):
+        if "64" in os.uname()[-1]:
+            from _cross_platform import get_platname_64bit
+            plat = get_platname_64bit()
+        else:
+            from _cross_platform import get_platname_32bit
+            plat = get_platname_32bit()
+        sys.argv.extend(["--plat-name", plat])
+except (ImportError, ModuleNotFoundError):
+    pass
 
 ext_modules = [Extension('cdiffer',
         sources = ['cdiffer.c'],
