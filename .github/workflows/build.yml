@@ -71,7 +71,7 @@ jobs:
       uses: actions/download-artifact@v2
     - name: Publish PyPI
         with:
-        name: dist
+          name: dist
       shell: bash
       env:
         TEST_PYPI_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
