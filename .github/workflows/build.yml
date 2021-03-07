@@ -15,8 +15,8 @@ jobs:
       max-parallel: 15
       matrix:
         platform: [
-            ubuntu-latest,
-            windows-latest,
+#            ubuntu-latest,
+            windows-2019,
             #macos-latest
             ]
         python-version: [
@@ -45,7 +45,7 @@ jobs:
     - name: Save whl file to artifact
       uses: actions/upload-artifact@v2
       with:
-        name: dist_${{ matrix.platform }}_${{ matrix.python-version }}
+        name: whlfiles_${{ matrix.platform }}_py${{ matrix.python-version }}
         path: dist
 
   publish:
