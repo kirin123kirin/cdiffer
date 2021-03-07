@@ -16,7 +16,7 @@ jobs:
       matrix:
         platform: [
 #            ubuntu-latest,
-            windows-2019,
+            windows-latest,
             #macos-latest
             ]
         python-version: [
