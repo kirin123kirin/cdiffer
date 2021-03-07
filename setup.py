@@ -5,7 +5,7 @@ import sys
 import codecs
 from os.path import dirname, join as pjoin
 
-__version__ = '0.0.8'
+__version__ = '0.0.9'
 
 # Edit for posix platname pypi error
 if os.name == "posix" and not ("--plat-name" in sys.argv or "-p" in sys.argv):
