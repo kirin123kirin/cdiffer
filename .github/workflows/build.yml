@@ -8,25 +8,24 @@ on:
 #  release:
 #    types: [push]
 
-strategy:
-  max-parallel: 15
-  matrix:
-    platform: [
-        ubuntu-latest,
-        windows-latest,
-      #macos-latest
-    ]
-    python-version: [
-      #            3.5,
-      #            3.6,
-        3.7,
-      #            3.8,
-      #            3.9,
-    ]
-
 jobs:
   build:
     runs-on: ${{ matrix.platform }}
+    strategy:
+      max-parallel: 15
+      matrix:
+        platform: [
+            ubuntu-latest,
+            windows-latest,
+            #macos-latest
+            ]
+        python-version: [
+#            3.5,
+#            3.6,
+            3.7,
+#            3.8,
+#            3.9,
+            ]
 
     steps:
     - uses: actions/checkout@v2
@@ -51,6 +50,21 @@ jobs:
   publish:
     needs: build
     runs-on: ${{ matrix.platform }}
+    strategy:
+      max-parallel: 15
+      matrix:
+        platform: [
+            ubuntu-latest,
+            windows-latest,
+            #macos-latest
+            ]
+        python-version: [
+#            3.5,
+#            3.6,
+            3.7,
+#            3.8,
+#            3.9,
+            ]
     steps:
     - name: Publish PyPI
       shell: bash
