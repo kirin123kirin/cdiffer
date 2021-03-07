@@ -1,12 +1,21 @@
 #!/usr/bin/env python
-
-from setuptools import setup, Extension
-
+from setuptools import Extension, setup
+import os
+import sys
 import codecs
-from os.path import dirname, exists, join as pjoin
+from os.path import dirname, join as pjoin
 
 __version__ = '0.0.8'
 
+# Edit for posix platname pypi error
+if os.name == "posix" and not ("--plat-name" in sys.argv or "-p" in sys.argv):
+    if "64" in os.uname()[-1]:
+        from _cross_platform import get_platname_64bit
+        plat = get_platname_64bit()
+    else:
+        from _cross_platform import get_platname_32bit
+        plat = get_platname_32bit()
+    sys.argv.extend(["--plat-name", plat])
 
 ext_modules = [Extension('cdiffer',
         sources = ['cdiffer.c'],
@@ -43,15 +52,15 @@ Operating System :: Unix
 readme = pjoin(dirname(__file__), "README.md")
 
 setup(name="cdiffer",
-    version=__version__,
-    description="Usefull differ function with Levenshtein distance.",
-    long_description_content_type='text/markdown',
-    long_description=codecs.open(readme, encoding="utf-8").read(),
-    url='https://github.com/kirin123kirin/cdiffer',
-    author='kirin123kirin',
-    ext_modules=ext_modules,
-    keywords = ["diff", "comparison", "compare"],
-    license="GPL2",
-    platforms=["Windows", "Linux"],  #, "Mac OS-X", "Unix"
-    classifiers=CF.strip().splitlines(),
-    )
+   version=__version__,
+   description="Usefull differ function with Levenshtein distance.",
+   long_description_content_type='text/markdown',
+   long_description=codecs.open(readme, encoding="utf-8").read(),
+   url='https://github.com/kirin123kirin/cdiffer',
+   author='kirin123kirin',
+   ext_modules=ext_modules,
+   keywords = ["diff", "comparison", "compare"],
+   license="GPL2",
+   platforms=["Windows", "Linux"],  #, "Mac OS-X", "Unix"
+   classifiers=CF.strip().splitlines(),
+   )

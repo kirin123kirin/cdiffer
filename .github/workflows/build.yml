@@ -21,11 +21,11 @@ jobs:
             ]
         python-version: [
             2.7,
-            3.5,
-            3.6,
-            3.7,
-            3.8,
-            3.9,
+#            3.5,
+#            3.6,
+#            3.7,
+#            3.8,
+#            3.9,
             ]
 
     steps:
@@ -41,14 +41,17 @@ jobs:
         python -m pip install -U pip 
         pip install setuptools wheel twine
         python setup.py bdist_wheel
-        python _rename4pypi.py dist/*.whl
-
+#        python _cross_platform.py
     - name: Save whl file to artifact
       uses: actions/upload-artifact@v2
       with:
-        name: dist_${{ matrix.platform }}
+        name: dist_${{ matrix.platform }}_${{ matrix.python-version }}
         path: dist
 
+  publish:
+    needs: build
+    runs-on: ${{ matrix.platform }}
+    steps:
     - name: Publish PyPI
       shell: bash
       env:

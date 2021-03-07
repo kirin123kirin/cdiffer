@@ -164,6 +164,8 @@
     <None Include=".github\workflows\build.yml" />
     <None Include=".gitignore" />
     <None Include="MANIFEST.in" />
+    <None Include="setup_new.py" />
+    <None Include="_getarchs.py" />
     <None Include="_rename4pypi.py" />
     <None Include="README.md" />
     <None Include="setup.py">
