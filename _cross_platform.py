@@ -54,7 +54,7 @@ def is_manylinux1(bit64=True, bit32=False):
     if bit64:
         ret.append("manylinux1_x86_64")
     if bit32:
-        ret.append("manylinux1_linux-i686")
+        ret.append("manylinux1_i686")
     return ret
 
 
@@ -72,7 +72,7 @@ def is_manylinux2010(bit64=True, bit32=False):
     if bit64:
         ret.append("manylinux2010_x86_64")
     if bit32:
-        ret.append("manylinux2010_linux-i686")
+        ret.append("manylinux2010_i686")
     return ret
 
 
@@ -152,7 +152,7 @@ def cross_wheel_build():
     pth = normpath(pjoin(dirname(__file__), "setup.py"))
     cmd = "python {} bdist_wheel --plat-name ".format(pth)
     command(cmd + get_platname_64bit())
-    command(cmd + get_platname_32bit())
+    command(cmd + get_platname_32bit()) #TODO 32bit cross compile dekinai
 
 
 if __name__ == "__main__":
