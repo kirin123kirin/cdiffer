@@ -45,7 +45,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: dist
-        path: dist/*.whl
+        path: dist
         retention-days: 5
 
   publish:
@@ -63,7 +63,7 @@ jobs:
 #            3.5,
 #            3.6,
             3.7,
-#            3.8,
+            3.8,
 #            3.9,
             ]
     steps:
@@ -79,6 +79,7 @@ jobs:
         PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
         PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
+        ls -la
         ls -la dist
         pip install twine
         ### upload to testPyPI repository ###
