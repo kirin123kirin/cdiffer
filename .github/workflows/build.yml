@@ -50,22 +50,7 @@ jobs:
 
   publish:
     needs: build
-    runs-on: ${{ matrix.platform }}
-    strategy:
-      max-parallel: 15
-      matrix:
-        platform: [
-            ubuntu-latest,
-#            windows-latest,
-#            macos-latest
-            ]
-        python-version: [
-#            3.5,
-#            3.6,
-            3.7,
-            3.8,
-#            3.9,
-            ]
+    runs-on: ubuntu-latest
     steps:
     - name: download dist from artifact
       uses: actions/download-artifact@v2
@@ -79,11 +64,9 @@ jobs:
         PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
         PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
-        ls -la
-        ls -la dist
         pip install twine
         ### upload to testPyPI repository ###
-        twine upload --verbose -u "$TEST_PYPI_USERNAME" -p "$TEST_PYPI_PASSWORD" --repository-url https://test.pypi.org/legacy/ dist/*
+        twine upload --verbose -u "$TEST_PYPI_USERNAME" -p "$TEST_PYPI_PASSWORD" --repository-url https://test.pypi.org/legacy/ ./*
         ### upload to PyPI repository ###
-        #twine upload --verbose -u "$PYPI_USERNAME" -p "$PYPI_PASSWORD" dist/*
+        #twine upload --verbose -u "$PYPI_USERNAME" -p "$PYPI_PASSWORD" ./*
 
