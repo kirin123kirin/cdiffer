@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch_name: [ android-arm, android-arm64 ]
+        arch_name: [ linux-arm64, android-arm64 ]
         python-version: [
             3.8
         ]
@@ -27,6 +27,8 @@ jobs:
     - name: Install and Build
       shell: bash
       run: |
+        uname -a
+        ls -l "`which python`*"
         python -m pip install -U pip 
         pip install setuptools wheel
         python setup.py sdist bdist_wheel
