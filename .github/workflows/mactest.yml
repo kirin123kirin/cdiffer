@@ -13,6 +13,7 @@ jobs:
       name:    Build on ubuntu-20.04 aarch64
       strategy:
          matrix:
+            max-parallel: 5
             python-version: [ python27,
                               python36,
                               python37,
