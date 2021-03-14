@@ -11,12 +11,12 @@ jobs:
          max-parallel: 15
          matrix:
             platform: [
-                  ubuntu-latest,
+#                  ubuntu-latest,
                   windows-latest,
             ]
             python-version: [
                   2.7,
-                  3.7,
+#                  3.7,
             ]
             exclude:
                -
