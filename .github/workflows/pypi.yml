@@ -3,10 +3,9 @@
 
 name: Upload pypi.org
 
-on:
-   workflow_dispatch
-   release:
-      types: [ push ]
+on: workflow_dispatch
+#   release:
+#      types: [ push ]
 
 jobs:
    build_python:
