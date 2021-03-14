@@ -23,21 +23,11 @@ jobs:
                distro:      python39
                githubToken: ${{ github.token }}
                run:         |
-                            uname -a
-                            env
-                            find /usr/bin
-                            which python && python -VV
-                            which python3 && python3 -VV
-#                            apt-get install -y --no-install-recommends build-essential
-#                            apt-get install -y --no-install-recommends python3-dev python3-pip
-#                            python3 -m pip install -U pip
-#                            pip3 install setuptools wheel
-#                            python3 setup.py bdist_wheel
-#                            python3 -V
-#         -
-#            name: Save whl file to artifact
-#            uses: actions/upload-artifact@v2
-#            with:
-#               name:           dist
-#               path:           dist
-#               retention-days: 1
+                            python3 setup.py bdist_wheel
+         -
+            name: Save whl file to artifact
+            uses: actions/upload-artifact@v2
+            with:
+               name:           dist
+               path:           dist
+               retention-days: 1
