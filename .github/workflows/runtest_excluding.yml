@@ -18,10 +18,10 @@ jobs:
                   2.7,
 #                  3.7,
             ]
-            exclude:
-               -
-                  platform:       windows-latest
-                  python-version: 2.7
+#            exclude:
+#               -
+#                  platform:       windows-latest
+#                  python-version: 2.7
 
 
       steps:
