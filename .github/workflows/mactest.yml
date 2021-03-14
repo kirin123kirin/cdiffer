@@ -7,10 +7,18 @@ on:
       workflow_dispatch
 
 jobs:
-   build_arm64_python38:
+   build_arm64_python:
       # The host should always be Linux
       runs-on: ubuntu-20.04
       name:    Build on ubuntu-20.04 aarch64
+      strategy:
+         matrix:
+            python-version: [ python27,
+                              python36,
+                              python37,
+#                              python38,
+#                              python39,
+            ]
       steps:
          -
             uses: actions/checkout@v2.1.0
@@ -20,10 +28,10 @@ jobs:
             id:   runcmd
             with:
                arch:        aarch64
-               distro:      python38
+               distro: { { matrix.python-version } }
                githubToken: ${{ github.token }}
                run:         |
-                            python3 setup.py bdist_wheel
+                            python setup.py bdist_wheel
          -
             name: Save whl file to artifact
             uses: actions/upload-artifact@v2
