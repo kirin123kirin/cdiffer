@@ -29,7 +29,7 @@ jobs:
             id:   runcmd
             with:
                arch:        aarch64
-               distro: { { matrix.python-version } }
+               distro:      ${{ matrix.python-version }}
                githubToken: ${{ github.token }}
                run:         |
                             python setup.py bdist_wheel
