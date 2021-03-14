@@ -20,7 +20,7 @@ jobs:
             id:   runcmd
             with:
                arch:        aarch64
-               distro:      python39
+               distro:      python38
                githubToken: ${{ github.token }}
                run:         |
                             python3 setup.py bdist_wheel
