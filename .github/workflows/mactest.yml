@@ -30,7 +30,6 @@ jobs:
                run:         |
                             uname -a
                             apt-get update
-                            gcc -v
 #                            apt-get install -y --no-install-recommends build-essential
 #                            apt-get install -y --no-install-recommends python3-dev python3-pip
 #                            python3 -m pip install -U pip
