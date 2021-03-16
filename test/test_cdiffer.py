@@ -140,3 +140,20 @@ def test_integer_test():
     assert (similar(10, 100) == 0)
     assert (dist(10, 100) == 2)
     assert (differ(10, 100) == [['replace', 0, 0, 10, 100]])
+
+
+if __name__ == '__main__':
+    import os
+    import traceback
+    curdir = os.getcwd()
+    try:
+        os.chdir(os.path.dirname(os.path.abspath(__file__)))
+        for fn, func in dict(locals()).items():
+            if fn.startswith("test_"):
+                print("Runner:", fn)
+                func()
+    except Exception as e:
+        traceback.print_exc()
+        raise(e)
+    finally:
+        os.chdir(curdir)

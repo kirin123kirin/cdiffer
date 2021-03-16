@@ -54,6 +54,17 @@ Operating System :: Unix
 
 readme = pjoin(dirname(__file__), "README.md")
 
+tests = {}
+if sys.version_info[:2] >= (3, 3):
+    tests = dict(
+        setup_requires=["pytest-runner"],
+        tests_require=["pytest", "pytest-cov"])
+else:
+    from commands import getstatusoutput
+    code, dat = getstatusoutput("python ./test/test_cdiffer.py")
+    if code != 0:
+        sys.exit(1)
+
 setup(name="cdiffer",
       version=__version__,
       description="Usefull differ function with Levenshtein distance.",
@@ -66,6 +77,5 @@ setup(name="cdiffer",
       license="GPL2",
       platforms=["Windows", "Linux"],  # , "Mac OS-X", "Unix"
       classifiers=CF.strip().splitlines(),
-      setup_requires=["pytest-runner"],
-      tests_require=["pytest", "pytest-cov"]
+      **tests
       )
