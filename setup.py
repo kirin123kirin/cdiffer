@@ -70,4 +70,6 @@ setup(name="cdiffer",
       license="GPL2",
       platforms=["Windows", "Linux"],  # , "Mac OS-X", "Unix"
       classifiers=CF.strip().splitlines(),
+      setup_requires=["pytest-runner"],
+      tests_require=["pytest", "pytest-cov"]
       )

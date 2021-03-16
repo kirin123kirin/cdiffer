@@ -259,8 +259,8 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 		return -1;
 
 	if (PyObject_RichCompareBool(arg1, arg2, Py_EQ)) {
-		*lensum = 0.00000000001;
-		return 0;
+		*lensum = 0;
+		return 1;
 	}
 
 	if (PyNumber_Check(arg1) && PyNumber_Check(arg2)) {
@@ -321,7 +321,6 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 		string2 = PyUnicode_AS_UNICODE(arg2);
 		{
 			size_t d = dist_u(len1, string1, len2, string2, xcost);
-
 			if (d == (size_t)(-1)) {
 				PyErr_NoMemory();
 				return -1;
@@ -335,10 +334,10 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 		{
 			size_t d = dist_o(len1, arg1, len2, arg2, xcost);
 
-			Py_XDECREF(arg1);
-			Py_XDECREF(arg2);
-
-
+            if (is_iter > 0) {
+                Py_XDECREF(arg1);
+                Py_XDECREF(arg2);
+            }
 			if (d == (size_t)(-1)) {
 				PyErr_NoMemory();
 				return -1;
@@ -355,7 +354,7 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 			Py_XDECREF(arg1);
 			Py_XDECREF(arg2);
 		}
-
+//        PyErr_NoMemory();
 		return -1;
 	}
 }
