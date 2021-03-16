@@ -4,6 +4,9 @@
 name: Upload pypi.org
 
 on:
+   push:
+      tags:
+         - 'v*'
    release:
       types: [ push ]
 
