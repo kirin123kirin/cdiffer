@@ -2,3 +2,4 @@ recursive-include docs *
 include README.md
 include COPYING.txt
 include cdiffer.h
+include setup.cfg

@@ -87,13 +87,19 @@ typedef struct {
 	size_t len;
 } LevMatchingBlock;
 
+static size_t
+dist_handler(PyObject* args,
+	const char* name,
+	size_t xcost,
+	size_t* lensum);
+
 _STATIC_PY
 size_t
 dist_s(size_t len1,
 	const lev_byte* string1,
 	size_t len2,
 	const lev_byte* string2,
-	int xcost);
+	size_t xcost);
 
 _STATIC_PY
 size_t
@@ -101,7 +107,7 @@ dist_u(size_t len1,
 	const lev_wchar* string1,
 	size_t len2,
 	const lev_wchar* string2,
-	int xcost);
+	size_t xcost);
 
 _STATIC_PY
 size_t
@@ -109,7 +115,7 @@ dist_o(size_t len1,
 	PyObject* string1,
 	size_t len2,
 	PyObject* string2,
-	int xcost);
+	size_t xcost);
 
 
 _STATIC_PY

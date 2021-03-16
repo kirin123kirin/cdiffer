@@ -3,7 +3,7 @@
  * Python extension computing Levenshtein distances, string similarities,
  *
  * Copyright (C) 2021 kirin123kirin <kirin123kirin@gmail.com>
- * 
+ *
  * python-Levenshtein:
  * Copyright (C) 2002-2003 David Necas (Yeti) <yeti@physics.muni.cz>.
  *
@@ -32,7 +32,7 @@
 #define _GNU_SOURCE
 #include <string.h>
 #include <math.h>
-  /* for debugging */
+ /* for debugging */
 #include <stdio.h>
 #else /* NO_PYTHON */
 #define _STATIC_PY static
@@ -65,9 +65,9 @@
 #include <assert.h>
 #include "cdiffer.h"
 
-  /* FIXME: inline avaliability should be solved in setup.py, somehow, or
-   * even better in Python.h, like const is...
-   * this should inline at least with gcc and msvc */
+ /* FIXME: inline avaliability should be solved in setup.py, somehow, or
+  * even better in Python.h, like const is...
+  * this should inline at least with gcc and msvc */
 #ifndef __GNUC__
 #  ifdef _MSC_VER
 #    define inline __inline
@@ -78,12 +78,12 @@
 #endif
 
 
-   /* Me thinks the second argument of PyArg_UnpackTuple() should be const.
-	* Anyway I habitually pass a constant string.
-	* A cast to placate the compiler. */
+  /* Me thinks the second argument of PyArg_UnpackTuple() should be const.
+   * Anyway I habitually pass a constant string.
+   * A cast to placate the compiler. */
 #define PYARGCFIX(x) (char*)(x)
 
-	/* local functions */
+   /* local functions */
 
 #define TAUS113_LCG(n) ((69069UL * n) & 0xffffffffUL)
 #define TAUS113_MASK 0xffffffffUL
@@ -124,17 +124,17 @@ static PyObject* similar_py(PyObject* self, PyObject* args);
 #define dist_DESC \
   "Compute absolute Levenshtein distance of two strings.\n" \
   "\n" \
-  "distance(string1, string2)\n" \
+  "dist(sequence, sequence)\n" \
   "\n" \
   "Examples (it's hard to spell Levenshtein correctly):\n" \
   "\n" \
-  ">>> distance('Levenshtein', 'Lenvinsten')\n" \
+  ">>> dist('Levenshtein', 'Lenvinsten')\n" \
   "4\n" \
-  ">>> distance('Levenshtein', 'Levensthein')\n" \
+  ">>> dist('Levenshtein', 'Levensthein')\n" \
   "2\n" \
-  ">>> distance('Levenshtein', 'Levenshten')\n" \
+  ">>> dist('Levenshtein', 'Levenshten')\n" \
   "1\n" \
-  ">>> distance('Levenshtein', 'Levenshtein')\n" \
+  ">>> dist('Levenshtein', 'Levenshtein')\n" \
   "0\n" \
   "\n" \
   "Yeah, we've managed it at last.\n"
@@ -142,17 +142,17 @@ static PyObject* similar_py(PyObject* self, PyObject* args);
 #define similar_DESC \
   "Compute similarity of two strings.\n" \
   "\n" \
-  "ratio(string1, string2)\n" \
+  "similar(sequence, sequence)\n" \
   "\n" \
   "The similarity is a number between 0 and 1, it's usually equal or\n" \
-  "somewhat higher than difflib.SequenceMatcher.ratio(), because it's\n" \
+  "somewhat higher than difflib.SequenceMatcher.similar(), because it's\n" \
   "based on real minimal edit distance.\n" \
   "\n" \
   "Examples:\n" \
   "\n" \
-  ">>> ratio('Hello world!', 'Holly grail!')  # doctest: +ELLIPSIS\n" \
-  "0.583333...\n" \
-  ">>> ratio('Brian', 'Jesus')\n" \
+  ">>> similar('coffee', 'cafe')\n" \
+  "0.6\n" \
+  ">>> similar('hoge', 'bar')\n" \
   "0.0\n" \
   "\n" \
   "Really?  I thought there was some similarity.\n"
@@ -160,23 +160,26 @@ static PyObject* similar_py(PyObject* self, PyObject* args);
 #define differ_DESC \
   "Find sequence of edit operations transforming one string to another.\n" \
   "\n" \
-  "opcodes(source_string, destination_string, diffonly=False)\n" \
-  "\n" \
-  "The result is a list of 5-tuples with the same meaning as in\n" \
-  "SequenceMatcher's get_opcodes() output.  But since the algorithms\n" \
-  "differ, the actual sequences from Levenshtein and SequenceMatcher\n" \
-  "may differ too.\n" \
+  "differ(source_sequence, destination_sequence, diffonly=False)\n" \
   "\n" \
   "Examples:\n" \
   "\n" \
-  ">>> for x in opcodes('spam', 'park'):\n" \
+  ">>> for x in differ('coffee', 'cafe'):\n" \
   "...     print(x)\n" \
   "...\n" \
-  "('delete', 0, 1, 0, 0)\n" \
-  "('equal', 1, 3, 0, 2)\n" \
-  "('insert', 3, 3, 2, 3)\n" \
-  "('replace', 3, 4, 3, 4)\n" \
-  "\n" \
+  "['equal',   0, 0,   'c', 'c']\n" \
+  "['replace', 1, 1,   'o', 'a']\n" \
+  "['equal',   2, 2,   'f', 'f']\n" \
+  "['delete',  3, None,'f',None]\n" \
+  "['delete',  4, None,'e',None]\n" \
+  "['equal',   5, 3,   'e', 'e']\n" \
+  ">>> for x in differ('coffee', 'cafe', diffonly=True):\n" \
+  "...     print(x)\n" \
+  "...\n" \
+  "['replace', 1, 1,   'o', 'a']\n" \
+  "['delete',  3, None,'f',None]\n" \
+  "['delete',  4, None,'e',None]\n" \
+  "\n"
 
 
 #define METHODS_ITEM(x) { #x, x##_py, METH_VARARGS, x##_DESC }
@@ -201,14 +204,6 @@ static opcode_names[] = {
   { NULL, "delete", 0 },
 };
 #define N_OPCODE_NAMES ((sizeof(opcode_names)/sizeof(opcode_names[0])))
-
-
-static long int
-dist_handler(PyObject* args,
-	const char* name,
-	size_t xcost,
-	size_t* lensum);
-
 
 static void*
 safe_malloc(size_t nmemb, size_t size) {
@@ -248,7 +243,7 @@ length_of(PyObject* object)
  *
  ****************************************************************************/
 
-static long int
+static size_t
 dist_handler(PyObject* args, const char* name, size_t xcost,
 	size_t* lensum)
 {
@@ -256,7 +251,7 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 	size_t len1, len2;
 
 	if (!PyArg_UnpackTuple(args, PYARGCFIX(name), 2, 2, &arg1, &arg2))
-		return -1;
+		return (size_t)(-1);
 
 	if (PyObject_RichCompareBool(arg1, arg2, Py_EQ)) {
 		*lensum = 0;
@@ -288,13 +283,13 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 	if (len1 == -1 || len2 == -1) {
 		PyErr_Format(PyExc_TypeError,
 			"Cannot len function. Needs. len(arg1) or len(arg2)");
-		
+
 		if (is_iter > 0) {
 			Py_XDECREF(arg1);
 			Py_XDECREF(arg2);
 		}
 
-		return -1;
+		return (size_t)(-1);
 	}
 
 	if (PyObject_TypeCheck(arg1, &PyString_Type)
@@ -308,7 +303,7 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 
 			if (d == (size_t)(-1)) {
 				PyErr_NoMemory();
-				return -1;
+				return (size_t)(-1);
 			}
 			return d;
 		}
@@ -323,7 +318,7 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 			size_t d = dist_u(len1, string1, len2, string2, xcost);
 			if (d == (size_t)(-1)) {
 				PyErr_NoMemory();
-				return -1;
+				return (size_t)(-1);
 			}
 			return d;
 		}
@@ -334,13 +329,13 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 		{
 			size_t d = dist_o(len1, arg1, len2, arg2, xcost);
 
-            if (is_iter > 0) {
-                Py_XDECREF(arg1);
-                Py_XDECREF(arg2);
-            }
+			if (is_iter > 0) {
+				Py_XDECREF(arg1);
+				Py_XDECREF(arg2);
+			}
 			if (d == (size_t)(-1)) {
 				PyErr_NoMemory();
-				return -1;
+				return (size_t)(-1);
 			}
 			return d;
 		}
@@ -349,13 +344,12 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 	else {
 		PyErr_Format(PyExc_TypeError,
 			"%s expected two Sequence object", name);
-
 		if (is_iter > 0) {
 			Py_XDECREF(arg1);
 			Py_XDECREF(arg2);
 		}
-//        PyErr_NoMemory();
-		return -1;
+		//        PyErr_NoMemory();
+		return (size_t)(-1);
 	}
 }
 
@@ -363,11 +357,10 @@ static PyObject*
 dist_py(PyObject* self, PyObject* args)
 {
 	size_t lensum;
-	long int ldist;
+	size_t ldist;
 
-	if ((ldist = dist_handler(args, "distance", 0, &lensum)) < 0)
+	if ((ldist = dist_handler(args, "dist", 0, &lensum)) == (size_t)(-1))
 		return NULL;
-
 	return PyInt_FromLong((long)ldist);
 }
 
@@ -375,21 +368,21 @@ static PyObject*
 similar_py(PyObject* self, PyObject* args)
 {
 	size_t lensum;
-	long int ldist;
+	size_t ldist;
 
-	if ((ldist = dist_handler(args, "ratio", 1, &lensum)) < 0)
+	if ((ldist = dist_handler(args, "similar", 1, &lensum)) == (size_t)(-1))
 		return NULL;
 
 	if (lensum == 0)
 		return PyFloat_FromDouble(1.0);
 
 	return PyFloat_FromDouble((((double)lensum - (double)ldist) / lensum));
-	
+
 }
 
 
 static PyObject*
-differ_result(size_t nb, LevOpCode* bops, 
+differ_result(size_t nb, LevOpCode* bops,
 	size_t len1, size_t len2,
 	PyObject* arg1, PyObject* arg2, PyObject* arg3)
 {
@@ -404,7 +397,7 @@ differ_result(size_t nb, LevOpCode* bops,
 		if (arg3 == NULL || strcmp(opcode_names[bops->type].cstring, "equal") != 0) {
 
 			size_t j = (size_t)bops->sbeg;
-			size_t k= (size_t)bops->dbeg;
+			size_t k = (size_t)bops->dbeg;
 
 			for (j, k;
 				j < bops->send || k < bops->dend;
@@ -424,25 +417,25 @@ differ_result(size_t nb, LevOpCode* bops,
 
 				if (strcmp(opcode_names[bops->type].cstring, "delete") == 0) {
 					if (j < len1) {
-						PyList_SetItem(list, 1, PyInt_FromLong(j));
+						PyList_SetItem(list, 1, PyInt_FromLong((long)j));
 						PyList_SetItem(list, 3, PySequence_GetItem(arg1, j));
 						xcost++;
 					}
 				}
 				else if (strcmp(opcode_names[bops->type].cstring, "insert") == 0) {
 					if (k < len2) {
-						PyList_SetItem(list, 2, PyInt_FromLong(k));
+						PyList_SetItem(list, 2, PyInt_FromLong((long)k));
 						PyList_SetItem(list, 4, PySequence_GetItem(arg2, k));
 						xcost++;
 					}
 				}
 				else {
 					if (j < len1) {
-						PyList_SetItem(list, 1, PyInt_FromLong(j));
+						PyList_SetItem(list, 1, PyInt_FromLong((long)j));
 						PyList_SetItem(list, 3, PySequence_GetItem(arg1, j));
 					}
 					if (k < len2) {
-						PyList_SetItem(list, 2, PyInt_FromLong(k));
+						PyList_SetItem(list, 2, PyInt_FromLong((long)k));
 						PyList_SetItem(list, 4, PySequence_GetItem(arg2, k));
 					}
 					if (strcmp(opcode_names[bops->type].cstring, "replace") == 0)
@@ -463,7 +456,7 @@ differ_py(PyObject* self, PyObject* args)
 
 	size_t len1, len2, n, nb;
 
-	if (!PyArg_UnpackTuple(args, PYARGCFIX("opcodes"), 2, 3, &arg1, &arg2, &arg3))
+	if (!PyArg_UnpackTuple(args, PYARGCFIX("differ"), 2, 3, &arg1, &arg2, &arg3))
 		return NULL;
 
 	if (PyNumber_Check(arg1) && PyNumber_Check(arg2)) {
@@ -554,7 +547,7 @@ differ_py(PyObject* self, PyObject* args)
 		return PyErr_NoMemory();
 
 	free(ops);
-	
+
 	PyObject* oplist;
 	oplist = differ_result(nb, bops, len1, len2, arg1, arg2, arg3);
 
@@ -604,23 +597,23 @@ PY_MOD_INIT_FUNC_DEF(cdiffer)
  * Basic stuff, Levenshtein distance
  *
  ****************************************************************************/
-/**
-  * dist_s:
-  * @len1: The length of @string1.
-  * @string1: A sequence of bytes of length @len1, may contain NUL characters.
-  * @len2: The length of @string2.
-  * @string2: A sequence of bytes of length @len2, may contain NUL characters.
-  * @xcost: If nonzero, the replace operation has weight 2, otherwise all
-  *         edit operations have equal weights of 1.
-  *
-  * Computes Levenshtein edit distance of two strings.
-  *
-  * Returns: The edit distance.
-  **/
+ /**
+   * dist_s:
+   * @len1: The length of @string1.
+   * @string1: A sequence of bytes of length @len1, may contain NUL characters.
+   * @len2: The length of @string2.
+   * @string2: A sequence of bytes of length @len2, may contain NUL characters.
+   * @xcost: If nonzero, the replace operation has weight 2, otherwise all
+   *         edit operations have equal weights of 1.
+   *
+   * Computes Levenshtein edit distance of two strings.
+   *
+   * Returns: The edit distance.
+   **/
 _STATIC_PY size_t
 dist_s(size_t len1, const lev_byte* string1,
 	size_t len2, const lev_byte* string2,
-	int xcost)
+	size_t xcost)
 {
 	size_t i;
 	size_t* row;  /* we only need to keep one row of costs */
@@ -659,7 +652,7 @@ dist_s(size_t len1, const lev_byte* string1,
 	/* check len1 == 1 separately */
 	if (len1 == 1) {
 		if (xcost)
-			return len2 + 1 - 2 * (memchr(string2, *string1, len2) != NULL);
+			return len2 + 1 - (2 * (memchr(string2, *string1, len2) != NULL));
 		else
 			return len2 - (memchr(string2, *string1, len2) != NULL);
 	}
@@ -778,7 +771,7 @@ dist_s(size_t len1, const lev_byte* string1,
 _STATIC_PY size_t
 dist_u(size_t len1, const lev_wchar* string1,
 	size_t len2, const lev_wchar* string2,
-	int xcost)
+	size_t xcost)
 {
 	size_t i;
 	size_t* row;  /* we only need to keep one row of costs */
@@ -872,7 +865,7 @@ dist_u(size_t len1, const lev_wchar* string1,
 			/* skip the upper triangle */
 			if (i >= len1 - half) {
 				size_t offset = i - (len1 - half);
-				
+
 				size_t c3;
 
 				char2p = string2 + offset;
@@ -894,7 +887,7 @@ dist_u(size_t len1, const lev_wchar* string1,
 			/* skip the lower triangle */
 			if (i <= half + 1)
 				end = row + len2 + i - half - 2;
-			
+
 			/* main */
 			while (p <= end) {
 				size_t c3 = --D + (char1 != *(char2p++));
@@ -939,16 +932,16 @@ dist_u(size_t len1, const lev_wchar* string1,
  * Returns: The edit distance.
  **/
 _STATIC_PY size_t
-dist_o(size_t len1, PyObject *string1,
+dist_o(size_t len1, PyObject* string1,
 	size_t len2, PyObject* string2,
-	int xcost)
+	size_t xcost)
 {
 	size_t len1o, len2o;
 	size_t i;
 	size_t* row;  /* we only need to keep one row of costs */
 	size_t* end;
 	size_t half;
-	
+
 
 	/* strip common prefix */
 	len1o = 0;
@@ -1002,8 +995,8 @@ dist_o(size_t len1, PyObject *string1,
 	if (len1 == 1) {
 		for (i = len2; i; i--) {
 			if (PyObject_RichCompareBool(
-				PySequence_GetItem(char2p, offset + len2 - i), 
-				PySequence_GetItem(char1, offset), 
+				PySequence_GetItem(char2p, offset + len2 - i),
+				PySequence_GetItem(char1, offset),
 				Py_EQ))
 				return len2 - 1;
 		}
@@ -1020,11 +1013,11 @@ dist_o(size_t len1, PyObject *string1,
 	end = row + len2 - 1;
 	for (i = 0; i < len2 - (xcost ? 0 : half); i++)
 		row[i] = i;
-	
+
 	/* go through the matrix and compute the costs.  yes, this is an extremely
 	 * obfuscated version, but also extremely memory-conservative and relatively
 	 * fast.  */
-	if (xcost) { 
+	if (xcost) {
 		for (i = 1; i < len1; i++) {
 			size_t* p = row + 1;
 			size_t D = i - 1;
@@ -1061,16 +1054,16 @@ dist_o(size_t len1, PyObject *string1,
 			//const lev_wchar char1 = string1[i - 1];
 			//const lev_wchar* char2p;
 			size_t D, x;
-			
+
 			size_t cnt = 0;
 
 			/* skip the upper triangle */
 			if (i >= len1 - half) {
 				offset2 = i - (len1 - half);
 				size_t c3;
-				
+
 				/*char2p = string2 + offset;*/
-				
+
 				p = row + offset2;
 				/*c3 = *(p++) + (char1 != *(char2p++));*/
 				c3 = *(p++) + (
@@ -1094,12 +1087,12 @@ dist_o(size_t len1, PyObject *string1,
 			/* skip the lower triangle */
 			if (i <= half + 1)
 				end = row + len2 + i - half - 2;
-			
+
 			/* main */
-			
-			
+
+
 			while (p <= end) {
-				/* 
+				/*
 				//DEBUG
 				printf("%d %d %ls %ls\n", i, *p,
 					PyUnicode_AS_UNICODE(PySequence_GetItem(char1, offset + i - 1)),
@@ -1109,10 +1102,10 @@ dist_o(size_t len1, PyObject *string1,
 				size_t c3 = --D + (
 					PyObject_RichCompareBool(
 						PySequence_GetItem(char1, offset + i - 1)
-						,PySequence_GetItem(char2p, offset + offset2 + cnt)
+						, PySequence_GetItem(char2p, offset + offset2 + cnt)
 						, Py_NE
 					)); //size_t c3 = --D + (char1 != *(char2p++));
-				
+
 				cnt++;
 
 				x++;
@@ -1133,7 +1126,7 @@ dist_o(size_t len1, PyObject *string1,
 						, PySequence_GetItem(char2p, offset + offset2 + cnt)
 						, Py_NE
 					)); //size_t c3 = --D + (char1 != *char2p);
-				
+
 				x++;
 				if (x > c3)
 					x = c3;
@@ -1144,8 +1137,8 @@ dist_o(size_t len1, PyObject *string1,
 
 	i = *end;
 	free(row);
-	
-	//自作のPyObjectは手動で開放してやらないとメモリリークするため参照カウントを減らす
+
+	//counter memory leak
 	Py_XDECREF(char1);
 	Py_XDECREF(char1);
 	Py_XDECREF(char2p);
@@ -1374,16 +1367,16 @@ ucost2op_s(size_t len1, const lev_wchar* string1, size_t o1,
 	size_t i, j, pos;
 	LevEditOp* ops;
 	int dir = 0;
-	
+
 	pos = *n = matrix[len1 * len2 - 1];
-	
+
 	if (!*n) {
 		free(matrix);
 		return NULL;
 	}
-	
+
 	ops = (LevEditOp*)safe_malloc((*n), sizeof(LevEditOp));
-	
+
 	if (!ops) {
 		free(matrix);
 		*n = (size_t)(-1);
@@ -1392,7 +1385,7 @@ ucost2op_s(size_t len1, const lev_wchar* string1, size_t o1,
 	i = len1 - 1;
 	j = len2 - 1;
 	p = matrix + len1 * len2 - 1;
-	
+
 	while (i || j) {
 		/* prefer contiuning in the same direction */
 		if (dir < 0 && j && *p == *(p - 1) + 1) {
@@ -1411,7 +1404,7 @@ ucost2op_s(size_t len1, const lev_wchar* string1, size_t o1,
 			p -= len2;
 			continue;
 		}
-		
+
 		if (i && j && *p == *(p - len2 - 1)
 			&& string1[i - 1] == string2[j - 1]) {
 			/* don't be stupid like difflib, don't store LEV_EDIT_KEEP */
@@ -1476,7 +1469,7 @@ ucost2op_s(size_t len1, const lev_wchar* string1, size_t o1,
  *          elementary edit operations, it length is stored in @n.
  *          It is normalized, i.e., keep operations are not included.
  **/
- 
+
 _STATIC_PY LevEditOp*
 differ_op_u(size_t len1, const lev_wchar* string1,
 	size_t len2, const lev_wchar* string2,
@@ -1485,7 +1478,7 @@ differ_op_u(size_t len1, const lev_wchar* string1,
 	size_t len1o, len2o;
 	size_t i;
 	size_t* matrix; /* cost matrix */
-	
+
 	/* strip common prefix */
 	len1o = 0;
 	while (len1 > 0 && len2 > 0 && *string1 == *string2) {
@@ -1559,7 +1552,7 @@ differ_op_o(size_t len1, PyObject* string1,
 	len1o = 0;
 	size_t offset = 0;
 
-	while (len1 > 0 && len2 > 0 
+	while (len1 > 0 && len2 > 0
 		&& PyObject_RichCompareBool(PySequence_GetItem(string1, len1o),
 			PySequence_GetItem(string2, len1o), Py_EQ)) {
 		len1--;
@@ -1573,7 +1566,7 @@ differ_op_o(size_t len1, PyObject* string1,
 
 	/* strip common suffix */
 	size_t suffix = 0;
-	while (len1 > 0 && len2 > 0 
+	while (len1 > 0 && len2 > 0
 		&& PyObject_RichCompareBool(PySequence_GetItem(string1, offset + len1 - 1),
 			PySequence_GetItem(string2, offset + len2 - 1), Py_EQ)) {
 		len1--;
@@ -1600,7 +1593,7 @@ differ_op_o(size_t len1, PyObject* string1,
 		size_t* prev = matrix + (i - 1) * len2;
 		size_t* p = matrix + i * len2;
 		size_t* end = p + len2 - 1;
-		
+
 		size_t x = i;
 		p++;
 		size_t cnt = 0;
@@ -1608,15 +1601,15 @@ differ_op_o(size_t len1, PyObject* string1,
 		while (p <= end) {
 
 			size_t itemmatch = PyObject_RichCompareBool(
-				PySequence_GetItem(string1, offset + i - 1), 
-				PySequence_GetItem(string2, offset + cnt), 
+				PySequence_GetItem(string1, offset + i - 1),
+				PySequence_GetItem(string2, offset + cnt),
 				Py_NE);
 
 			if (itemmatch == -1) {
 				itemmatch = 1;
 			}
 			size_t c3 = *(prev++) + itemmatch;
-			
+
 			x++;
 			if (x > c3)
 				x = c3;
@@ -1627,7 +1620,7 @@ differ_op_o(size_t len1, PyObject* string1,
 			cnt++;
 		}
 	}
-	
+
 	/* find the way back */
 	/* ***
 	like function "ucost2op_s" for Python Object.
