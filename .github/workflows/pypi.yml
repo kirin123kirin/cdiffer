@@ -42,7 +42,7 @@ jobs:
                    python -m pip install -U pip
                    flake8
                    python setup.py test
-                   pip install setuptools wheel, pytest, flake8
+                   pip install setuptools wheel pytest flake8
                    python setup.py sdist bdist_wheel
                    # python _cross_platform.py #TODO
          -
