@@ -128,16 +128,23 @@ static PyObject* similar_py(PyObject* self, PyObject* args);
   "\n" \
   "Examples (it's hard to spell Levenshtein correctly):\n" \
   "\n" \
-  ">>> dist('Levenshtein', 'Lenvinsten')\n" \
-  "4\n" \
-  ">>> dist('Levenshtein', 'Levensthein')\n" \
-  "2\n" \
-  ">>> dist('Levenshtein', 'Levenshten')\n" \
+  ">>> dist('coffee', 'cafe')\n" \
+  "3\n" \
+  ">>> dist(b'coffee', b'cafe')\n" \
+  "3\n" \
+  ">>> dist(list('coffee'), list('cafe'))\n" \
+  "3\n" \
+  ">>> dist(tuple('coffee'), tuple('cafe'))\n" \
+  "3\n" \
+  ">>> dist(iter('coffee'), iter('cafe'))\n" \
+  "3\n" \
+  ">>> dist(range(4), range(5))\n" \
   "1\n" \
-  ">>> dist('Levenshtein', 'Levenshtein')\n" \
+  ">>> dist('coffee', 'xxxxxx')\n" \
+  "6\n" \
+  ">>> dist('coffee', 'coffee')\n" \
   "0\n" \
   "\n" \
-  "Yeah, we've managed it at last.\n"
 
 #define similar_DESC \
   "Compute similarity of two strings.\n" \
@@ -223,6 +230,7 @@ safe_malloc_3(size_t nmemb1, size_t nmemb2, size_t size) {
 	return safe_malloc(nmemb1, nmemb2 * size);
 }
 
+/*
 static size_t
 length_of(PyObject* object)
 {
@@ -236,22 +244,27 @@ length_of(PyObject* object)
 		return PySequence_Length(object);
 	return (size_t)-1;
 }
+*/
+
+
 
 /****************************************************************************
  *
  * Python interface and subroutines
  *
  ****************************************************************************/
+size_t error_n = (size_t)(-1);
+
 
 static size_t
 dist_handler(PyObject* args, const char* name, size_t xcost,
 	size_t* lensum)
 {
 	PyObject* arg1, * arg2;
-	size_t len1, len2;
+	size_t len1, len2, d;
 
 	if (!PyArg_UnpackTuple(args, PYARGCFIX(name), 2, 2, &arg1, &arg2))
-		return (size_t)(-1);
+		return error_n;
 
 	if (PyObject_RichCompareBool(arg1, arg2, Py_EQ)) {
 		*lensum = 0;
@@ -280,7 +293,7 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 
 	*lensum = len1 + len2;
 
-	if (len1 == -1 || len2 == -1) {
+	if (len1 == error_n || len2 == error_n) {
 		PyErr_Format(PyExc_TypeError,
 			"Cannot len function. Needs. len(arg1) or len(arg2)");
 
@@ -289,21 +302,21 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 			Py_XDECREF(arg2);
 		}
 
-		return (size_t)(-1);
+		return error_n;
 	}
 
 	if (PyObject_TypeCheck(arg1, &PyString_Type)
 		&& PyObject_TypeCheck(arg2, &PyString_Type)) {
 		lev_byte* string1, * string2;
 
-		string1 = PyString_AS_STRING(arg1);
-		string2 = PyString_AS_STRING(arg2);
+		string1 = (lev_byte*)PyString_AS_STRING(arg1);
+		string2 = (lev_byte*)PyString_AS_STRING(arg2);
 		{
-			size_t d = dist_s(len1, string1, len2, string2, xcost);
+			d = dist_s(len1, string1, len2, string2, xcost);
 
 			if (d == (size_t)(-1)) {
 				PyErr_NoMemory();
-				return (size_t)(-1);
+				return error_n;
 			}
 			return d;
 		}
@@ -312,13 +325,13 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 		&& PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
 		Py_UNICODE* string1, * string2;
 
-		string1 = PyUnicode_AS_UNICODE(arg1);
-		string2 = PyUnicode_AS_UNICODE(arg2);
+		string1 = (Py_UNICODE*)PyUnicode_AS_UNICODE(arg1);
+		string2 = (Py_UNICODE*)PyUnicode_AS_UNICODE(arg2);
 		{
-			size_t d = dist_u(len1, string1, len2, string2, xcost);
+			d = dist_u(len1, string1, len2, string2, xcost);
 			if (d == (size_t)(-1)) {
 				PyErr_NoMemory();
-				return (size_t)(-1);
+				return error_n;
 			}
 			return d;
 		}
@@ -327,7 +340,7 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 	else if (PySequence_Check(arg1) && PySequence_Check(arg2)) {
 
 		{
-			size_t d = dist_o(len1, arg1, len2, arg2, xcost);
+			d = dist_o(len1, arg1, len2, arg2, xcost);
 
 			if (is_iter > 0) {
 				Py_XDECREF(arg1);
@@ -335,7 +348,7 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 			}
 			if (d == (size_t)(-1)) {
 				PyErr_NoMemory();
-				return (size_t)(-1);
+				return error_n;
 			}
 			return d;
 		}
@@ -349,7 +362,7 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 			Py_XDECREF(arg2);
 		}
 		//        PyErr_NoMemory();
-		return (size_t)(-1);
+		return error_n;
 	}
 }
 
@@ -391,7 +404,6 @@ differ_result(size_t nb, LevOpCode* bops,
 	size_t i;
 
 	size_t xcost = 0;
-	size_t lensum = len1 + len2;
 
 	for (i = 0; i < nb; i++, bops++) {
 		if (arg3 == NULL || strcmp(opcode_names[bops->type].cstring, "equal") != 0) {
@@ -399,10 +411,7 @@ differ_result(size_t nb, LevOpCode* bops,
 			size_t j = (size_t)bops->sbeg;
 			size_t k = (size_t)bops->dbeg;
 
-			for (j, k;
-				j < bops->send || k < bops->dend;
-				j++, k++)
-			{
+			for (j, k; j < bops->send || k < bops->dend; j++, k++) {
 				PyObject* list = PyList_New(5);
 				PyObject* is = opcode_names[bops->type].pystring;
 				Py_INCREF(is);
@@ -491,7 +500,7 @@ differ_py(PyObject* self, PyObject* args)
 	len1 = PyObject_Length(arg1);
 	len2 = PyObject_Length(arg2);
 
-	if (len1 == -1 || len2 == -1) {
+	if (len1 == error_n || len2 == error_n) {
 		PyErr_Format(PyExc_TypeError,
 			"Cannot len function. Needs. len(arg1) or len(arg2)");
 
@@ -512,16 +521,16 @@ differ_py(PyObject* self, PyObject* args)
 		&& PyObject_TypeCheck(arg2, &PyString_Type)) {
 		lev_byte* string1, * string2;
 
-		string1 = PyString_AS_STRING(arg1);
-		string2 = PyString_AS_STRING(arg2);
+		string1 = (lev_byte*)PyString_AS_STRING(arg1);
+		string2 = (lev_byte*)PyString_AS_STRING(arg2);
 		ops = differ_op_s(len1, string1, len2, string2, &n);
 	}
 	else if (PyObject_TypeCheck(arg1, &PyUnicode_Type)
 		&& PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
 		Py_UNICODE* string1, * string2;
 
-		string1 = PyUnicode_AS_UNICODE(arg1);
-		string2 = PyUnicode_AS_UNICODE(arg2);
+		string1 = (Py_UNICODE*)PyUnicode_AS_UNICODE(arg1);
+		string2 = (Py_UNICODE*)PyUnicode_AS_UNICODE(arg2);
 		ops = differ_op_u(len1, string1, len2, string2, &n);
 	}
 
@@ -663,7 +672,7 @@ dist_s(size_t len1, const lev_byte* string1,
 	/* initalize first row */
 	row = (size_t*)safe_malloc(len2, sizeof(size_t));
 	if (!row)
-		return (size_t)(-1);
+		return error_n;
 	end = row + len2 - 1;
 	for (i = 0; i < len2 - (xcost ? 0 : half); i++)
 		row[i] = i;
@@ -824,7 +833,7 @@ dist_u(size_t len1, const lev_wchar* string1,
 	/* initalize first row */
 	row = (size_t*)safe_malloc(len2, sizeof(size_t));
 	if (!row)
-		return (size_t)(-1);
+		return error_n;
 	end = row + len2 - 1;
 	for (i = 0; i < len2 - (xcost ? 0 : half); i++)
 		row[i] = i;
@@ -936,7 +945,7 @@ dist_o(size_t len1, PyObject* string1,
 	size_t len2, PyObject* string2,
 	size_t xcost)
 {
-	size_t len1o, len2o;
+	size_t len1o;
 	size_t i;
 	size_t* row;  /* we only need to keep one row of costs */
 	size_t* end;
@@ -953,7 +962,6 @@ dist_o(size_t len1, PyObject* string1,
 		offset++;
 		len1o++;
 	}
-	len2o = len1o;
 
 	/* strip common suffix */
 	size_t suffix = 0;
@@ -1009,7 +1017,7 @@ dist_o(size_t len1, PyObject* string1,
 	/* initalize first row */
 	row = (size_t*)safe_malloc(len2, sizeof(size_t));
 	if (!row)
-		return (size_t)(-1);
+		return error_n;
 	end = row + len2 - 1;
 	for (i = 0; i < len2 - (xcost ? 0 : half); i++)
 		row[i] = i;
@@ -1605,7 +1613,7 @@ differ_op_o(size_t len1, PyObject* string1,
 				PySequence_GetItem(string2, offset + cnt),
 				Py_NE);
 
-			if (itemmatch == -1) {
+			if (itemmatch == error_n) {
 				itemmatch = 1;
 			}
 			size_t c3 = *(prev++) + itemmatch;
