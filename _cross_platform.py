@@ -8,6 +8,7 @@ except ImportError:
 from distutils.util import get_platform
 from platform import machine, system
 
+
 def have_glibc(major, minimum_minor):
     # from PEP571 https://www.python.org/dev/peps/pep-0571/
     import ctypes
