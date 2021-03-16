@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-import os, sys
-from glob import glob
-from os.path import dirname, exists, normpath, join as pjoin
+from os.path import dirname, normpath, join as pjoin
+
 try:
     from subprocess import getstatusoutput
 except ImportError:
     from commands import getstatusoutput
 from distutils.util import get_platform
 from platform import machine, system
+
 
 def have_glibc(major, minimum_minor):
     # from PEP571 https://www.python.org/dev/peps/pep-0571/
@@ -31,10 +31,13 @@ def have_glibc(major, minimum_minor):
     # Parse string and check against requested version.
     version = [int(piece) for piece in version_str.split(".")]
     assert len(version) == 2
+
     if major != version[0]:
         return False
+
     if minimum_minor > version[1]:
         return False
+
     return True
 
 
@@ -105,7 +108,6 @@ def is_manylinux2014(bit64=True, bit32=False):
 def get_platname_64bit():
     arch = machine()
     OS = system()
-    plats = []
 
     if OS == "Windows":
         return "win_" + arch.lower()
@@ -122,7 +124,6 @@ def get_platname_64bit():
 
 
 def get_platname_32bit():
-    arch = machine()
     OS = system()
 
     if OS == "Windows":
@@ -151,7 +152,7 @@ def cross_wheel_build():
     pth = normpath(pjoin(dirname(__file__), "setup.py"))
     cmd = "python {} bdist_wheel --plat-name ".format(pth)
     command(cmd + get_platname_64bit())
-    command(cmd + get_platname_32bit()) #TODO 32bit cross compile dekinai
+    command(cmd + get_platname_32bit())  # TODO 32bit cross compile dekinai
 
 
 if __name__ == "__main__":
