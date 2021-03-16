@@ -7,22 +7,19 @@ from os.path import dirname, join as pjoin
 
 __version__ = '0.1.0'
 
-try:
-    # Edit posix platname for pypi upload error
-    if os.name == "posix" and any(x.startswith("bdist") for x in sys.argv) \
-            and not ("--plat-name" in sys.argv or "-p" in sys.argv):
+# Edit posix platname for pypi upload error
+if os.name == "posix" and any(x.startswith("bdist") for x in sys.argv) \
+        and not ("--plat-name" in sys.argv or "-p" in sys.argv):
 
-        if "64" in os.uname()[-1]:
-            from _cross_platform import get_platname_64bit
+    if "64" in os.uname()[-1]:
+        from _cross_platform import get_platname_64bit
 
-            plat = get_platname_64bit()
-        else:
-            from _cross_platform import get_platname_32bit
+        plat = get_platname_64bit()
+    else:
+        from _cross_platform import get_platname_32bit
 
-            plat = get_platname_32bit()
-        sys.argv.extend(["--plat-name", plat])
-except (ImportError, ModuleNotFoundError):
-    pass
+        plat = get_platname_32bit()
+    sys.argv.extend(["--plat-name", plat])
 
 ext_modules = [Extension('cdiffer',
                          sources=['cdiffer.c'],
@@ -40,7 +37,6 @@ License :: OSI Approved :: GNU General Public License v2 (GPLv2)
 Programming Language :: C
 Programming Language :: Python
 Programming Language :: Python :: 2.7
-Programming Language :: Python :: 3.5
 Programming Language :: Python :: 3.6
 Programming Language :: Python :: 3.7
 Programming Language :: Python :: 3.8
