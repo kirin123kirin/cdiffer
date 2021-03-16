@@ -17,7 +17,7 @@ jobs:
             platform: [
                   ubuntu-latest,
                   windows-latest,
-#                  macos-latest
+              #                  macos-latest
             ]
             python-version: [
                   2.7,
@@ -47,10 +47,19 @@ jobs:
             run:   |
                    python -m pip install -U pip
                    pip install setuptools wheel pytest flake8
+         -
+            name:  Test and Build
+            shell: bash
+            run:   |
                    flake8
                    python setup.py test
-                   python setup.py sdist bdist_wheel
-                   # python _cross_platform.py #TODO
+                   python setup.py bdist_wheel
+         -
+            name:  Build tar.gz
+            shell: bash
+            if:    ${{ matrix.python-version == '3.9' && matrix.platform == 'ubuntu-latest' }}
+            run:   python setup.py sdist
+
          -
             name: Save whl file to artifact
             uses: actions/upload-artifact@v2
@@ -84,6 +93,7 @@ jobs:
                distro:      ${{ matrix.python-version }}
                githubToken: ${{ github.token }}
                run:         |
+                            python setup.py test
                             python setup.py bdist_wheel
          -
             name: Save whl file to artifact
