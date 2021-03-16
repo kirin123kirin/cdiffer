@@ -150,7 +150,7 @@ if __name__ == '__main__':
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         for fn, func in dict(locals()).items():
             if fn.startswith("test_"):
-                print("Runner:", fn)
+                print("Runner: %s" % fn)
                 func()
     except Exception as e:
         traceback.print_exc()

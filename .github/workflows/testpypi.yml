@@ -51,6 +51,7 @@ jobs:
             shell: bash
             if:    ${{ matrix.python-version == '2.7' }}
             run:   |
+                   pip install -e .
                    python test/test_cdiffer.py
                    python setup.py bdist_wheel
          -
@@ -99,6 +100,7 @@ jobs:
                distro:      ${{ matrix.python-version }}
                githubToken: ${{ github.token }}
                run:         |
+                            pip install -e .
                             python test/test_cdiffer.py
                             python setup.py bdist_wheel
          -
