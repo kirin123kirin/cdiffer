@@ -59,11 +59,6 @@ if sys.version_info[:2] >= (3, 3):
     tests = dict(
         setup_requires=["pytest-runner"],
         tests_require=["pytest", "pytest-cov"])
-else:
-    from commands import getstatusoutput
-    code, dat = getstatusoutput("python ./test/test_cdiffer.py")
-    if code != 0:
-        sys.exit(1)
 
 setup(name="cdiffer",
       version=__version__,
