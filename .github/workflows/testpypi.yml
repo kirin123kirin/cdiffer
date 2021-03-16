@@ -16,15 +16,15 @@ jobs:
          matrix:
             platform: [
                   ubuntu-latest,
-#                  windows-latest,
+                  windows-latest,
               #                  macos-latest
             ]
             python-version: [
                   2.7,
-#                  3.6,
-#                  3.7,
-#                  3.8,
-#                  3.9,
+                  3.6,
+                  3.7,
+                  3.8,
+                  3.9,
             ]
             exclude:
                -
@@ -47,8 +47,16 @@ jobs:
                    python -m pip install -U pip
                    pip install setuptools wheel pytest flake8
          -
-            name:  Test and Build
+            name:  Test and Build for 2.7
             shell: bash
+            if:    ${{ matrix.python-version == '2.7' }}
+            run:   |
+                   python test/test_cdiffer.py
+                   python setup.py bdist_wheel
+         -
+            name:  Test and Build for >= 3.6
+            shell: bash
+            if:    ${{ matrix.python-version != '2.7' }}
             run:   |
                    flake8
                    python setup.py test
@@ -68,7 +76,6 @@ jobs:
                retention-days: 1
 
    build_arm64_python:
-      # The host should always be Linux
       runs-on: ubuntu-20.04
       name:    Build on ubuntu-20.04 aarch64
       strategy:
@@ -92,7 +99,7 @@ jobs:
                distro:      ${{ matrix.python-version }}
                githubToken: ${{ github.token }}
                run:         |
-                            python setup.py test
+                            python test/test_cdiffer.py
                             python setup.py bdist_wheel
          -
             name: Save whl file to artifact
