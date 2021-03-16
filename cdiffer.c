@@ -130,8 +130,6 @@ static PyObject* similar_py(PyObject* self, PyObject* args);
   "\n" \
   ">>> dist('coffee', 'cafe')\n" \
   "3\n" \
-  ">>> dist(b'coffee', b'cafe')\n" \
-  "3\n" \
   ">>> dist(list('coffee'), list('cafe'))\n" \
   "3\n" \
   ">>> dist(tuple('coffee'), tuple('cafe'))\n" \
@@ -408,10 +406,9 @@ differ_result(size_t nb, LevOpCode* bops,
 	for (i = 0; i < nb; i++, bops++) {
 		if (arg3 == NULL || strcmp(opcode_names[bops->type].cstring, "equal") != 0) {
 
-			size_t j = (size_t)bops->sbeg;
-			size_t k = (size_t)bops->dbeg;
+			size_t j, k;
 
-			for (j, k; j < bops->send || k < bops->dend; j++, k++) {
+			for (j = bops->sbeg, k = bops->dbeg; j < bops->send || k < bops->dend; j++, k++) {
 				PyObject* list = PyList_New(5);
 				PyObject* is = opcode_names[bops->type].pystring;
 				Py_INCREF(is);
