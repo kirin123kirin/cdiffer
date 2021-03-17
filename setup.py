@@ -65,10 +65,7 @@ with open(readme, encoding="utf-8") as f:
             for b, k in badge.findall(line):
                 line = line.replace(b, b.replace(k, "v" + __version__))
             is_change = True
-        print(repr(line))
         description += line
-
-print(description)
 
 if is_change:
     with open(readme, "w", encoding="utf-8") as f:

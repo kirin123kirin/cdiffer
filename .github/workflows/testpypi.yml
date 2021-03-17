@@ -45,7 +45,7 @@ jobs:
             shell: bash
             run:   |
                    python -m pip install -U pip
-                   pip install setuptools wheel pytest flake8
+                   pip install setuptools wheel pytest flake8 twine
          -
             name:  Test and Build for 2.7
             shell: bash
@@ -54,6 +54,7 @@ jobs:
                    pip install -e .
                    python test/test_cdiffer.py
                    python setup.py bdist_wheel
+                   twine check --strict dist/*
          -
             name:  Test and Build for >= 3.6
             shell: bash
@@ -62,12 +63,14 @@ jobs:
                    flake8
                    python setup.py test
                    python setup.py bdist_wheel
+                   twine check --strict dist/*
          -
             name:  Build tar.gz
             shell: bash
             if:    ${{ matrix.python-version == '3.9' && matrix.platform == 'ubuntu-latest' }}
-            run:   python setup.py sdist
-
+            run:   |
+                   python setup.py sdist
+                   twine check --strict dist/*
          -
             name: Save whl file to artifact
             uses: actions/upload-artifact@v2
@@ -100,9 +103,11 @@ jobs:
                distro:      ${{ matrix.python-version }}
                githubToken: ${{ github.token }}
                run:         |
+                            pip install twine
                             pip install -e .
                             python test/test_cdiffer.py
                             python setup.py bdist_wheel
+                            twine check --strict dist/*
          -
             name: Save whl file to artifact
             uses: actions/upload-artifact@v2
@@ -128,5 +133,5 @@ jobs:
                TEST_PYPI_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
             run:   |
                    pip install twine
-                   python3 -m twine upload --verbose --skip-existing -u "$TEST_PYPI_USERNAME" -p "$TEST_PYPI_PASSWORD" --repository-url https://test.pypi.org/legacy/ ./*
+                   twine upload --verbose --skip-existing -u "$TEST_PYPI_USERNAME" -p "$TEST_PYPI_PASSWORD" --repository-url https://test.pypi.org/legacy/ ./*
 
