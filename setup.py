@@ -4,7 +4,6 @@ import re
 from setuptools import Extension, setup
 import os
 import sys
-import codecs
 from os.path import dirname, join as pjoin
 
 __version__ = '0.1.5'
@@ -59,7 +58,7 @@ readme = pjoin(dirname(__file__), "README.md")
 badge = re.compile(r'(\[!\[.*?\]\(https://.*?badge\.(?:svg|png)\?branch=([^\)]+)\)\])')
 description = ""
 is_change = False
-with codecs.open(readme, encoding="utf-8") as f:
+with open(readme, encoding="utf-8") as f:
     for line in f:
         res = badge.search(line)
         if res and __version__ not in res.group(2):
@@ -72,7 +71,7 @@ with codecs.open(readme, encoding="utf-8") as f:
 print(description)
 
 if is_change:
-    with codecs.open(readme, "w", encoding="utf-8") as f:
+    with open(readme, "w", encoding="utf-8") as f:
         f.write(description)
 
 # for python2.7

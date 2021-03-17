@@ -13,6 +13,7 @@ jobs:
          matrix:
             platform: [
                   ubuntu-latest,
+                  windows-latest,
             ]
             python-version: [
                   3.6,
