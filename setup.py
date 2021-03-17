@@ -5,6 +5,7 @@ from setuptools import Extension, setup
 import os
 import sys
 import codecs
+from io import StringIO
 from os.path import dirname, join as pjoin
 
 __version__ = '0.1.4'
@@ -58,7 +59,7 @@ Operating System :: Unix
 readme = pjoin(dirname(__file__), "README.md")
 badge = re.compile(r'\[!\[.*?\]\(https://.*?badge\.(?:svg|png)\?branch=([^\)]+)\)\]')
 badge = re.compile(r'(\[!\[.*?\]\(https://.*?badge\.(?:svg|png)\?branch=([^\)]+)\)\])')
-description = ""
+description = StringIO()
 is_change = False
 with codecs.open(readme, encoding="utf-8") as f:
     for line in f:
@@ -67,11 +68,11 @@ with codecs.open(readme, encoding="utf-8") as f:
             for b, k in badge.findall(line):
                 line = line.replace(b, b.replace(k, "v" + __version__))
             is_change = True
-        description += line
+        description.write(line)
 
 if is_change:
     with codecs.open(readme, "w", encoding="utf-8") as f:
-        f.write(description)
+        f.write(description.getvalue())
 
 # for python2.7
 tests = {}
@@ -84,7 +85,7 @@ setup(name="cdiffer",
       version=__version__,
       description="Usefull differ function with Levenshtein distance.",
       long_description_content_type='text/markdown',
-      long_description=description,
+      long_description=description.getvalue(),
       url='https://github.com/kirin123kirin/cdiffer',
       author='kirin123kirin',
       ext_modules=ext_modules,

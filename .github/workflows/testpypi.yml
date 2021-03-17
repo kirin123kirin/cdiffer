@@ -128,5 +128,5 @@ jobs:
                TEST_PYPI_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
             run:   |
                    pip install twine
-                   python3 -m twine upload --verbose -u "$TEST_PYPI_USERNAME" -p "$TEST_PYPI_PASSWORD" --repository-url https://test.pypi.org/legacy/ ./*
+                   python3 -m twine upload --verbose --skip-existing -u "$TEST_PYPI_USERNAME" -p "$TEST_PYPI_PASSWORD" --repository-url https://test.pypi.org/legacy/ ./*
 
