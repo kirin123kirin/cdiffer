@@ -34,10 +34,9 @@ ext_modules = [Extension('cdiffer',
 #   5 - Production/Stable
 
 CF = """
-Development Status :: 4 - Beta
+Development Status :: 5 - Production/Stable
 License :: OSI Approved :: GNU General Public License v2 (GPLv2)
 Programming Language :: C
-Programming Language :: Python
 Programming Language :: Python :: 2.7
 Programming Language :: Python :: 3.6
 Programming Language :: Python :: 3.7
@@ -46,11 +45,11 @@ Programming Language :: Python :: 3.9
 Programming Language :: Python :: Implementation :: CPython
 Operating System :: OS Independent
 Operating System :: Microsoft :: Windows
+Operating System :: MacOS
 Operating System :: POSIX
 """
 # Not yet
 """
-Operating System :: MacOS
 Operating System :: Unix
 """
 
