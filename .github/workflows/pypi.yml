@@ -4,12 +4,8 @@
 name: Upload pypi.org
 
 on:
-   push:
-      branches:
-         - 'releases/**'
-      tags:
-         - v*
-         - V*
+   release:
+      types: published
    workflow_dispatch:
       inputs:
          name:

@@ -142,7 +142,7 @@ static PyObject* similar_py(PyObject* self, PyObject* args);
   "6\n" \
   ">>> dist('coffee', 'coffee')\n" \
   "0\n" \
-  "\n" \
+  "\n"
 
 #define similar_DESC \
   "Compute similarity of two strings.\n" \
@@ -150,7 +150,6 @@ static PyObject* similar_py(PyObject* self, PyObject* args);
   "similar(sequence, sequence)\n" \
   "\n" \
   "The similarity is a number between 0 and 1, it's usually equal or\n" \
-  "somewhat higher than difflib.SequenceMatcher.similar(), because it's\n" \
   "based on real minimal edit distance.\n" \
   "\n" \
   "Examples:\n" \
@@ -159,8 +158,7 @@ static PyObject* similar_py(PyObject* self, PyObject* args);
   "0.6\n" \
   ">>> similar('hoge', 'bar')\n" \
   "0.0\n" \
-  "\n" \
-  "Really?  I thought there was some similarity.\n"
+  "\n"
 
 #define differ_DESC \
   "Find sequence of edit operations transforming one string to another.\n" \
