@@ -57,14 +57,15 @@ Operating System :: Unix
 # Readme read or edit
 readme = pjoin(dirname(__file__), "README.md")
 badge = re.compile(r'\[!\[.*?\]\(https://.*?badge\.(?:svg|png)\?branch=([^\)]+)\)\]')
+badge = re.compile(r'(\[!\[.*?\]\(https://.*?badge\.(?:svg|png)\?branch=([^\)]+)\)\])')
 description = ""
 is_change = False
 with codecs.open(readme, encoding="utf-8") as f:
     for line in f:
         res = badge.search(line)
-        if res and __version__ not in res.group(1):
-            for x in badge.finditer(line):
-                line[x.start(1): x.end(1)] = "v" + __version__
+        if res and __version__ not in res.group(2):
+            for b, k in badge.findall(line):
+                line = line.replace(b, b.replace(k, "v" + __version__))
             is_change = True
         description += line
 

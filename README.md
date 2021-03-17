@@ -1,7 +1,7 @@
 
 
 # Python C Extention 2 Sequence Compare
-[![Upload pypi.org](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml/badge.svg?branch=v0.1.3)](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml)
+[![Upload pypi.org](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml/badge.svg?branch=v0.1.4)](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml)
 
 **Usefull differ function with Levenshtein distance.**
 
