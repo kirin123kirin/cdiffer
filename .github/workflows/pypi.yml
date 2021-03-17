@@ -4,12 +4,19 @@
 name: Upload pypi.org
 
 on:
-   workflow_dispatch
    push:
+      branches:
+         - master
+         - 'releases/**'
       tags:
-         - 'v*'
-   release:
-      types: [ push ]
+         - v*
+         - V*
+   workflow_dispatch:
+      inputs:
+         name:
+            description: 'reason'
+            required:    true
+            default:     'any'
 
 jobs:
    build_python:
