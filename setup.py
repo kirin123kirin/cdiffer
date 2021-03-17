@@ -1,11 +1,13 @@
 #!/usr/bin/env python
+import re
+
 from setuptools import Extension, setup
 import os
 import sys
 import codecs
 from os.path import dirname, join as pjoin
 
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 
 # Edit posix platname for pypi upload error
 if os.name == "posix" and any(x.startswith("bdist") for x in sys.argv) \
@@ -52,8 +54,25 @@ Operating System :: MacOS
 Operating System :: Unix
 """
 
+# Readme read or edit
 readme = pjoin(dirname(__file__), "README.md")
+badge = re.compile(r'\[!\[.*?\]\(https://.*?badge\.(?:svg|png)\?branch=([^\)]+)\)\]')
+description = ""
+is_change = False
+with codecs.open(readme, encoding="utf-8") as f:
+    for line in f:
+        res = badge.search(line)
+        if res and __version__ not in res.group(1):
+            for x in badge.finditer(line):
+                line[x.start(1): x.end(1)] = "v" + __version__
+            is_change = True
+        description += line
 
+if is_change:
+    with codecs.open(readme, "w", encoding="utf-8") as f:
+        f.write(description)
+
+# for python2.7
 tests = {}
 if sys.version_info[:2] >= (3, 3):
     tests = dict(
@@ -64,7 +83,7 @@ setup(name="cdiffer",
       version=__version__,
       description="Usefull differ function with Levenshtein distance.",
       long_description_content_type='text/markdown',
-      long_description=codecs.open(readme, encoding="utf-8").read(),
+      long_description=description,
       url='https://github.com/kirin123kirin/cdiffer',
       author='kirin123kirin',
       ext_modules=ext_modules,
