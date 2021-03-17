@@ -8,7 +8,6 @@ except ImportError:
 from distutils.util import get_platform
 from platform import machine, system
 
-
 def have_glibc(major, minimum_minor):
     # from PEP571 https://www.python.org/dev/peps/pep-0571/
     import ctypes
@@ -120,7 +119,10 @@ def get_platname_64bit():
                 ["manylinux2010_" + arch])[0]
     elif OS == "Darwin":
         from platform import mac_ver
-        return "macosx_{}_{}_{}".format(*mac_ver())
+        import re
+        rel, _, arch = mac_ver()
+        mj, mn = re.split("[\.\-_]", rel)[:2]
+        return "macosx_{}_{}_{}".format(mj, mn, arch)
     else:
         return get_platform()
 
