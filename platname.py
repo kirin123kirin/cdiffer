@@ -121,7 +121,7 @@ def get_platname_64bit():
         from platform import mac_ver
         import re
         rel, _, arch = mac_ver()
-        mj, mn = re.split("[\.\-_]", rel)[:2]
+        mj, mn = re.split(r'[\.\-_]', rel)[:2]
         return "macosx_{}_{}_{}".format(mj, mn, arch)
     else:
         return get_platform()
