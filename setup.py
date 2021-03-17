@@ -3,6 +3,7 @@ import re
 
 from setuptools import Extension, setup
 import os
+import io
 import sys
 from os.path import dirname, join as pjoin
 
@@ -58,7 +59,7 @@ readme = pjoin(dirname(__file__), "README.md")
 badge = re.compile(r'(\[!\[.*?\]\(https://.*?badge\.(?:svg|png)\?branch=([^\)]+)\)\])')
 description = ""
 is_change = False
-with open(readme, encoding="utf-8") as f:
+with io.open(readme, encoding="utf-8") as f:
     for line in f:
         res = badge.search(line)
         if res and __version__ not in res.group(2):
@@ -68,7 +69,7 @@ with open(readme, encoding="utf-8") as f:
         description += line
 
 if is_change:
-    with open(readme, "w", encoding="utf-8") as f:
+    with io.open(readme, "w", encoding="utf-8") as f:
         f.write(description)
 
 # for python2.7
