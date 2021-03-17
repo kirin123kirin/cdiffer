@@ -59,7 +59,7 @@ jobs:
                    pip install -e .
                    python test/test_cdiffer.py
                    python setup.py bdist_wheel
-                   twine check --strict dist/*
+                   twine check dist/*
          -
             name:  Test and Build for >= 3.6
             shell: bash
@@ -112,7 +112,7 @@ jobs:
                             pip install -e .
                             python test/test_cdiffer.py
                             python setup.py bdist_wheel
-                            twine check --strict dist/*
+                            twine check dist/*
          -
             name: Save whl file to artifact
             uses: actions/upload-artifact@v2
