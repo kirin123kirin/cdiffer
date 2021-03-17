@@ -3,3 +3,4 @@ include README.md
 include COPYING.txt
 include cdiffer.h
 include setup.cfg
+include platname.py

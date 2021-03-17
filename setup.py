@@ -12,11 +12,11 @@ if os.name == "posix" and any(x.startswith("bdist") for x in sys.argv) \
         and not ("--plat-name" in sys.argv or "-p" in sys.argv):
 
     if "64" in os.uname()[-1]:
-        from _cross_platform import get_platname_64bit
+        from platname import get_platname_64bit
 
         plat = get_platname_64bit()
     else:
-        from _cross_platform import get_platname_32bit
+        from platname import get_platname_32bit
 
         plat = get_platname_32bit()
     sys.argv.extend(["--plat-name", plat])
