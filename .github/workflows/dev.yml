@@ -12,7 +12,7 @@ jobs:
       strategy:
          matrix:
             platform: [
-                  windows-latest,
+                  ubuntu-latest,
             ]
             python-version: [
                   3.6,
