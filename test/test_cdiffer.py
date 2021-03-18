@@ -43,15 +43,15 @@ def test_diffonly_flag_test():
 
 
 def test_dist_list_test():
-    assert (dist(list('coffee'), list('cafe')))
+    assert (dist(list('coffee'), list('cafe'))==3)
 
 
 def test_similar_binary_test():
-    assert (similar(b'coffee', b'cafe'))
+    assert (similar(b'coffee', b'cafe')==0.6)
 
 
 def test_similar_string_test():
-    assert (similar('coffee', 'cafe'))
+    assert (similar('coffee', 'cafe')==0.6)
 
 
 def test_similar_list_test():
@@ -69,26 +69,26 @@ def test_similar_tuple_test():
 
 
 def test_similar_same_test():
-    assert (similar([], []))
-    assert (similar(1, 1))
+    assert (similar([], [])==1.0)
+    assert (similar(1, 1)==1.0)
 
 
 def test_similar_iter_test():
-    assert (similar(iter('coffee'), iter('cafe')))
+    assert (similar(iter('coffee'), iter('cafe'))==0.6)
     assert (differ(iter('cafexyz'), iter('coffeeabcdefghijk')))
 
 
 def test_string_test():
-    assert (dist('cdfaafe', 'cofeedfajj'))
+    assert (dist('cdfaafe', 'cofeedfajj')==7)
 
 
 def test_list_test():
-    assert (dist(list('cdfaafe'), list('cofeedfajj')))
+    assert (dist(list('cdfaafe'), list('cofeedfajj'))==7)
 
 
 def test_dict_string_test():
-    assert (similar(dict(zip('012345', 'coffee')), dict(zip('0123', 'cafe'))))
-    assert (dist(dict(zip('012345', 'coffee')), dict(zip('0123', 'cafe'))))
+    assert (similar(dict(zip('012345', 'coffee')), dict(zip('0123', 'cafe')))==0.8)
+    assert (dist(dict(zip('012345', 'coffee')), dict(zip('0123', 'cafe')))==2)
     assert (differ(dict(zip('012345', 'coffee')), dict(zip('0123', 'cafe'))))
 
 

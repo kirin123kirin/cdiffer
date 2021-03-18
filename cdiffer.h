@@ -12,16 +12,8 @@
 #  define _STATIC_PY /* */
 #endif
 
-/* In C, this is just wchar_t and unsigned char, in Python, lev_wchar can
- * be anything.  If you really want to cheat, define wchar_t to any integer
- * type you like before including Levenshtein.h and recompile it. */
-#ifndef lev_wchar
-#  ifndef wchar_t
-#    include <wchar.h>
-#  endif
-#  define lev_wchar wchar_t
-#endif
-typedef unsigned char lev_byte;
+//typedef unsigned char lev_byte;
+typedef char lev_byte;
 
 /* Edit opration type
  * DON'T CHANGE! used ad arrays indices and the bits are occasionally used
@@ -104,9 +96,9 @@ dist_s(size_t len1,
 _STATIC_PY
 size_t
 dist_u(size_t len1,
-	const lev_wchar* string1,
+	Py_UCS4* string1,
 	size_t len2,
-	const lev_wchar* string2,
+	Py_UCS4* string2,
 	size_t xcost);
 
 _STATIC_PY
@@ -129,9 +121,9 @@ differ_op_s(size_t len1,
 _STATIC_PY
 LevEditOp*
 differ_op_u(size_t len1,
-	const lev_wchar* string1,
+	Py_UCS4* string1,
 	size_t len2,
-	const lev_wchar* string2,
+	Py_UCS4* string2,
 	size_t* n);
 
 _STATIC_PY

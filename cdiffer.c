@@ -36,27 +36,26 @@
 #include <stdio.h>
 #else /* NO_PYTHON */
 #define _STATIC_PY static
-#define lev_wchar Py_UNICODE
 #include <Python.h>
 #endif /* NO_PYTHON */
 
 #if PY_MAJOR_VERSION >= 3
 #define _PYTHON3
-#define PyString_Type PyBytes_Type
-#define PyString_GET_SIZE PyBytes_GET_SIZE
-#define PyString_AS_STRING PyBytes_AS_STRING
-#define PyString_Check PyBytes_Check
-#define PyString_FromStringAndSize PyBytes_FromStringAndSize
-#define PyString_InternFromString PyUnicode_InternFromString
-#define PyInt_AS_LONG PyLong_AsLong
-#define PyInt_FromLong PyLong_FromLong
-#define PyInt_Check PyLong_Check
 #define PY_INIT_MOD(module, name, doc, methods) \
         static struct PyModuleDef moduledef = { \
             PyModuleDef_HEAD_INIT, name, doc, -1, methods, }; \
         module = PyModule_Create(&moduledef);
 #define PY_MOD_INIT_FUNC_DEF(name) PyObject* PyInit_##name(void)
 #else
+#define Py_UCS4 Py_UNICODE
+#define PyBytes_Type PyString_Type
+#define PyBytes_GET_SIZE PyString_GET_SIZE
+#define PyBytes_AS_STRING PyString_AS_STRING
+#define PyLong_AsLong PyInt_AS_LONG
+#define PyLong_FromLong PyInt_FromLong
+#define PyUnicode_InternFromString PyString_InternFromString
+#define PyUnicode_GET_LENGTH PyUnicode_GET_SIZE
+#define PyUnicode_AsUCS4Copy PyUnicode_AS_UNICODE
 #define PY_INIT_MOD(module, name, doc, methods) \
             Py_InitModule3(name, methods, doc);
 #define PY_MOD_INIT_FUNC_DEF(name) void init##name(void)
@@ -230,8 +229,8 @@ safe_malloc_3(size_t nmemb1, size_t nmemb2, size_t size) {
 static size_t
 length_of(PyObject* object)
 {
-	if (PyInt_Check(object)) {
-		long int len = PyInt_AS_LONG(object);
+	if (PyLong_Check(object)) {   //if (PyInt_Check(object)) {
+		long int len = PyLong_AsLong(object); //PyInt_AS_LONG(object);
 		if (len < 0)
 			len = -1;
 		return (size_t)len;
@@ -262,6 +261,9 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 	if (!PyArg_UnpackTuple(args, PYARGCFIX(name), 2, 2, &arg1, &arg2))
 		return error_n;
 
+	if (arg1 == NULL || arg2 == NULL)
+		return error_n;
+
 	if (PyObject_RichCompareBool(arg1, arg2, Py_EQ)) {
 		*lensum = 0;
 		return 1;
@@ -284,29 +286,16 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 		is_iter++;
 	}
 
-	len1 = (size_t)PyObject_Length(arg1);
-	len2 = (size_t)PyObject_Length(arg2);
 
-	*lensum = len1 + len2;
-
-	if (len1 == error_n || len2 == error_n) {
-		PyErr_Format(PyExc_TypeError,
-			"Cannot len function. Needs. len(arg1) or len(arg2)");
-
-		if (is_iter > 0) {
-			Py_XDECREF(arg1);
-			Py_XDECREF(arg2);
-		}
-
-		return error_n;
-	}
-
-	if (PyObject_TypeCheck(arg1, &PyString_Type)
-		&& PyObject_TypeCheck(arg2, &PyString_Type)) {
+	if (PyObject_TypeCheck(arg1, &PyBytes_Type)
+		&& PyObject_TypeCheck(arg2, &PyBytes_Type)) {
 		lev_byte* string1, * string2;
 
-		string1 = (lev_byte*)PyString_AS_STRING(arg1);
-		string2 = (lev_byte*)PyString_AS_STRING(arg2);
+		len1 = PyBytes_GET_SIZE(arg1);
+		len2 = PyBytes_GET_SIZE(arg2);
+		*lensum = len1 + len2;
+		string1 = PyBytes_AS_STRING(arg1);
+		string2 = PyBytes_AS_STRING(arg2);
 		{
 			d = dist_s(len1, string1, len2, string2, xcost);
 
@@ -319,12 +308,17 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 	}
 	else if (PyObject_TypeCheck(arg1, &PyUnicode_Type)
 		&& PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
-		Py_UNICODE* string1, * string2;
 
-		string1 = (Py_UNICODE*)PyUnicode_AS_UNICODE(arg1);
-		string2 = (Py_UNICODE*)PyUnicode_AS_UNICODE(arg2);
+		len1 = PyUnicode_GET_LENGTH(arg1);
+		len2 = PyUnicode_GET_LENGTH(arg2);
+		*lensum = len1 + len2;
+		Py_UCS4* unicode1 = PyUnicode_AsUCS4Copy(arg1);
+		Py_UCS4* unicode2 = PyUnicode_AsUCS4Copy(arg2);
 		{
-			d = dist_u(len1, string1, len2, string2, xcost);
+			d = dist_u(len1, unicode1, len2, unicode2, xcost);
+			PyMem_Free(unicode1);
+			PyMem_Free(unicode2);
+
 			if (d == (size_t)(-1)) {
 				PyErr_NoMemory();
 				return error_n;
@@ -334,7 +328,9 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 	}
 
 	else if (PySequence_Check(arg1) && PySequence_Check(arg2)) {
-
+		len1 = PySequence_Fast_GET_SIZE(arg1);
+		len2 = PySequence_Fast_GET_SIZE(arg2);
+		*lensum = len1 + len2;
 		{
 			d = dist_o(len1, arg1, len2, arg2, xcost);
 
@@ -351,6 +347,23 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 	}
 
 	else {
+		len1 = (size_t)PyObject_Length(arg1);
+		len2 = (size_t)PyObject_Length(arg2);
+
+		*lensum = len1 + len2;
+
+		if (len1 == error_n || len2 == error_n) {
+			PyErr_Format(PyExc_TypeError,
+				"Cannot len function. Needs. len(arg1) or len(arg2)");
+
+			if (is_iter > 0) {
+				Py_XDECREF(arg1);
+				Py_XDECREF(arg2);
+			}
+
+			return error_n;
+		}
+
 		PyErr_Format(PyExc_TypeError,
 			"%s expected two Sequence object", name);
 		if (is_iter > 0) {
@@ -370,7 +383,7 @@ dist_py(PyObject* self, PyObject* args)
 
 	if ((ldist = dist_handler(args, "dist", 0, &lensum)) == (size_t)(-1))
 		return NULL;
-	return PyInt_FromLong((long)ldist);
+	return PyLong_FromLong((long)ldist);
 }
 
 static PyObject*
@@ -421,25 +434,25 @@ differ_result(size_t nb, LevOpCode* bops,
 
 				if (strcmp(opcode_names[bops->type].cstring, "delete") == 0) {
 					if (j < len1) {
-						PyList_SetItem(list, 1, PyInt_FromLong((long)j));
+						PyList_SetItem(list, 1, PyLong_FromLong((long)j));
 						PyList_SetItem(list, 3, PySequence_GetItem(arg1, j));
 						xcost++;
 					}
 				}
 				else if (strcmp(opcode_names[bops->type].cstring, "insert") == 0) {
 					if (k < len2) {
-						PyList_SetItem(list, 2, PyInt_FromLong((long)k));
+						PyList_SetItem(list, 2, PyLong_FromLong((long)k));
 						PyList_SetItem(list, 4, PySequence_GetItem(arg2, k));
 						xcost++;
 					}
 				}
 				else {
 					if (j < len1) {
-						PyList_SetItem(list, 1, PyInt_FromLong((long)j));
+						PyList_SetItem(list, 1, PyLong_FromLong((long)j));
 						PyList_SetItem(list, 3, PySequence_GetItem(arg1, j));
 					}
 					if (k < len2) {
-						PyList_SetItem(list, 2, PyInt_FromLong((long)k));
+						PyList_SetItem(list, 2, PyLong_FromLong((long)k));
 						PyList_SetItem(list, 4, PySequence_GetItem(arg2, k));
 					}
 					if (strcmp(opcode_names[bops->type].cstring, "replace") == 0)
@@ -463,14 +476,17 @@ differ_py(PyObject* self, PyObject* args)
 	if (!PyArg_UnpackTuple(args, PYARGCFIX("differ"), 2, 3, &arg1, &arg2, &arg3))
 		return NULL;
 
+	if (arg1 == NULL || arg2 == NULL)
+		return NULL;
+
 	if (PyNumber_Check(arg1) && PyNumber_Check(arg2)) {
 		PyObject* oplist = PyList_New(1);
 		PyObject* list = PyList_New(5);
 		Py_INCREF(list);
 
 		PyList_SetItem(list, 0, PyUnicode_FromString("replace"));
-		PyList_SetItem(list, 1, PyInt_FromLong(0));
-		PyList_SetItem(list, 2, PyInt_FromLong(0));
+		PyList_SetItem(list, 1, PyLong_FromLong(0));
+		PyList_SetItem(list, 2, PyLong_FromLong(0));
 		Py_XINCREF(arg1);
 		PyList_SetItem(list, 3, arg1);
 		Py_XINCREF(arg2);
@@ -492,47 +508,58 @@ differ_py(PyObject* self, PyObject* args)
 		is_iter++;
 	}
 
-	len1 = PyObject_Length(arg1);
-	len2 = PyObject_Length(arg2);
-
-	if (len1 == error_n || len2 == error_n) {
-		PyErr_Format(PyExc_TypeError,
-			"Cannot len function. Needs. len(arg1) or len(arg2)");
-
-		if (is_iter > 0) {
-			Py_XDECREF(arg1);
-			Py_XDECREF(arg2);
-		}
-
-		return NULL;
-	}
-
-
 	LevEditOp* ops;
 	LevOpCode* bops;
 
 	/* find opcodes: we were called (s1, s2) */
-	if (PyObject_TypeCheck(arg1, &PyString_Type)
-		&& PyObject_TypeCheck(arg2, &PyString_Type)) {
+	if (PyObject_TypeCheck(arg1, &PyBytes_Type)
+		&& PyObject_TypeCheck(arg2, &PyBytes_Type)) {
 		lev_byte* string1, * string2;
 
-		string1 = (lev_byte*)PyString_AS_STRING(arg1);
-		string2 = (lev_byte*)PyString_AS_STRING(arg2);
+		len1 = PyBytes_GET_SIZE(arg1);
+		len2 = PyBytes_GET_SIZE(arg2);
+
+		string1 = PyBytes_AS_STRING(arg1);
+		string2 = PyBytes_AS_STRING(arg2);
 		ops = differ_op_s(len1, string1, len2, string2, &n);
 	}
 	else if (PyObject_TypeCheck(arg1, &PyUnicode_Type)
 		&& PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
-		Py_UNICODE* string1, * string2;
 
-		string1 = (Py_UNICODE*)PyUnicode_AS_UNICODE(arg1);
-		string2 = (Py_UNICODE*)PyUnicode_AS_UNICODE(arg2);
-		ops = differ_op_u(len1, string1, len2, string2, &n);
+		len1 = PyUnicode_GET_LENGTH(arg1);
+		len2 = PyUnicode_GET_LENGTH(arg2);
+
+		Py_UCS4* unicode1 = PyUnicode_AsUCS4Copy(arg1);
+		Py_UCS4* unicode2 = PyUnicode_AsUCS4Copy(arg2);
+		ops = differ_op_u(len1, unicode1, len2, unicode2, &n);
+		PyMem_Free(unicode1);
+		PyMem_Free(unicode2);
 	}
 
 	else if (PySequence_Check(arg1) && PySequence_Check(arg2)) {
+		len1 = PySequence_Fast_GET_SIZE(arg1);
+		len2 = PySequence_Fast_GET_SIZE(arg2);
+
 		ops = differ_op_o(len1, arg1, len2, arg2, &n);
 	}
 	else {
+
+		len1 = (size_t)PyObject_Length(arg1);
+		len2 = (size_t)PyObject_Length(arg2);
+
+		if (len1 == error_n || len2 == error_n) {
+			PyErr_Format(PyExc_TypeError,
+				"Cannot len function. Needs. len(arg1) or len(arg2)");
+
+			if (is_iter > 0) {
+				Py_XDECREF(arg1);
+				Py_XDECREF(arg2);
+			}
+
+			return NULL;
+		}
+
+
 		PyErr_Format(PyExc_TypeError,
 			"expected two Sequence or iter object");
 		if (is_iter > 0) {
@@ -580,13 +607,8 @@ PY_MOD_INIT_FUNC_DEF(cdiffer)
 		if (opcode_names[0].pystring)
 			abort();
 	for (i = 0; i < N_OPCODE_NAMES; i++) {
-#ifdef _PYTHON3
 		opcode_names[i].pystring
 			= PyUnicode_InternFromString(opcode_names[i].cstring);
-#else
-		opcode_names[i].pystring
-			= PyString_InternFromString(opcode_names[i].cstring);
-#endif
 		opcode_names[i].len = strlen(opcode_names[i].cstring);
 	}
 	init_rng(0);
@@ -656,7 +678,7 @@ dist_s(size_t len1, const lev_byte* string1,
 	/* check len1 == 1 separately */
 	if (len1 == 1) {
 		if (xcost)
-			return len2 + 1 - (2 * (memchr(string2, *string1, len2) != NULL));
+			return len2 + 1 - (size_t)(2 * (memchr(string2, *string1, len2) != NULL));
 		else
 			return len2 - (memchr(string2, *string1, len2) != NULL);
 	}
@@ -773,8 +795,8 @@ dist_s(size_t len1, const lev_byte* string1,
  * Returns: The edit distance.
  **/
 _STATIC_PY size_t
-dist_u(size_t len1, const lev_wchar* string1,
-	size_t len2, const lev_wchar* string2,
+dist_u(size_t len1, Py_UCS4* string1,
+	size_t len2, Py_UCS4* string2,
 	size_t xcost)
 {
 	size_t i;
@@ -805,7 +827,7 @@ dist_u(size_t len1, const lev_wchar* string1,
 	/* make the inner cycle (i.e. string2) the longer one */
 	if (len1 > len2) {
 		size_t nx = len1;
-		const lev_wchar* sx = string1;
+		Py_UCS4* sx = string1;
 		len1 = len2;
 		len2 = nx;
 		string1 = string2;
@@ -813,8 +835,8 @@ dist_u(size_t len1, const lev_wchar* string1,
 	}
 	/* check len1 == 1 separately */
 	if (len1 == 1) {
-		lev_wchar z = *string1;
-		const lev_wchar* p = string2;
+		Py_UCS4 z = *string1;
+		Py_UCS4* p = string2;
 		for (i = len2; i; i--) {
 			if (*(p++) == z)
 				return len2 - 1;
@@ -839,8 +861,8 @@ dist_u(size_t len1, const lev_wchar* string1,
 	if (xcost) {
 		for (i = 1; i < len1; i++) {
 			size_t* p = row + 1;
-			const lev_wchar char1 = string1[i - 1];
-			const lev_wchar* char2p = string2;
+			const Py_UCS4 char1 = string1[i - 1];
+			const Py_UCS4* char2p = string2;
 			size_t D = i - 1;
 			size_t x = i;
 			while (p <= end) {
@@ -863,8 +885,8 @@ dist_u(size_t len1, const lev_wchar* string1,
 		row[0] = len1 - half - 1;
 		for (i = 1; i < len1; i++) {
 			size_t* p;
-			const lev_wchar char1 = string1[i - 1];
-			const lev_wchar* char2p;
+			Py_UCS4 char1 = string1[i - 1];
+			Py_UCS4* char2p;
 			size_t D, x;
 			/* skip the upper triangle */
 			if (i >= len1 - half) {
@@ -1069,7 +1091,7 @@ dist_o(size_t len1, PyObject* string1,
 
 				p = row + offset2;
 				/*c3 = *(p++) + (char1 != *(char2p++));*/
-				c3 = *(p++) + (
+				c3 = *(p++) + (size_t)(
 					PyObject_RichCompareBool(
 						PySequence_GetItem(char1, offset + i - 1)
 						, PySequence_GetItem(char2p, offset + offset2 + cnt)
@@ -1102,7 +1124,7 @@ dist_o(size_t len1, PyObject* string1,
 					PyUnicode_AS_UNICODE(PySequence_GetItem(char2p, offset + offset2 + cnt)
 					));
 				*/
-				size_t c3 = --D + (
+				size_t c3 = --D + (size_t)(
 					PyObject_RichCompareBool(
 						PySequence_GetItem(char1, offset + i - 1)
 						, PySequence_GetItem(char2p, offset + offset2 + cnt)
@@ -1123,7 +1145,7 @@ dist_o(size_t len1, PyObject* string1,
 
 			/* lower triangle sentinel */
 			if (i <= half) {
-				size_t c3 = --D + (
+				size_t c3 = --D + (size_t)(
 					PyObject_RichCompareBool(
 						PySequence_GetItem(char1, i - 1)
 						, PySequence_GetItem(char2p, offset + offset2 + cnt)
@@ -1362,8 +1384,8 @@ differ_op_s(size_t len1, const lev_byte* string1,
  *          elementary edit operations, it length is stored in @n.
  **/
 static LevEditOp*
-ucost2op_s(size_t len1, const lev_wchar* string1, size_t o1,
-	size_t len2, const lev_wchar* string2, size_t o2,
+ucost2op_s(size_t len1, const Py_UCS4* string1, size_t o1,
+	size_t len2, const Py_UCS4* string2, size_t o2,
 	size_t* matrix, size_t* n)
 {
 	size_t* p;
@@ -1474,8 +1496,8 @@ ucost2op_s(size_t len1, const lev_wchar* string1, size_t o1,
  **/
 
 _STATIC_PY LevEditOp*
-differ_op_u(size_t len1, const lev_wchar* string1,
-	size_t len2, const lev_wchar* string2,
+differ_op_u(size_t len1, Py_UCS4* string1,
+	size_t len2, Py_UCS4* string2,
 	size_t* n)
 {
 	size_t len1o, len2o;
@@ -1518,8 +1540,8 @@ differ_op_u(size_t len1, const lev_wchar* string1,
 		size_t* prev = matrix + (i - 1) * len2;
 		size_t* p = matrix + i * len2;
 		size_t* end = p + len2 - 1;
-		const lev_wchar char1 = string1[i - 1];
-		const lev_wchar* char2p = string2;
+		Py_UCS4 char1 = string1[i - 1];
+		Py_UCS4* char2p = string2;
 		size_t x = i;
 		p++;
 		while (p <= end) {
@@ -1603,7 +1625,7 @@ differ_op_o(size_t len1, PyObject* string1,
 
 		while (p <= end) {
 
-			size_t itemmatch = PyObject_RichCompareBool(
+			size_t itemmatch = (size_t)PyObject_RichCompareBool(
 				PySequence_GetItem(string1, offset + i - 1),
 				PySequence_GetItem(string2, offset + cnt),
 				Py_NE);
