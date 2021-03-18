@@ -337,7 +337,7 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 				Py_XDECREF(arg1);
 				Py_XDECREF(arg2);
 			}
-			return max(len1, len2);
+			return len1 > len2 ? len1 : len2;
 		}
 
 		d = dist_o(len1, arg1, len2, arg2, xcost);
