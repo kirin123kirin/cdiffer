@@ -232,7 +232,11 @@ safe_malloc_3(size_t nmemb1, size_t nmemb2, size_t size) {
  *
  ****************************************************************************/
 size_t error_n = (size_t)(-1);
-
+#if PY_MAJOR_VERSION >= 3
+const char* attr_iter_or_gen = "__next__";
+#else
+const char* attr_iter_or_gen = "next";
+#endif
 
 static size_t
 dist_handler(PyObject* args, const char* name, size_t xcost,
@@ -258,13 +262,13 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 	}
 
 	size_t is_iter = 0;
-	if (PyGen_Check(arg1) || PyIter_Check(arg1) || PySet_Check(arg1) || PyDict_Check(arg1)) {
+	if (PyObject_HasAttrString(arg1, attr_iter_or_gen) || PySet_Check(arg1) || PyDict_Check(arg1)) {
 		arg1 = PySequence_List(arg1);
 		is_iter++;
 	}
 
 
-	if (PyGen_Check(arg2) || PyIter_Check(arg2) || PySet_Check(arg2) || PyDict_Check(arg2)) {
+	if (PyObject_HasAttrString(arg2, attr_iter_or_gen) || PySet_Check(arg2) || PyDict_Check(arg2)) {
 		arg2 = PySequence_List(arg2);
 		is_iter++;
 	}
@@ -479,12 +483,12 @@ differ_py(PyObject* self, PyObject* args)
 	}
 
 	size_t is_iter = 0;
-	if (PyGen_Check(arg1) || PyIter_Check(arg1) || PySet_Check(arg1) || PyDict_Check(arg1)) {
+	if (PyObject_HasAttrString(arg1, attr_iter_or_gen) || PySet_Check(arg1) || PyDict_Check(arg1)) {
 		arg1 = PySequence_List(arg1);
 		is_iter++;
 	}
 
-	if (PyGen_Check(arg2) || PyIter_Check(arg2) || PySet_Check(arg2) || PyDict_Check(arg2)) {
+	if (PyObject_HasAttrString(arg2, attr_iter_or_gen) || PySet_Check(arg2) || PyDict_Check(arg2)) {
 		arg2 = PySequence_List(arg2);
 		is_iter++;
 	}
@@ -842,8 +846,8 @@ dist_u(size_t len1, Py_UCS4* string1,
 	if (xcost) {
 		for (i = 1; i < len1; i++) {
 			size_t* p = row + 1;
-			const Py_UCS4 char1 = string1[i - 1];
-			const Py_UCS4* char2p = string2;
+			Py_UCS4 char1 = string1[i - 1];
+			Py_UCS4* char2p = string2;
 			size_t D = i - 1;
 			size_t x = i;
 			while (p <= end) {
