@@ -225,23 +225,6 @@ safe_malloc_3(size_t nmemb1, size_t nmemb2, size_t size) {
 	return safe_malloc(nmemb1, nmemb2 * size);
 }
 
-/*
-static size_t
-length_of(PyObject* object)
-{
-	if (PyLong_Check(object)) {   //if (PyInt_Check(object)) {
-		long int len = PyLong_AsLong(object); //PyInt_AS_LONG(object);
-		if (len < 0)
-			len = -1;
-		return (size_t)len;
-	}
-	if (PySequence_Check(object))
-		return PySequence_Length(object);
-	return (size_t)-1;
-}
-*/
-
-
 
 /****************************************************************************
  *
@@ -289,7 +272,7 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 
 	if (PyObject_TypeCheck(arg1, &PyBytes_Type)
 		&& PyObject_TypeCheck(arg2, &PyBytes_Type)) {
-		lev_byte* string1, * string2;
+		bytes_type* string1, * string2;
 
 		len1 = PyBytes_GET_SIZE(arg1);
 		len2 = PyBytes_GET_SIZE(arg2);
@@ -328,8 +311,8 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 	}
 
 	else if (PySequence_Check(arg1) && PySequence_Check(arg2)) {
-		len1 = PySequence_Fast_GET_SIZE(arg1);
-		len2 = PySequence_Fast_GET_SIZE(arg2);
+		len1 = PySequence_Length(arg1);
+		len2 = PySequence_Length(arg2);
 		*lensum = len1 + len2;
 		{
 			d = dist_o(len1, arg1, len2, arg2, xcost);
@@ -349,8 +332,6 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 	else {
 		len1 = (size_t)PyObject_Length(arg1);
 		len2 = (size_t)PyObject_Length(arg2);
-
-		*lensum = len1 + len2;
 
 		if (len1 == error_n || len2 == error_n) {
 			PyErr_Format(PyExc_TypeError,
@@ -514,7 +495,7 @@ differ_py(PyObject* self, PyObject* args)
 	/* find opcodes: we were called (s1, s2) */
 	if (PyObject_TypeCheck(arg1, &PyBytes_Type)
 		&& PyObject_TypeCheck(arg2, &PyBytes_Type)) {
-		lev_byte* string1, * string2;
+		bytes_type* string1, * string2;
 
 		len1 = PyBytes_GET_SIZE(arg1);
 		len2 = PyBytes_GET_SIZE(arg2);
@@ -537,8 +518,8 @@ differ_py(PyObject* self, PyObject* args)
 	}
 
 	else if (PySequence_Check(arg1) && PySequence_Check(arg2)) {
-		len1 = PySequence_Fast_GET_SIZE(arg1);
-		len2 = PySequence_Fast_GET_SIZE(arg2);
+		len1 = PySequence_Length(arg1);
+		len2 = PySequence_Length(arg2);
 
 		ops = differ_op_o(len1, arg1, len2, arg2, &n);
 	}
@@ -637,8 +618,8 @@ PY_MOD_INIT_FUNC_DEF(cdiffer)
    * Returns: The edit distance.
    **/
 _STATIC_PY size_t
-dist_s(size_t len1, const lev_byte* string1,
-	size_t len2, const lev_byte* string2,
+dist_s(size_t len1, const bytes_type* string1,
+	size_t len2, const bytes_type* string2,
 	size_t xcost)
 {
 	size_t i;
@@ -669,7 +650,7 @@ dist_s(size_t len1, const lev_byte* string1,
 	/* make the inner cycle (i.e. string2) the longer one */
 	if (len1 > len2) {
 		size_t nx = len1;
-		const lev_byte* sx = string1;
+		const bytes_type* sx = string1;
 		len1 = len2;
 		len2 = nx;
 		string1 = string2;
@@ -700,8 +681,8 @@ dist_s(size_t len1, const lev_byte* string1,
 	if (xcost) {
 		for (i = 1; i < len1; i++) {
 			size_t* p = row + 1;
-			const lev_byte char1 = string1[i - 1];
-			const lev_byte* char2p = string2;
+			const bytes_type char1 = string1[i - 1];
+			const bytes_type* char2p = string2;
 			size_t D = i;
 			size_t x = i;
 			while (p <= end) {
@@ -725,8 +706,8 @@ dist_s(size_t len1, const lev_byte* string1,
 		row[0] = len1 - half - 1;
 		for (i = 1; i < len1; i++) {
 			size_t* p;
-			const lev_byte char1 = string1[i - 1];
-			const lev_byte* char2p;
+			const bytes_type char1 = string1[i - 1];
+			const bytes_type* char2p;
 			size_t D, x;
 			/* skip the upper triangle */
 			if (i >= len1 - half) {
@@ -1117,13 +1098,6 @@ dist_o(size_t len1, PyObject* string1,
 
 
 			while (p <= end) {
-				/*
-				//DEBUG
-				printf("%d %d %ls %ls\n", i, *p,
-					PyUnicode_AS_UNICODE(PySequence_GetItem(char1, offset + i - 1)),
-					PyUnicode_AS_UNICODE(PySequence_GetItem(char2p, offset + offset2 + cnt)
-					));
-				*/
 				size_t c3 = --D + (size_t)(
 					PyObject_RichCompareBool(
 						PySequence_GetItem(char1, offset + i - 1)
@@ -1195,8 +1169,8 @@ dist_o(size_t len1, PyObject* string1,
  *          elementary edit operations, it length is stored in @n.
  **/
 static LevEditOp*
-cost2op_s(size_t len1, const lev_byte* string1, size_t off1,
-	size_t len2, const lev_byte* string2, size_t off2,
+cost2op_s(size_t len1, const bytes_type* string1, size_t off1,
+	size_t len2, const bytes_type* string2, size_t off2,
 	size_t* matrix, size_t* n)
 {
 	size_t* p;
@@ -1300,8 +1274,8 @@ cost2op_s(size_t len1, const lev_byte* string1, size_t off1,
  *          It is normalized, i.e., keep operations are not included.
  **/
 _STATIC_PY LevEditOp*
-differ_op_s(size_t len1, const lev_byte* string1,
-	size_t len2, const lev_byte* string2,
+differ_op_s(size_t len1, const bytes_type* string1,
+	size_t len2, const bytes_type* string2,
 	size_t* n)
 {
 	size_t len1o, len2o;
@@ -1343,8 +1317,8 @@ differ_op_s(size_t len1, const lev_byte* string1,
 		size_t* prev = matrix + (i - 1) * len2;
 		size_t* p = matrix + i * len2;
 		size_t* end = p + len2 - 1;
-		const lev_byte char1 = string1[i - 1];
-		const lev_byte* char2p = string2;
+		const bytes_type char1 = string1[i - 1];
+		const bytes_type* char2p = string2;
 		size_t x = i;
 		p++;
 		while (p <= end) {

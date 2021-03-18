@@ -12,8 +12,8 @@
 #  define _STATIC_PY /* */
 #endif
 
-//typedef unsigned char lev_byte;
-typedef char lev_byte;
+//typedef unsigned char bytes_type;
+typedef char bytes_type;
 
 /* Edit opration type
  * DON'T CHANGE! used ad arrays indices and the bits are occasionally used
@@ -25,27 +25,6 @@ typedef enum {
 	LEV_EDIT_DELETE = 3,
 	LEV_EDIT_LAST  /* sometimes returned when an error occurs */
 } LevEditType;
-
-/* Error codes returned by editop check functions */
-typedef enum {
-	LEV_EDIT_ERR_OK = 0,
-	LEV_EDIT_ERR_TYPE,  /* nonexistent edit type */
-	LEV_EDIT_ERR_OUT,  /* edit out of string bounds */
-	LEV_EDIT_ERR_ORDER,  /* ops are not ordered */
-	LEV_EDIT_ERR_BLOCK,  /* incosistent block boundaries (block ops) */
-	LEV_EDIT_ERR_SPAN,  /* sequence is not a full transformation (block ops) */
-	LEV_EDIT_ERR_LAST
-} LevEditOpError;
-
-/* string averaging method (UNUSED yet) */
-typedef enum {
-	LEV_AVG_HEAD = 0,  /* take operations from the head */
-	LEV_AVG_TAIL,  /* take operations from the tail */
-	LEV_AVG_SPREAD,  /* take a equidistantly distributed subset */
-	LEV_AVG_BLOCK,  /* take a random continuous block */
-	LEV_AVG_RANDOM,  /* take a random subset */
-	LEV_AVG_LAST
-} LevAveragingType;
 
 /* Edit operation (atomic).
  * This is the `native' atomic edit operation.  It differs from the difflib
@@ -72,13 +51,6 @@ typedef struct {
 	size_t dbeg, dend;  /* destination block begin, end */
 } LevOpCode;
 
-/* Matching block (difflib-compatible). */
-typedef struct {
-	size_t spos;
-	size_t dpos;
-	size_t len;
-} LevMatchingBlock;
-
 static size_t
 dist_handler(PyObject* args,
 	const char* name,
@@ -88,9 +60,9 @@ dist_handler(PyObject* args,
 _STATIC_PY
 size_t
 dist_s(size_t len1,
-	const lev_byte* string1,
+	const bytes_type* string1,
 	size_t len2,
-	const lev_byte* string2,
+	const bytes_type* string2,
 	size_t xcost);
 
 _STATIC_PY
@@ -113,9 +85,9 @@ dist_o(size_t len1,
 _STATIC_PY
 LevEditOp*
 differ_op_s(size_t len1,
-	const lev_byte* string1,
+	const bytes_type* string1,
 	size_t len2,
-	const lev_byte* string2,
+	const bytes_type* string2,
 	size_t* n);
 
 _STATIC_PY
