@@ -232,11 +232,6 @@ safe_malloc_3(size_t nmemb1, size_t nmemb2, size_t size) {
  *
  ****************************************************************************/
 size_t error_n = (size_t)(-1);
-#if PY_MAJOR_VERSION >= 3
-const char* attr_iter_or_gen = "__next__";
-#else
-const char* attr_iter_or_gen = "next";
-#endif
 
 static size_t
 dist_handler(PyObject* args, const char* name, size_t xcost,
@@ -244,6 +239,7 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 {
 	PyObject* arg1, * arg2;
 	size_t len1, len2, d;
+	size_t is_iter = 0;
 
 	if (!PyArg_UnpackTuple(args, PYARGCFIX(name), 2, 2, &arg1, &arg2))
 		return error_n;
@@ -260,19 +256,6 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 		*lensum = 2;
 		return 2;
 	}
-
-	size_t is_iter = 0;
-	if (PyObject_HasAttrString(arg1, attr_iter_or_gen) || PySet_Check(arg1) || PyDict_Check(arg1)) {
-		arg1 = PySequence_List(arg1);
-		is_iter++;
-	}
-
-
-	if (PyObject_HasAttrString(arg2, attr_iter_or_gen) || PySet_Check(arg2) || PyDict_Check(arg2)) {
-		arg2 = PySequence_List(arg2);
-		is_iter++;
-	}
-
 
 	if (PyObject_TypeCheck(arg1, &PyBytes_Type)
 		&& PyObject_TypeCheck(arg2, &PyBytes_Type)) {
@@ -295,16 +278,20 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 	}
 	else if (PyObject_TypeCheck(arg1, &PyUnicode_Type)
 		&& PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
+		Py_UCS4* string1, * string2;
 
 		len1 = PyUnicode_GET_LENGTH(arg1);
 		len2 = PyUnicode_GET_LENGTH(arg2);
 		*lensum = len1 + len2;
-		Py_UCS4* unicode1 = PyUnicode_AsUCS4Copy(arg1);
-		Py_UCS4* unicode2 = PyUnicode_AsUCS4Copy(arg2);
+		string1 = PyUnicode_AsUCS4Copy(arg1);
+		string2 = PyUnicode_AsUCS4Copy(arg2);
 		{
-			d = dist_u(len1, unicode1, len2, unicode2, xcost);
-			PyMem_Free(unicode1);
-			PyMem_Free(unicode2);
+			d = dist_u(len1, string1, len2, string2, xcost);
+
+#if PY_MAJOR_VERSION >= 3
+			PyMem_Free(string1);
+			PyMem_Free(string2);
+#endif
 
 			if (d == (size_t)(-1)) {
 				PyErr_NoMemory();
@@ -313,50 +300,58 @@ dist_handler(PyObject* args, const char* name, size_t xcost,
 			return d;
 		}
 	}
-
-	else if (PySequence_Check(arg1) && PySequence_Check(arg2)) {
-		len1 = PySequence_Length(arg1);
-		len2 = PySequence_Length(arg2);
-		*lensum = len1 + len2;
-		{
-			d = dist_o(len1, arg1, len2, arg2, xcost);
-
-			if (is_iter > 0) {
-				Py_XDECREF(arg1);
-				Py_XDECREF(arg2);
-			}
-			if (d == (size_t)(-1)) {
-				PyErr_NoMemory();
-				return error_n;
-			}
-			return d;
-		}
-	}
-
 	else {
-		len1 = (size_t)PyObject_Length(arg1);
-		len2 = (size_t)PyObject_Length(arg2);
+		if (PySequence_Check(arg1)) {
+			len1 = PySequence_Length(arg1);
+		}
+		else {
+			arg1 = PySequence_List(arg1);
+			is_iter++;
+			if (arg1 == NULL) {
+				PyErr_Format(PyExc_TypeError,
+					"Unknown Type Object. this function need `len(arg1)`");
+				Py_XDECREF(arg1);
+				return error_n;
+			}
+			len1 = PySequence_Length(arg1);
+		}
 
-		if (len1 == error_n || len2 == error_n) {
-			PyErr_Format(PyExc_TypeError,
-				"Cannot len function. Needs. len(arg1) or len(arg2)");
+		if (PySequence_Check(arg2)) {
+			len2 = PySequence_Length(arg2);
+		}
+		else {
+			arg2 = PySequence_List(arg2);
+			is_iter++;
+			if (arg2 == NULL) {
+				PyErr_Format(PyExc_TypeError,
+					"Unknown Type Object. this function need `len(arg2)`");
+				Py_XDECREF(arg2);
+				return error_n;
+			}
+			len2 = PySequence_Length(arg2);
+		}
 
+		*lensum = len1 + len2;
+		if (len1 == 0 || len2 == 0) {
 			if (is_iter > 0) {
 				Py_XDECREF(arg1);
 				Py_XDECREF(arg2);
 			}
-
-			return error_n;
+			return max(len1, len2);
 		}
 
-		PyErr_Format(PyExc_TypeError,
-			"%s expected two Sequence object", name);
+		d = dist_o(len1, arg1, len2, arg2, xcost);
+
 		if (is_iter > 0) {
 			Py_XDECREF(arg1);
 			Py_XDECREF(arg2);
 		}
-		//        PyErr_NoMemory();
-		return error_n;
+		if (d == (size_t)(-1)) {
+			PyErr_NoMemory();
+			return error_n;
+		}
+		return d;
+
 	}
 }
 
@@ -455,8 +450,10 @@ static PyObject*
 differ_py(PyObject* self, PyObject* args)
 {
 	PyObject* arg1, * arg2, * arg3 = NULL;
-
 	size_t len1, len2, n, nb;
+	size_t is_iter = 0;
+	LevEditOp* ops;
+	LevOpCode* bops;
 
 	if (!PyArg_UnpackTuple(args, PYARGCFIX("differ"), 2, 3, &arg1, &arg2, &arg3))
 		return NULL;
@@ -482,20 +479,6 @@ differ_py(PyObject* self, PyObject* args)
 		return oplist;
 	}
 
-	size_t is_iter = 0;
-	if (PyObject_HasAttrString(arg1, attr_iter_or_gen) || PySet_Check(arg1) || PyDict_Check(arg1)) {
-		arg1 = PySequence_List(arg1);
-		is_iter++;
-	}
-
-	if (PyObject_HasAttrString(arg2, attr_iter_or_gen) || PySet_Check(arg2) || PyDict_Check(arg2)) {
-		arg2 = PySequence_List(arg2);
-		is_iter++;
-	}
-
-	LevEditOp* ops;
-	LevOpCode* bops;
-
 	/* find opcodes: we were called (s1, s2) */
 	if (PyObject_TypeCheck(arg1, &PyBytes_Type)
 		&& PyObject_TypeCheck(arg2, &PyBytes_Type)) {
@@ -510,49 +493,64 @@ differ_py(PyObject* self, PyObject* args)
 	}
 	else if (PyObject_TypeCheck(arg1, &PyUnicode_Type)
 		&& PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
+		Py_UCS4* string1, * string2;
 
 		len1 = PyUnicode_GET_LENGTH(arg1);
 		len2 = PyUnicode_GET_LENGTH(arg2);
 
-		Py_UCS4* unicode1 = PyUnicode_AsUCS4Copy(arg1);
-		Py_UCS4* unicode2 = PyUnicode_AsUCS4Copy(arg2);
-		ops = differ_op_u(len1, unicode1, len2, unicode2, &n);
-		PyMem_Free(unicode1);
-		PyMem_Free(unicode2);
-	}
+		string1 = PyUnicode_AsUCS4Copy(arg1);
+		string2 = PyUnicode_AsUCS4Copy(arg2);
+		ops = differ_op_u(len1, string1, len2, string2, &n);
 
-	else if (PySequence_Check(arg1) && PySequence_Check(arg2)) {
-		len1 = PySequence_Length(arg1);
-		len2 = PySequence_Length(arg2);
+#if PY_MAJOR_VERSION >= 3
+		PyMem_Free(string1);
+		PyMem_Free(string2);
+#endif
 
-		ops = differ_op_o(len1, arg1, len2, arg2, &n);
 	}
 	else {
+		if (PySequence_Check(arg1)) {
+			len1 = PySequence_Length(arg1);
+		}
+		else {
+			arg1 = PySequence_List(arg1);
+			is_iter++;
+			if (arg1 == NULL) {
+				PyErr_Format(PyExc_TypeError,
+					"Unknown Type Object. this function need `len(arg1)`");
+				Py_XDECREF(arg1);
+				return NULL;
+			}
+			len1 = PySequence_Length(arg1);
+		}
 
-		len1 = (size_t)PyObject_Length(arg1);
-		len2 = (size_t)PyObject_Length(arg2);
+		if (PySequence_Check(arg2)) {
+			len2 = PySequence_Length(arg2);
+		}
+		else {
+			arg2 = PySequence_List(arg2);
+			is_iter++;
+			if (arg2 == NULL) {
+				PyErr_Format(PyExc_TypeError,
+					"Unknown Type Object. this function need `len(arg2)`");
+				Py_XDECREF(arg2);
+				return NULL;
+			}
+			len2 = PySequence_Length(arg2);
+		}
 
-		if (len1 == error_n || len2 == error_n) {
-			PyErr_Format(PyExc_TypeError,
-				"Cannot len function. Needs. len(arg1) or len(arg2)");
+		ops = differ_op_o(len1, arg1, len2, arg2, &n);
 
+
+		if (ops == NULL) {
+			PyErr_Format(PyExc_TypeError, "expected two Sequence or iter object");
 			if (is_iter > 0) {
 				Py_XDECREF(arg1);
 				Py_XDECREF(arg2);
 			}
-
 			return NULL;
 		}
 
-
-		PyErr_Format(PyExc_TypeError,
-			"expected two Sequence or iter object");
-		if (is_iter > 0) {
-			Py_XDECREF(arg1);
-			Py_XDECREF(arg2);
-		}
-
-		return NULL;
 	}
 
 	if (!ops && n)
@@ -1738,7 +1736,7 @@ differ_op_o(size_t len1, PyObject* string1,
  *          its length is stored in @nb.
  **/
 _STATIC_PY LevOpCode*
-op2opcodes(size_t n, const LevEditOp* ops, size_t* nb,
+op2opcodes(size_t n, LevEditOp* ops, size_t* nb,
 	size_t len1, size_t len2)
 {
 	size_t nbl, i, spos, dpos;

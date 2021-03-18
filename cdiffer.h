@@ -109,7 +109,7 @@ differ_op_o(size_t len1,
 _STATIC_PY
 LevOpCode*
 op2opcodes(size_t n,
-	const LevEditOp* ops,
+	LevEditOp* ops,
 	size_t* nb,
 	size_t len1,
 	size_t len2);
