@@ -36,14 +36,14 @@ if any("--debug" in x or "-g" in x for x in sys.argv) and get_default_compiler()
         Extension(
             'cdiffer',
             sources=['cdiffer.cpp'],
-            ### Reason is Debuging Error "Access violation executing location 0x00000000" when using mwArray in Visual-C++ ###
+            # Reason is Debuging Error "Access violation executing location 0x00000000" when using mwArray in Visual-C++
             undef_macros=["_DEBUG"],
             extra_compile_args=[
-                ### Reason https://docs.microsoft.com/ja-jp/cpp/build/reference/ltcg-link-time-code-generation?view=msvc-160 ###
+                # Reason https://docs.microsoft.com/ja-jp/cpp/build/reference/ltcg-link-time-code-generation?view=msvc-160
                 "/GL",
-                ### Reason unicode string crash ####
+                # Reason unicode string crash #
                 "/source-charset:utf-8",
-                ### Reason IDE warning link crash ###
+                # Reason IDE warning link crash #
                 "/FC",
             ],
         )]
