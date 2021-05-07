@@ -1,0 +1,30 @@
+{
+    "configurations": [
+        {
+            "name": "win64_d",
+            "includePath": [
+                "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.28.29910\\ATLMFC\\include",
+                "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.28.29910\\include",
+                "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\ucrt",
+                "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\shared",
+                "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\um",
+                "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\winrt",
+                "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\cppwinrt",
+                "${env:PYTHONPATH}\\include",
+                "${env:APPROOT}\\usr\\local\\include",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.18362.0",
+            "compilerPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.28.29910\\bin\\Hostx64\\x64\\cl.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "windows-msvc-x64"
+        }
+    ],
+    "version": 4
+}

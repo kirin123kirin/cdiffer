@@ -1,0 +1,114 @@
+{
+  // Variable Example
+  // ${workspaceFolder}	/home/your-username/your-project
+  // ${workspaceFolderBasename}	your-project
+  // ${file}	/home/your-username/your-project/folder/file.ext
+  // ${relativeFile}	folder/file.ext
+  // ${relativeFileDirname}	folder
+  // ${fileBasename}	file.ext
+  // ${fileBasenameNoExtension}	file
+  // ${fileDirname}	/home/your-username/your-project/folder
+  // ${fileExtname}	.ext
+  // ${lineNumber}	VSCodeの編集画面で現在選択されている行番号
+  // ${selectedText}	VSCodeの編集画面で現在選択されているテキスト
+  // ${execPath}	実行中のVS Code実行可能ファイル「code.exe」のアドレス
+  // ${env:xxxxxx} 環境変数
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "0.2.0",
+  "configurations": [
+    //
+    // from pytest Run Debugger
+    //
+    {
+      "name": "Debug Setup.py",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "python",
+      "args": [
+        "-m",
+        "pytest"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "preLaunchTask": "DebugSetup.py",
+      "console": "internalConsole"
+    },
+    // for Release Setup Running
+    {
+      "name": "Release Setup.py",
+      "type": "python",
+      "request": "launch",
+      "program": "-m",
+      "args": [
+        "pytest"
+      ],
+      "justMyCode": false,
+      "preLaunchTask": "ReleaseSetup.py",
+      "console": "internalConsole"
+    },
+    //
+    // from Python to C++ Debug Run
+    //
+    {
+      "name": "Instant Debug from py",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "python",
+      "args": [
+        "${file}"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "console": "internalConsole",
+      "preLaunchTask": "DebugSetup.py"
+    },
+    //
+    // Python and C++ Mix Debug Mode Setting
+    //
+    {
+      "name": "1_混合モードデバッグ(python側)",
+      "type": "python",
+      "request": "launch",
+      "program": "-m",
+      "args": [
+        "pytest"
+      ],
+      "justMyCode": false,
+      "preLaunchTask": "DebugSetup.py",
+      "console": "internalConsole"
+    },
+    // for MIX Mode
+    {
+      "name": "2_混合モード C++ デバッグアタッチ",
+      "type": "cppvsdbg",
+      "request": "attach",
+      "processId": "${command:pickProcess}"
+    },
+    // // for C/C++
+    {
+      "name": "C/C++: PureRun",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "build/${fileBasenameNoExtension}.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      // "preLaunchTask": "DebugBuildCpp",
+      // "console": "newExternalWindow",
+      // "console": "integratedTerminal"
+      "console": "internalConsole"
+    },
+    // for Python
+    {
+      "name": "Python: Pure Run",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "console": "internalConsole"
+    },
+  ]
+}

@@ -2,12 +2,14 @@
 import re
 
 from setuptools import Extension, setup
+from distutils.ccompiler import get_default_compiler
 import os
 import io
 import sys
 from os.path import dirname, join as pjoin
 
-__version__ = '0.1.7'
+
+__version__ = '0.2.0'
 
 # Edit posix platname for pypi upload error
 if os.name == "posix" and any(x.startswith("bdist") for x in sys.argv) \
@@ -23,15 +25,29 @@ if os.name == "posix" and any(x.startswith("bdist") for x in sys.argv) \
         plat = get_platname_32bit()
     sys.argv.extend(["--plat-name", plat])
 
-ext_modules = [Extension('cdiffer',
-                         sources=['cdiffer.c'],
-                         # include_dirs=['.'],
-                         )]
+ext_modules = [
+    Extension(
+        'cdiffer',
+        sources=['cdiffer.cpp'],
+    )]
 
-# Development Status Example
-#   3 - Alpha
-#   4 - Beta
-#   5 - Production/Stable
+if any("--debug" in x or "-g" in x for x in sys.argv) and get_default_compiler() == "msvc":
+    ext_modules = [
+        Extension(
+            'cdiffer',
+            sources=['cdiffer.cpp'],
+            ### Reason is Debuging Error "Access violation executing location 0x00000000" when using mwArray in Visual-C++ ###
+            undef_macros=["_DEBUG"],
+            extra_compile_args=[
+                ### Reason https://docs.microsoft.com/ja-jp/cpp/build/reference/ltcg-link-time-code-generation?view=msvc-160 ###
+                "/GL",
+                ### Reason unicode string crash ####
+                "/source-charset:utf-8",
+                ### Reason IDE warning link crash ###
+                "/FC",
+            ],
+        )]
+
 
 CF = """
 Development Status :: 5 - Production/Stable
@@ -47,10 +63,6 @@ Operating System :: OS Independent
 Operating System :: Microsoft :: Windows
 Operating System :: MacOS
 Operating System :: POSIX
-"""
-# Not yet
-"""
-Operating System :: Unix
 """
 
 # Readme read or edit
@@ -76,7 +88,7 @@ tests = {}
 if sys.version_info[:2] >= (3, 3):
     tests = dict(
         setup_requires=["pytest-runner"],
-        tests_require=["pytest", "pytest-cov"])
+        tests_require=["pytest", "pytest-cov", "psutil"])
 
 setup(name="cdiffer",
       version=__version__,
@@ -88,7 +100,7 @@ setup(name="cdiffer",
       ext_modules=ext_modules,
       keywords=["diff", "comparison", "compare"],
       license="GPL2",
-      platforms=["Windows", "Linux"],  # , "Mac OS-X", "Unix"
+      platforms=["Windows", "Linux", "Mac OS-X"],
       classifiers=CF.strip().splitlines(),
       **tests
       )
