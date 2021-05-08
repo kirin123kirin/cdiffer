@@ -1,7 +1,7 @@
 
 
 # Python C Extention 2 Sequence Compare
-[![Upload pypi.org](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml/badge.svg?branch=v0.2.0)](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml)
+[![Upload pypi.org](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml/badge.svg?branch=v0.2.1)](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml)
 
 **Usefull differ function with Levenshtein distance.**
 
@@ -48,16 +48,15 @@ Compute similarity of two strings.
 ## Usage
 similar(sequence, sequence)
 
-The similarity is a number between 0 and 1, it's usually equal or
-somewhat higher than difflib.SequenceMatcher.ratio(), because it's
-based on real minimal edit distance.
+The similarity is a number between 0 and 1,
+base on levenshtein edit distance.
 
 ## Examples
 ```python
 >>> from cdiffer import similar
 >>>
 >>> similar('coffee', 'cafe')
-0.6
+0.7
 >>> similar('hoge', 'bar')
 0.0
 
@@ -68,7 +67,7 @@ based on real minimal edit distance.
 Find sequence of edit operations transforming one string to another.
 
 ## Usage
-differ(source_sequence, destination_sequence, diffonly=False)
+differ(source_sequence, destination_sequence, diffonly=False, rep_rate=60)
 
 ## Examples
 
