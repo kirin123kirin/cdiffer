@@ -233,7 +233,7 @@ def memusage():
     return process.memory_info()[0] / 1024
 
 
-def runtimeit(funcstr, setup, number=100000, normalize=10000):
+def runtimeit(funcstr, setup, number=1000, normalize=1000000):
     for fc in funcstr.strip().splitlines():
         fc = fc.strip()
         bm = memusage()
