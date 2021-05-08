@@ -158,15 +158,16 @@ extern "C" PyObject* similar_py(PyObject* self, PyObject* args) {
 /*
  * python Interface differ function
  */
-extern "C" PyObject* differ_py(PyObject* self, PyObject* args) {
+extern "C" PyObject* differ_py(PyObject* self, PyObject* args, PyObject *kwargs) {
     PyObject *arg1, *arg2, *arg3 = NULL, *arg4 = NULL;
 
-    if(!PyArg_UnpackTuple(args, (char*)("differ"), 2, 4, &arg1, &arg2, &arg3,
-                          &arg4))
-        return NULL;
+    bool diffonly = false;
+    int rep_rate = REPLACEMENT_RATE;
 
-    bool diffonly = arg3 ? PyObject_IsTrue(arg3) : false;
-    long rep_rate = arg4 ? PyLong_AsLong(arg4) : REPLACEMENT_RATE;
+    static char *kwlist[] = {"a", "b", "diffonly", "rep_rate", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|ip", kwlist, 
+                                     &arg1, &arg2, &diffonly, &rep_rate))
+        return NULL;
 
     if(PyObject_RichCompareBool(arg1, arg2, Py_EQ)) {
         if(diffonly)
@@ -328,6 +329,8 @@ extern "C" PyObject* differ_py(PyObject* self, PyObject* args) {
 
 #define PY_ADD_METHOD(py_func, c_func, desc) \
     { py_func, (PyCFunction)c_func, METH_VARARGS, desc }
+#define PY_ADD_METHOD_KWARGS(py_func, c_func, desc) \
+    { py_func, (PyCFunction)c_func, METH_VARARGS | METH_KEYWORDS, desc }
 
 /* Please extern method define for python */
 /* PyMethodDef Parameter Help
@@ -336,7 +339,7 @@ extern "C" PyObject* differ_py(PyObject* self, PyObject* args) {
 static PyMethodDef py_methods[] = {
     PY_ADD_METHOD("dist", dist_py, dist_DESC),
     PY_ADD_METHOD("similar", similar_py, similar_DESC),
-    PY_ADD_METHOD("differ", differ_py, differ_DESC),
+    PY_ADD_METHOD_KWARGS("differ", differ_py, differ_DESC),
 
     {NULL, NULL, 0, NULL}};
 

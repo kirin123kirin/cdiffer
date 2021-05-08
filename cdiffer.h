@@ -254,7 +254,7 @@ static size_t dist_op(PyObject* arg1, PyObject* arg2, size_t* lensum);
 
 extern "C" PyObject* dist_py(PyObject* self, PyObject* args);
 extern "C" PyObject* similar_py(PyObject* self, PyObject* args);
-extern "C" PyObject* differ_py(PyObject* self, PyObject* args);
+extern "C" PyObject* differ_py(PyObject* self, PyObject* args, PyObject *kwargs);
 
 template <typename T = uint64_t>
 void makelist(PyObject*& ops,
