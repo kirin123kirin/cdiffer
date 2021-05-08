@@ -4,9 +4,9 @@
 from timeit import timeit
 import os
 import sys
-# from psutil import virtual_memory, Process
-# process = Process(os.getpid())
-# print("\n\n", __file__, ":PID -> ", os.getpid(), "\n\n")
+from psutil import virtual_memory, Process
+process = Process(os.getpid())
+print("\n\n", __file__, ":PID -> ", os.getpid(), "\n\n")
 
 try:
     from cdiffer import dist, differ, similar
@@ -229,75 +229,76 @@ def test_differ_complex_Nottype():
     assert(differ([None], "") == [['delete', 0, None, None, None]])
     assert(differ([None], []) == [['delete', 0, None, None, None]])
 
-# def memusage():
-#     return process.memory_info()[0] / 1024
+def memusage():
+    return process.memory_info()[0] / 1024
 
 
-# def runtimeit(funcstr, setup, number=100000, normalize=10000):
-#     for fc in funcstr.strip().splitlines():
-#         fc = fc.strip()
-#         bm = memusage()
-#         p = timeit(fc, setup.strip(), number=number)
-#         am = (memusage() - bm)
-#         assert am < 350, "{} function {}KB Memory Leak Error".format(fc, am)
-#         print("{}: {} ns (mem after {}KB)".format(fc, int(p * normalize), am))
+def runtimeit(funcstr, setup, number=100000, normalize=10000):
+    for fc in funcstr.strip().splitlines():
+        fc = fc.strip()
+        bm = memusage()
+        p = timeit(fc, setup.strip(), number=number)
+        am = (memusage() - bm)
+        assert am < 350, "{} function {}KB Memory Leak Error".format(fc, am)
+        print("{}: {} ns (mem after {}KB)".format(fc, int(p * normalize), am))
 
 
-# def test_dist_perf():
-#     func = """
-#     dist('coffee', 'cafe')
-#     dist(list('coffee'), list('cafe'))
-#     dist(tuple('coffee'), tuple('cafe'))
-#     dist(iter('coffee'), iter('cafe'))
-#     dist('coffee', 'xxxxxx')
-#     dist('coffee', 'coffee')
-#     dist(range(4), range(5))
-#     dist(10, 100)
-#     """
-#     print("\n### Perfomance & memory leak check dist func ###")
-#     runtimeit(func, smip)
+def test_dist_perf():
+    func = """
+    dist('coffee', 'cafe')
+    dist(list('coffee'), list('cafe'))
+    dist(tuple('coffee'), tuple('cafe'))
+    dist(iter('coffee'), iter('cafe'))
+    dist('coffee', 'xxxxxx')
+    dist('coffee', 'coffee')
+    dist(range(4), range(5))
+    dist(10, 100)
+    """
+    print("\n### Perfomance & memory leak check dist func ###")
+    runtimeit(func, smip)
 
 
-# def test_similar_perf():
-#     func = """
-#     similar('coffee', 'cafe')
-#     similar(list('coffee'), list('cafe'))
-#     similar(tuple('coffee'), tuple('cafe'))
-#     similar(iter('coffee'), iter('cafe'))
-#     similar('coffee', 'xxxxxx')
-#     similar('coffee', 'coffee')
-#     similar(range(4), range(5))
-#     """
-#     print("\n### Perfomance & memory leak check similar func ###")
-#     runtimeit(func, smip)
+def test_similar_perf():
+    func = """
+    similar('coffee', 'cafe')
+    similar(list('coffee'), list('cafe'))
+    similar(tuple('coffee'), tuple('cafe'))
+    similar(iter('coffee'), iter('cafe'))
+    similar('coffee', 'xxxxxx')
+    similar('coffee', 'coffee')
+    similar(range(4), range(5))
+    """
+    print("\n### Perfomance & memory leak check similar func ###")
+    runtimeit(func, smip)
 
 
-# def test_differ_perf():
-#     func = """
-#     differ('coffee', 'cafe')
-#     differ(list('coffee'), list('cafe'))
-#     differ(tuple('coffee'), tuple('cafe'))
-#     differ(iter('coffee'), iter('cafe'))
-#     differ('coffee', 'xxxxxx')
-#     differ('coffee', 'coffee')
-#     differ(range(4), range(5))
-#     """
-#     print("\n### Perfomance & memory leak check differ func ###")
-#     runtimeit(func, smip)
+def test_differ_perf():
+    func = """
+    differ('coffee', 'cafe')
+    differ(list('coffee'), list('cafe'))
+    differ(tuple('coffee'), tuple('cafe'))
+    differ(iter('coffee'), iter('cafe'))
+    differ('coffee', 'xxxxxx')
+    differ('coffee', 'coffee')
+    differ(range(4), range(5))
+    differ(10, 100)
+    """
+    print("\n### Perfomance & memory leak check differ func ###")
+    runtimeit(func, smip)
 
 
-# def test_other_perf():
-#     smipa = """
-#     a = dict(zip('012345', 'coffee'))
-#     b = dict(zip('0123', 'cafe'))
-#     """.splitlines()
-#     func = """
-#     dist(a, b)
-#     similar(a, b)
-#     differ(a, b)
-#     """
-#     print("\n### Perfomance & memory leak check other func ###")
-#     runtimeit(func, smip + "\n".join(map(str.strip, smipa)))
+def test_other_perf():
+    smipa = """
+    a = dict(zip('012345', 'coffee'))
+    b = dict(zip('0123', 'cafe'))
+    """.splitlines()
+    func = """
+    dist(a, b)
+    similar(a, b)
+    differ(a, b)
+    """
+    print("\n### Perfomance & memory leak check other func ###")
+    runtimeit(func, smip + "\n".join(map(str.strip, smipa)))
 
 
 if __name__ == '__main__':

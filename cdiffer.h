@@ -288,6 +288,7 @@ void makelist(PyObject*& ops,
             PyList_SET_ITEM(list, 3 + swapflag,
                             PySequence_GetItem(hash1.py, aidx));
         } else {
+            Py_INCREF(hash1.py);
             PyList_SET_ITEM(list, 3 + swapflag, hash1.py);
         }
     }
@@ -305,13 +306,12 @@ void makelist(PyObject*& ops,
             PyList_SET_ITEM(list, 4 - swapflag,
                             PySequence_GetItem(hash2.py, bidx));
         } else {
+            Py_INCREF(hash2.py);
             PyList_SET_ITEM(list, 4 - swapflag, hash2.py);
         }
     }
     PyList_Append(ops, list);
-    if (PyNumber_Check(hash1.py) || PyNumber_Check(hash2.py))
-        return;
-    Py_XDECREF(list);
+    Py_DECREF(list);
 }
 
 PyObject* makelist(int tp,
