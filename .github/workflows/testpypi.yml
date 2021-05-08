@@ -15,15 +15,15 @@ jobs:
          max-parallel: 15
          matrix:
             platform: [
-                  # windows-latest,
-                  # ubuntu-latest,
+                  windows-latest,
+                  ubuntu-latest,
                   macos-latest
             ]
             python-version: [
                   2.7,
                   3.6,
                   3.7,
-                  3.8, # linux munmap_chunk(): invalid pointer. most recent call first, win Windows fatal exception: code 0xc0000374
+                  # 3.8, # linux munmap_chunk(): invalid pointer. most recent call first, win mac Windows fatal exception: code 0xc0000374
                   3.9,
             ]
             exclude:
