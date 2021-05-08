@@ -103,7 +103,8 @@ jobs:
                distro:      ${{ matrix.python-version }}
                githubToken: ${{ github.token }}
                run:         |
-                            pip install twine psutil
+                            pip install twine psutil gnureadline
+                            pip uninstall -y readline
                             pip install -e .
                             python test/test_cdiffer.py
                             python setup.py bdist_wheel
