@@ -309,7 +309,9 @@ void makelist(PyObject*& ops,
         }
     }
     PyList_Append(ops, list);
-    Py_DECREF(list);
+    if (PyNumber_Check(hash1.py) || PyNumber_Check(hash2.py))
+        return;
+    Py_XDECREF(list);
 }
 
 PyObject* makelist(int tp,
