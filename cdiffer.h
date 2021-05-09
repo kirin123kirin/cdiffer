@@ -75,7 +75,17 @@ struct hasher {
             else {
                 py = PySequence_Tuple(o);
                 be_ref_clear = true;
-                len = PyObject_Length(py);
+                be_hash_clear = true;
+                if((len = PyObject_Length(py)) == 0) {
+                    hash = new T[1];
+                    hash[0] = pyhash(py);
+                } else {
+                    hash = new T[len];
+                    for(Py_ssize_t i = 0; i < len; i++) {
+                        hash[i] = pyhash(PySequence_ITEM(py, i));
+                    }
+                }
+                return;
             }
         }
 
@@ -254,7 +264,9 @@ static size_t dist_op(PyObject* arg1, PyObject* arg2, size_t* lensum);
 
 extern "C" PyObject* dist_py(PyObject* self, PyObject* args);
 extern "C" PyObject* similar_py(PyObject* self, PyObject* args);
-extern "C" PyObject* differ_py(PyObject* self, PyObject* args, PyObject *kwargs);
+extern "C" PyObject* differ_py(PyObject* self,
+                               PyObject* args,
+                               PyObject* kwargs);
 
 template <typename T = uint64_t>
 void makelist(PyObject*& ops,

@@ -65,7 +65,9 @@ static size_t dist_op(PyObject* arg1, PyObject* arg2, size_t* lensum) {
         len2 = PyByteArray_GET_SIZE(arg2);
         ldist = distance(len1, PyByteArray_AsString(arg1), len2,
                          PyByteArray_AsString(arg2));
-
+    } else if (PyNumber_Check(arg1) && PyNumber_Check(arg2)) {
+        *lensum = 1;
+        return 1;
     } else {
         hasher<uint64_t> seq1(arg1);
         hasher<uint64_t> seq2(arg2);
@@ -175,17 +177,16 @@ extern "C" PyObject* differ_py(PyObject* self, PyObject* args, PyObject *kwargs)
 
         ssize_t len = PyObject_Length(arg1);
         PyErr_Clear();
-        PyObject *ret, *list;
+        PyObject* ret;
         if(len <= 1) {
             ret = PyList_New(0);
             makelist(ret, ED_EQUAL, 0, 0, arg1, arg2);
         } else {
             ret = PyList_New(len);
             for(ssize_t i = 0; i < len; i++) {
-                list = makelist(ED_EQUAL, i, i, PySequence_GetItem(arg1, i),
+                PyObject* list = makelist(ED_EQUAL, i, i, PySequence_GetItem(arg1, i),
                                 PySequence_GetItem(arg2, i));
                 PyList_SetItem(ret, i, list);
-                Py_DECREF(list);
             }
         }
         return ret;
@@ -227,6 +228,26 @@ extern "C" PyObject* differ_py(PyObject* self, PyObject* args, PyObject *kwargs)
         hasher<Py_UNICODE> seq2(PyUnicode_AsUnicode(arg2), arg2);
         return differ_op(seq1, seq2, diffonly, rep_rate);
 #endif
+    } else if (PyNumber_Check(arg1) && PyNumber_Check(arg2)) {
+        PyObject *ret = PyList_New(0);
+        PyObject* list;
+        if(rep_rate == 0) {
+            makelist(ret, ED_REPLACE, 0, 0, arg1, arg2);
+        } else {
+            list = makelist(ED_INSERT, -1, 0, Py_None, arg2);
+            Py_INCREF(Py_None);
+            PyList_SetItem(list, 1, Py_None);
+            PyList_Append(ret, list);
+            Py_DECREF(list);
+
+            list = makelist(ED_DELETE, 0, -1, arg1, Py_None);
+            Py_INCREF(Py_None);
+            PyList_SetItem(list, 2, Py_None);
+            PyList_Append(ret, list);
+            Py_DECREF(list);
+        }
+        return ret;
+
     } else {
         hasher<uint64_t> seq1(arg1);
         hasher<uint64_t> seq2(arg2);
