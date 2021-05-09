@@ -233,14 +233,20 @@ def memusage():
     return process.memory_info()[0] / 1024
 
 
-def runtimeit(funcstr, setup, number=100000, normalize=10000):
+def runtimeit(funcstr, setup=smip, number=100000, normalize=10000):
+    i = 0
+    st = setup.strip()
+
     for fc in funcstr.strip().splitlines():
         fc = fc.strip()
+        if i == 0:
+            timeit(fc, st, number=number)
         bm = memusage()
-        p = timeit(fc, setup.strip(), number=number)
+        p = timeit(fc, st, number=number)
         am = (memusage() - bm)
         assert am < 350, "{} function {}KB Memory Leak Error".format(fc, am)
         print("{}: {} ns (mem after {}KB)".format(fc, int(p * normalize), am))
+        i += 1
 
 
 def test_dist_perf():

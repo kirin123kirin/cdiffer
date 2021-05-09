@@ -63,7 +63,7 @@
         "${file}"
       ],
       "stopAtEntry": false,
-      "cwd": "${workspaceFolder}/build",
+      "cwd": "${workspaceFolder}",
       "environment": [],
       "console": "internalConsole",
       "preLaunchTask": "DebugSetup.py"
