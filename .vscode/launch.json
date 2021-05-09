@@ -27,10 +27,11 @@
       "program": "python",
       "args": [
         "-m",
-        "pytest"
+        "pytest",
+        ".."
       ],
       "stopAtEntry": false,
-      "cwd": "${workspaceFolder}",
+      "cwd": "${workspaceFolder}/build",
       "environment": [],
       "preLaunchTask": "DebugSetup.py",
       "console": "internalConsole"
@@ -42,9 +43,11 @@
       "request": "launch",
       "program": "-m",
       "args": [
-        "pytest"
+        "pytest",
+        ".."
       ],
       "justMyCode": false,
+      "cwd": "${workspaceFolder}/build",
       "preLaunchTask": "ReleaseSetup.py",
       "console": "internalConsole"
     },
