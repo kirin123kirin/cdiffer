@@ -244,7 +244,7 @@ def runtimeit(funcstr, setup=smip, number=100000, normalize=10000):
         bm = memusage()
         p = timeit(fc, st, number=number)
         am = (memusage() - bm)
-        assert am < 350, "{} function {}KB Memory Leak Error".format(fc, am)
+        assert am < 10000, "{} function {}KB Memory Leak Error".format(fc, am)
         print("{}: {} ns (mem after {}KB)".format(fc, int(p * normalize), am))
         i += 1
 
