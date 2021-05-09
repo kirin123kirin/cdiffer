@@ -165,7 +165,7 @@ extern "C" PyObject* differ_py(PyObject* self, PyObject* args, PyObject *kwargs)
     int rep_rate = REPLACEMENT_RATE;
 
     static char *kwlist[] = {"a", "b", "diffonly", "rep_rate", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|ip", kwlist, 
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|pi", kwlist, 
                                      &arg1, &arg2, &diffonly, &rep_rate))
         return NULL;
 
