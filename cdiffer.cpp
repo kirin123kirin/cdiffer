@@ -161,11 +161,11 @@ extern "C" PyObject* similar_py(PyObject* self, PyObject* args) {
 extern "C" PyObject* differ_py(PyObject* self, PyObject* args, PyObject *kwargs) {
     PyObject *arg1, *arg2, *arg3 = NULL, *arg4 = NULL;
 
-    bool diffonly = false;
+    int diffonly = false;
     int rep_rate = REPLACEMENT_RATE;
 
-    static char *kwlist[] = {"a", "b", "diffonly", "rep_rate", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|pi", kwlist, 
+    const char *kwlist[5] = {"a", "b", "diffonly", "rep_rate", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|ii", (char**)kwlist, 
                                      &arg1, &arg2, &diffonly, &rep_rate))
         return NULL;
 
