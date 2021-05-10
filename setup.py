@@ -30,6 +30,7 @@ ext_modules = [
         'cdiffer',
         extra_compile_args=['-std=c++14'],
         sources=['cdiffer.cpp'],
+        language="c++"
     )]
 
 if any("--debug" in x or "-g" in x for x in sys.argv) and get_default_compiler() == "msvc":
@@ -46,9 +47,10 @@ if any("--debug" in x or "-g" in x for x in sys.argv) and get_default_compiler()
                 "/source-charset:utf-8",
                 # Reason IDE warning link crash #
                 "/FC",
+                "/std:c++14",
             ],
+            language="c++"
         )]
-
 
 CF = """
 Development Status :: 5 - Production/Stable
