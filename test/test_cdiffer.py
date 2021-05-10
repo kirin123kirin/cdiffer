@@ -30,7 +30,7 @@ def test_import_similar():
     assert similar
 
 
-####### differ_test
+# differ_test
 def test_differ_binary_test():
     assert (differ(b'coffee', b'cafe'))
 
@@ -103,7 +103,7 @@ def test_similar_same_test():
 def test_similar_iter_test():
     assert (dist(iter('coffee'), iter('cafe')) == 3)
     assert (similar(iter('coffee'), iter('cafe')) == 0.7)
-    assert (differ(iter('cafexyz'), iter('coffeeabcdefghijk'), False, 0) == \
+    assert (differ(iter('cafexyz'), iter('coffeeabcdefghijk'), False, 0) ==
             [['equal', 0, 0, 'c', 'c'],
              ['insert', None, 1, None, 'o'],
              ['insert', None, 2, None, 'f'],
@@ -184,7 +184,7 @@ def test_integer_test():
     assert (differ(10, 100) == [
         ['insert', None, 0, None, 100],
         ['delete', 0, None, 10, None],
-        ])
+    ])
 
 def test_complex_type():
     assert (dist(list("coffee"), "cafe") == 3)
@@ -228,6 +228,17 @@ def test_differ_complex_Nottype():
     assert(differ([None], None) == [['equal', 0, 0, None, None]])
     assert(differ([None], "") == [['delete', 0, None, None, None]])
     assert(differ([None], []) == [['delete', 0, None, None, None]])
+
+def test_2d_list():
+    a = ["hoge", "foo", "bar"]
+    b = ["fuge", "faa", "bar"]
+    assert(differ(a, b, rep_rate=70) == [
+        ['replace', 0, 0, 'hoge', 'fuge'],
+        ['insert', None, 1, None, 'faa'],
+        ['delete', 1, None, 'foo', None],
+        ['equal', 2, 2, 'bar', 'bar']
+    ])
+
 
 def memusage():
     return process.memory_info()[0] / 1024
@@ -323,4 +334,3 @@ if __name__ == '__main__':
         raise (e)
     finally:
         os.chdir(curdir)
-

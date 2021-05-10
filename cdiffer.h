@@ -462,8 +462,8 @@ static PyObject* difference(const hasher<T>& hash1,
                 makelist(ops, ED_REPLACE, --j + o1, hash1, --k + o2, hash2,
                          swapflag);
             } else {
-                PyObject* pya = PySequence_GetItem(hash1.py, --j);
-                PyObject* pyb = PySequence_GetItem(hash2.py, --k);
+                PyObject* pya = PySequence_GetItem(hash1.py, --j + o1);
+                PyObject* pyb = PySequence_GetItem(hash2.py, --k + o2);
                 ssize_t clen1 = PyObject_Length(pya);
                 ssize_t clen2 = PyObject_Length(pyb);
                 PyErr_Clear();
@@ -561,7 +561,7 @@ static PyObject* difference_with_equal(const hasher<T>& hash1,
 
     /* strip common suffix */
     while(len1 > 0 && len2 > 0 && seq1[len1 - 1] == seq2[len2 - 1]) {
-        makelist(ops, ED_EQUAL, len1--, hash1, len2--, hash2, swapflag);
+        makelist(ops, ED_EQUAL, --len1 + o1, hash1, --len2 + o2, hash2, swapflag);
     }
 
     len1++;
@@ -629,7 +629,7 @@ static PyObject* difference_with_equal(const hasher<T>& hash1,
         }
         if(j && k && *p == *(p - len2 - 1) && seq1[j - 1] == seq2[k - 1]) {
             /* don't be stupid like difflib, don't store ED_KEEP */
-            makelist(ops, ED_EQUAL, j--, hash1, k--, hash2, swapflag);
+            makelist(ops, ED_EQUAL, --j + o1, hash1, --k + o2, hash2, swapflag);
             p -= len2 + 1;
             dir = 0;
             continue;
@@ -639,8 +639,8 @@ static PyObject* difference_with_equal(const hasher<T>& hash1,
                 makelist(ops, ED_REPLACE, --j + o1, hash1, --k + o2, hash2,
                          swapflag);
             } else {
-                PyObject* pya = PySequence_GetItem(hash1.py, --j);
-                PyObject* pyb = PySequence_GetItem(hash2.py, --k);
+                PyObject* pya = PySequence_GetItem(hash1.py, --j + o1);
+                PyObject* pyb = PySequence_GetItem(hash2.py, --k + o2);
                 ssize_t clen1 = PyObject_Length(pya);
                 ssize_t clen2 = PyObject_Length(pyb);
                 PyErr_Clear();
@@ -897,7 +897,7 @@ static PyObject* difference_with_equal_parsed(
 
     /* strip common suffix */
     while(len1 > 0 && len2 > 0 && seq1[len1 - 1] == seq2[len2 - 1]) {
-        makelist(ops, ED_EQUAL, len1--, hash1, len2--, hash2, swapflag);
+        makelist(ops, ED_EQUAL, --len1 + o1, hash1, --len2 + o2, hash2, swapflag);
     }
 
     len1++;
@@ -965,7 +965,7 @@ static PyObject* difference_with_equal_parsed(
         }
         if(j && k && *p == *(p - len2 - 1) && seq1[j - 1] == seq2[k - 1]) {
             /* don't be stupid like difflib, don't store ED_KEEP */
-            makelist(ops, ED_EQUAL, j--, hash1, k--, hash2, swapflag);
+            makelist(ops, ED_EQUAL, --j + o1, hash1, --k + o2, hash2, swapflag);
             p -= len2 + 1;
             dir = 0;
             continue;
