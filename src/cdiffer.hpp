@@ -391,10 +391,12 @@ class Diff_t {
             x = i < A - 1 ? i : A - 1;
         }
 
-        for(; j < B; ++j) {
+        for(; j < B; ++j)
             makelist_pyn(ops, pyn, ED_INSERT, x, j);
-        }
-
+#if PY_MAJOR_VERSION < 3
+        for(std::size_t n = 0; n < B; n++)
+            Py_DECREF(pyn[n]);
+#endif
         delete[] pyn;
         return ops;
     }

@@ -42,8 +42,8 @@ def test_dist_values():
     assert(dist("coffee" * 20, "cafe" * 20) == 80)
     assert(dist("coffee" * 40, "cafe" * 40) == 160)
     assert(dist("coffee" * 80, "cafe" * 80) == 320)
-    assert(dist('あいう', 'あえう!') == 3)
-    assert(dist('ＣＯＦＦＥＥ', 'ＣＡＦＥ') == 4)
+    assert(dist(u'あいう', u'あえう!') == 3)
+    assert(dist(u'ＣＯＦＦＥＥ', u'ＣＡＦＥ') == 4)
 
 # # differ_test
 def test_differ_binary_test():
@@ -221,7 +221,7 @@ def test_integer_test():
 
 def test_complex_type():
     assert (dist(list("coffee"), "cafe") == 10)
-    assert (dist(list('あいう'), 'あえう!') == 7)
+    assert (dist(list(u'あいう'), u'あえう!') == 7)
 
 def test_dist_Notype():
     assert(dist(None, None) == 0)
@@ -417,8 +417,8 @@ def test_dist_perf():
     dist('coffee'*20, 'cafe'*20)
     dist('coffee'*40, 'cafe'*40)
     dist('coffee'*80, 'cafe'*80)
-    dist('ＣＯＦＦＥＥ', 'ＣＡＦＥ')
-    dist('あいう'*40, 'あえう!'*40)
+    dist(u'ＣＯＦＦＥＥ', u'ＣＡＦＥ')
+    dist(u'あいう'*40, u'あえう!'*40)
     dist(list('coffee'), list('cafe'))
     dist(tuple('coffee'), tuple('cafe'))
     dist(iter('coffee'), iter('cafe'))

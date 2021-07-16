@@ -21,7 +21,7 @@ constexpr inline std::size_t PyAny_KIND(PyObject*& o) {
         return PyUnicode_KIND(o);
 
 #else
-        return 2;
+        return 4;
 
 #endif
 
@@ -134,7 +134,7 @@ class pyview_t {
                 kind = PyUnicode_KIND(o);
                 data_ = (CharT*)PyUnicode_DATA(o);
 #else
-                kind = 2;  // unicode
+                kind = 4;  // unicode
                 data_ = (CharT*)PyUnicode_AsUnicode(py);
 #endif
                 return;
