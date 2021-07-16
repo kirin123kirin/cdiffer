@@ -129,7 +129,7 @@ class pyview_t {
                 return;
             }
         } else {
-            if PyUnicode_Check(o) {
+            if (PyUnicode_Check(o)) {
 #if PY_MAJOR_VERSION >= 3
                 kind = PyUnicode_KIND(o);
                 data_ = (CharT*)PyUnicode_DATA(o);
@@ -359,7 +359,7 @@ class pyview {
                 return;
             }
         } else {
-            if PyUnicode_Check(o) {
+            if (PyUnicode_Check(o)) {
 #if PY_MAJOR_VERSION >= 3
                 kind = PyUnicode_KIND(o);
                 data_32 = (uint32_t*)PyUnicode_DATA(o);
