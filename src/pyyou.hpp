@@ -13,7 +13,7 @@ std::size_t error_n = (std::size_t)(-1);
         PyObject_TypeCheck(op, &PyDictValues_Type) || PyObject_TypeCheck(op, &PySet_Type)
 #define PyHashable_Check(op)                                                                                        \
     PyUnicode_Check(op) || PyTuple_Check(op) || PyNumber_Check(op) || PyBytes_Check(op) || PyByteArray_Check(op) || \
-        PyBool_Check || op == Py_None
+        PyBool_Check(op) || op == Py_None
 
 constexpr inline std::size_t PyAny_KIND(PyObject*& o) {
     if(PyUnicode_Check(o)) {
@@ -146,7 +146,7 @@ class pyview_t {
         if(size_ == 0)
             return;
 
-        if(!PySequence_Check(py)) {
+        if(!PySequence_Check(py) || PyRange_Check(py)) {
             py = PySequence_Tuple(py);
             size_ = (std::size_t)PyObject_Length(py);
             be_ref_clear = true;
@@ -157,10 +157,13 @@ class pyview_t {
         data_ = new CharT[size_];
         for(std::size_t i = 0; i < size_; i++) {
             PyObject* item = PySequence_ITEM(py, (Py_ssize_t)i);
-            if(PyNotHashable_Check(item)) {
-                item = PySequence_Tuple(item);
+            if(PyHashable_Check(item)) {
+                data_[i] = (CharT)PyObject_Hash(item);
+            }else{
+                PyObject* tmp = PySequence_Tuple(item);
+                data_[i] = (CharT)PyObject_Hash(tmp);
+                Py_DECREF(tmp);
             }
-            data_[i] = (CharT)PyObject_Hash(item);
             Py_DECREF(item);
         }
     }
@@ -364,7 +367,7 @@ class pyview {
         if(size_ == 0)
             return;
 
-        if(!PySequence_Check(py)) {
+        if(!PySequence_Check(py) || PyRange_Check(py)) {
             py = PySequence_Tuple(py);
             size_ = (std::size_t)PyObject_Length(py);
             be_ref_clear = true;
@@ -375,10 +378,13 @@ class pyview {
         data_64 = new uint64_t[size_];
         for(std::size_t i = 0; i < size_; i++) {
             PyObject* item = PySequence_ITEM(py, (Py_ssize_t)i);
-            if(PyNotHashable_Check(item)) {
-                item = PySequence_Tuple(item);
+            if(PyHashable_Check(item)) {
+                data_64[i] = (uint64_t)PyObject_Hash(item);
+            }else{
+                PyObject* tmp = PySequence_Tuple(item);
+                data_64[i] = (uint64_t)PyObject_Hash(tmp);
+                Py_DECREF(tmp);
             }
-            data_64[i] = (uint64_t)PyObject_Hash(item);
             Py_DECREF(item);
         }
     }

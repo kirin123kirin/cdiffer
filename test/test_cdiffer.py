@@ -407,7 +407,7 @@ def runtimeit(funcstr, setup=smip, number=100000, normalize=10000):
         i += 1
 
 
-def test_dist_perf(): #@todo list memory leak
+def test_dist_perf():
     func = """
     dist('cafe', 'coffee')
     dist('coffee', 'cafe')
@@ -419,7 +419,7 @@ def test_dist_perf(): #@todo list memory leak
     dist('coffee'*80, 'cafe'*80)
     dist('ＣＯＦＦＥＥ', 'ＣＡＦＥ')
     dist('あいう'*40, 'あえう!'*40)
-    dist(list('coffee'), list('cafe')) #<-memory leak
+    dist(list('coffee'), list('cafe'))
     dist(tuple('coffee'), tuple('cafe'))
     dist(iter('coffee'), iter('cafe'))
     dist('coffee', 'xxxxxx')

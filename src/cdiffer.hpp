@@ -198,8 +198,20 @@ class Diff_t {
                 return core_difference(fp);
             }
         }
+        
+        if(A < 2 && B < 2) {
+            PyObject* ops = PyList_New(0);
 
-        else if(b.kind == 2 && B < 256) {
+            if(rep_rate < 1) {
+                makelist(ops, ED_REPLACE, 0, 0, a.py, b.py);
+            } else {
+                makelist(ops, ED_DELETE, 0, 0, a.py, b.py);
+                makelist(ops, ED_INSERT, 0, 0, a.py, b.py);
+            }
+            return ops;
+        }
+
+        else if(B < 256) {
             if(B < 8) {
                 MappingBlock<uint8_t> fp = {};
                 fp.pair = std::array<std::array<uint8_t, 83>, 2>{
@@ -238,16 +250,6 @@ class Diff_t {
                      {ZERO_256, ZERO_256, ZERO_64, ZERO_16, ZERO_4, ZERO_2, ZERO_1}}};
                 return core_difference(fp);
             }
-        } else if(A < 2 && B < 2) {
-            PyObject* ops = PyList_New(0);
-
-            if(rep_rate < 1) {
-                makelist(ops, ED_REPLACE, 0, 0, a.py, b.py);
-            } else {
-                makelist(ops, ED_DELETE, 0, 0, a.py, b.py);
-                makelist(ops, ED_INSERT, 0, 0, a.py, b.py);
-            }
-            return ops;
         }
 
         else {
@@ -430,7 +432,7 @@ class Diff_t {
             }
         }
 
-        else if(b.kind == 2 && B < 256) {
+        else if(B < 256) {
             if(B < 8) {
                 MappingBlock<uint8_t> fp = {};
                 fp.pair = std::array<std::array<uint8_t, 83>, 2>{
