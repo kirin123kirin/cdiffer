@@ -42,7 +42,11 @@ constexpr inline std::size_t PyAny_KIND(PyObject*& o) {
 
 */
 inline std::size_t PyAny_Length(PyObject*& o, int deal_iter_level = 0) {
+#if PY_MAJOR_VERSION >= 3
     if(PyMapping_Check(o)) {
+#else
+    if(PyMapping_Check(o) || PySequence_Check(o)) {
+#endif
         return (std::size_t)PyObject_Length(o);
     } else {
         if(PyNumber_Check(o) || PyBool_Check(o))
@@ -65,7 +69,7 @@ inline std::size_t PyAny_Length(PyObject*& o, int deal_iter_level = 0) {
 template <typename CharT>
 class pyview_t {
    public:
-    using value_type = typename CharT;
+    using value_type = CharT;
     using size_type = std::size_t;
 
     PyObject* py = NULL;
@@ -111,12 +115,16 @@ class pyview_t {
     const void open() {
         PyObject* o = py;
         if(size_ == error_n) {
-            kind = 8;
-            be_hash_clear = true;
             if(PyNumber_Check(py) || PyBool_Check(py) || py == Py_None) {
                 size_ = 1;
+                kind = 8;
                 data_ = new CharT[1];
-                *data_ = (CharT)(PyBool_Check(py) ? (Py_hash_t)py : PyObject_Hash(py));
+                if(data_ == NULL) {
+                    PyErr_NoMemory();
+                    return;
+                }
+                be_hash_clear = true;
+                *data_ = (CharT)(PyBool_Check(py) ? (uint64_t)py : PyObject_Hash(py));
                 is_sequence = false;
                 return;
             }
@@ -152,14 +160,19 @@ class pyview_t {
             be_ref_clear = true;
         }
 
+        data_ = new CharT[size_];
+        if(data_ == NULL) {
+            PyErr_NoMemory();
+            return;
+        }
         be_hash_clear = true;
         canonical = false;
-        data_ = new CharT[size_];
+
         for(std::size_t i = 0; i < size_; i++) {
             PyObject* item = PySequence_ITEM(py, (Py_ssize_t)i);
             if(PyHashable_Check(item)) {
                 data_[i] = (CharT)PyObject_Hash(item);
-            }else{
+            } else {
                 PyObject* tmp = PySequence_Tuple(item);
                 data_[i] = (CharT)PyObject_Hash(tmp);
                 Py_DECREF(tmp);
@@ -180,7 +193,7 @@ class pyview_t {
         }
         if(be_hash_clear && size_ != error_n) {
             if(*(data_ + size_ - 1)) {
-                *(data_ + size_ - 1) = NULL;
+                *(data_ + size_ - 1) = 0;
                 delete[] data_;
             }
             be_hash_clear = false;
@@ -331,13 +344,17 @@ class pyview {
     const void open() {
         PyObject* o = py;
         if(size_ == error_n) {
-            kind = 8;
-            be_hash_clear = true;
             if(PyNumber_Check(py) || PyBool_Check(py) || py == Py_None) {
                 size_ = 1;
+                kind = 8;
                 data_64 = new uint64_t[1];
+                if(data_64 == NULL) {
+                    PyErr_NoMemory();
+                    return;
+                }
                 *data_64 = (uint64_t)PyObject_Hash(py);
                 *data_64 = PyBool_Check(py) ? (uint64_t)py : (uint64_t)PyObject_Hash(py);
+                be_hash_clear = true;
                 is_sequence = false;
                 return;
             }
@@ -373,14 +390,18 @@ class pyview {
             be_ref_clear = true;
         }
 
+        data_64 = new uint64_t[size_];
+        if(data_64 == NULL) {
+            PyErr_NoMemory();
+            return;
+        }
         be_hash_clear = true;
         canonical = false;
-        data_64 = new uint64_t[size_];
         for(std::size_t i = 0; i < size_; i++) {
             PyObject* item = PySequence_ITEM(py, (Py_ssize_t)i);
             if(PyHashable_Check(item)) {
                 data_64[i] = (uint64_t)PyObject_Hash(item);
-            }else{
+            } else {
                 PyObject* tmp = PySequence_Tuple(item);
                 data_64[i] = (uint64_t)PyObject_Hash(tmp);
                 Py_DECREF(tmp);
@@ -400,16 +421,16 @@ class pyview {
         }
         if(be_hash_clear && size_ != error_n) {
             if(kind == 8 && *(data_64 + size_ - 1)) {
-                *(data_64 + size_ - 1) = NULL;
+                *(data_64 + size_ - 1) = 0;
                 delete[] data_64;
             } else if(kind == 4 && *(data_32 + size_ - 1)) {
-                *(data_32 + size_ - 1) = NULL;
+                *(data_32 + size_ - 1) = 0;
                 delete[] data_32;
             } else if(kind == 2 && *(data_16 + size_ - 1)) {
-                *(data_16 + size_ - 1) = NULL;
+                *(data_16 + size_ - 1) = 0;
                 delete[] data_16;
             } else if(kind == 1 && *(data_8 + size_ - 1)) {
-                *(data_8 + size_ - 1) = NULL;
+                *(data_8 + size_ - 1) = 0;
                 delete[] data_8;
             }
             be_hash_clear = false;
@@ -574,173 +595,5 @@ class pyview {
     std::reverse_iterator<uint64_t const*> crbegin() noexcept { return rbegin(); }
     std::reverse_iterator<uint64_t const*> crend() noexcept { return rend(); }
 };
-
-/* Python Interface Method Example */
-// #define MODULE_NAME xxxx
-// #define MODULE_NAME_S "xxxx"
-
-// // this module description
-// #define MODULE_DOCS "xxxx\n"
-
-// #define meth_DESC \
-//     "xxxx"        \
-//     "\n"
-
-// static PyObject* mech_py(CustomObject* self, PyObject* Py_UNUSED(ignored)) {
-//     return PyUnicode_FromString("xxxx");
-// }
-
-// #define PY_ADD_METHOD(py_func, c_func, desc) \
-//     { py_func, (PyCFunction)c_func, METH_VARARGS, desc }
-// #define PY_ADD_METHOD_KWARGS(py_func, c_func, desc) \
-//     { py_func, (PyCFunction)c_func, METH_VARARGS | METH_KEYWORDS, desc }
-
-// /* Please extern method define for python */
-// /* PyMethodDef Parameter Help
-//  * https://docs.python.org/ja/3/c-api/structures.html#c.PyMethodDef
-//  */
-// static PyMethodDef py_methods[] = {PY_ADD_METHOD("meth", meth_py, meth_DESC), {NULL, NULL, 0, NULL}};
-
-// #if PY_MAJOR_VERSION >= 3
-// static struct PyModuleDef py_defmod = {PyModuleDef_HEAD_INIT, MODULE_NAME_S, MODULE_DOCS, 0, py_methods};
-// #define PARSE_NAME(mn) PyInit_##mn
-// #define PARSE_FUNC(mn) \
-//     PyMODINIT_FUNC PARSE_NAME(mn)() { return PyModule_Create(&py_defmod); }
-
-// #else
-// #define PARSE_NAME(mn) \
-//     init##mn(void) { (void)Py_InitModule3(MODULE_NAME_S, py_methods, MODULE_DOCS); }
-// #define PARSE_FUNC(mn) PyMODINIT_FUNC PARSE_NAME(mn)
-// #endif
-
-// PARSE_FUNC(MODULE_NAME)
-
-/* Class Example */
-// struct CustomObject {
-//     PyObject_HEAD PyObject* first; /* first name */
-//     PyObject* last;                /* last name */
-//     int number;
-// };
-
-// static int Custom_traverse(CustomObject* self, visitproc visit, void* arg) {
-//     Py_VISIT(self->first);
-//     Py_VISIT(self->last);
-//     return 0;
-// }
-
-// static int Custom_clear(CustomObject* self) {
-//     Py_CLEAR(self->first);
-//     Py_CLEAR(self->last);
-//     return 0;
-// }
-
-// static void Custom_dealloc(CustomObject* self) {
-//     PyObject_GC_UnTrack(self);
-//     Custom_clear(self);
-//     Py_TYPE(self)->tp_free((PyObject*)self);
-// }
-
-// static PyObject* Custom_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
-//     CustomObject* self;
-//     if((self = (CustomObject*)type->tp_alloc(type, 0)) != NULL) {
-//         self->first = PyUnicode_FromString("");
-//         if(self->first == NULL) {
-//             Py_DECREF(self);
-//             return NULL;
-//         }
-//         self->last = PyUnicode_FromString("");
-//         if(self->last == NULL) {
-//             Py_DECREF(self);
-//             return NULL;
-//         }
-//         self->number = 0;
-//     }
-//     return (PyObject*)self;
-// }
-
-// static int Custom_init(CustomObject* self, PyObject* args, PyObject* kwds) {
-//     static char* kwlist[] = {"first", "last", "number", NULL};
-//     PyObject *first = NULL, *last = NULL, *tmp;
-
-//     if(!PyArg_ParseTupleAndKeywords(args, kwds, "|UUi", kwlist, &first, &last, &self->number))
-//         return -1;
-
-//     if(first) {
-//         tmp = self->first;
-//         Py_INCREF(first);
-//         self->first = first;
-//         Py_DECREF(tmp);
-//     }
-//     if(last) {
-//         tmp = self->last;
-//         Py_INCREF(last);
-//         self->last = last;
-//         Py_DECREF(tmp);
-//     }
-//     return 0;
-// }
-
-// static PyObject* Custom_name(CustomObject* self, PyObject* Py_UNUSED(ignored)) {
-//     return PyUnicode_FromFormat("%S %S", self->first, self->last);
-// }
-
-// PyMODINIT_FUNC PyInit_custom4(void) { /* name needs modulename match */
-//     static PyModuleDef custommodule = {PyModuleDef_HEAD_INIT};
-//     static PyTypeObject CustomType = {PyVarObject_HEAD_INIT(NULL, 0)};
-//     PyObject* m;
-
-//     /* /////////////////////////////////////  Please Setting  //////////////////////////////////////////////
-//      * [Set Me 1] this module infomation
-//      */
-//     custommodule.m_name = "custom4";
-//     custommodule.m_doc = "Example module that creates an extension type.";
-
-//     /* [Set Me 2] this class, infomation */
-//     const char* class_object_name = "Custom"; /* ClassName for python */
-//     CustomType.tp_name = "custom4.Custom";    /* module fullpath */
-//     CustomType.tp_doc = "Custom objects";     /* display document into python */
-
-//     /* [Set Me 3] this class attributes, infomation */
-//     static PyMemberDef Custom_members[] = {
-//         /* reference. https://docs.python.org/ja/3/c-api/structures.html#c.PyMemberDef */
-//         {"number", T_INT, offsetof(CustomObject, number), 0, "custom number"},
-//         {NULL} /* Sentinel */
-//     };
-
-//     /* [Set Me 4] this methods infomation */
-//     static PyMethodDef Custom_methods[] = {
-//         {"name", (PyCFunction)Custom_name, METH_NOARGS, "Return the name, combining the first and last name"},
-//         {NULL} /* Sentinel */
-//     };
-
-//     /* ///////////////////////////////////////////////////////////////////////////////////////////////////  */
-
-//     CustomType.tp_basicsize = sizeof(CustomObject);
-//     CustomType.tp_itemsize = 0;
-//     CustomType.tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC;
-//     CustomType.tp_new = Custom_new;
-//     CustomType.tp_init = (initproc)Custom_init;
-//     CustomType.tp_dealloc = (destructor)Custom_dealloc;
-//     CustomType.tp_traverse = (traverseproc)Custom_traverse;
-//     CustomType.tp_clear = (inquiry)Custom_clear;
-//     CustomType.tp_members = Custom_members;
-//     CustomType.tp_methods = Custom_methods;
-
-//     if(PyType_Ready(&CustomType) < 0)
-//         return NULL;
-
-//     custommodule.m_size = -1;
-//     m = PyModule_Create(&custommodule);
-//     if(m == NULL)
-//         return NULL;
-
-//     Py_INCREF(&CustomType);
-//     if(PyModule_AddObject(m, class_object_name, (PyObject*)&CustomType) < 0) {
-//         Py_DECREF(&CustomType);
-//         Py_DECREF(m);
-//         return NULL;
-//     }
-//     return m;
-// }
 
 #endif /* !defined(PYYOU_H) */

@@ -42,7 +42,7 @@ struct through_pass_hash {
     T operator()(const uint32_t& s) const { return s; }
     T operator()(const uint64_t& s) const { return s; }
     T operator()(const std::string& s) const { return (T)s.data(); }
-    T operator()(const pyview& s) const { return (T)s.data_; }
+    T operator()(const pyview& s) const { return (T)s.data_64; }
     T operator()(const PyObject*& s) const {
         T hash;
         if((hash = (T)PyObject_Hash(s)) == -1) {
@@ -163,7 +163,7 @@ class Diff_t {
           rep_rate(REPLACEMENT_RATE) {}
     Diff_t(nullptr_t) { Diff_t::Diff_t(); }
 
-    Diff_t(PyObject*& _a, PyObject*& _b) : a(CharT(_a)), b(CharT(_b)) {
+    Diff_t(PyObject* _a, PyObject* _b) : a(CharT(_a)), b(CharT(_b)) {
         A = a.size();
         B = b.size();
         swapflag = a.kind == b.kind && A > B;
@@ -198,7 +198,7 @@ class Diff_t {
                 return core_difference(fp);
             }
         }
-        
+
         if(A < 2 && B < 2) {
             PyObject* ops = PyList_New(0);
 
@@ -300,7 +300,7 @@ class Diff_t {
     PyObject* core_difference(Storage& fp) {
         std::size_t i = 0, j = 0, x = 0, y = 0, len = 0, sj = 0, mj = 0;
         uint64_t found = 0, adat = 0, trb = 0;
-        const std::size_t BITS = std::min(64ULL, sizeof(fp[0]) * 8);
+        const std::size_t BITS = std::min(std::size_t(64), (std::size_t)(sizeof(fp[0]) * 8));
         PyObject* ops = PyList_New(0);
         if(a == b) {
             if(!diffonly)
@@ -320,7 +320,7 @@ class Diff_t {
         }
         if(A == 1 && B == 1) {
             if(rep_rate > 0 &&
-               ((a.canonical && b.canonical) || Diff(a.getitem(0), b.getitem(0)).similar(rep_rate) * 100 < rep_rate)) {
+               ((a.canonical && b.canonical) || Diff_t<pyview>(a.getitem(0), b.getitem(0)).similar(rep_rate) * 100 < rep_rate)) {
                 makelist(ops, ED_DELETE, x, 0, a.py, b.py, swapflag);
                 makelist(ops, ED_INSERT, 0, y, a.py, b.py, swapflag);
             } else {
@@ -362,13 +362,14 @@ class Diff_t {
                     if(!diffonly)
                         makelist_pyn(ops, pyn, ED_EQUAL, x, j);
                 } else if(i < A) {
-                    if(rep_rate > 0 && (a.canonical && b.canonical) ||
-                       Diff(a.getitem(x), b.getitem(j)).similar(rep_rate) * 100 < rep_rate) {
+                    if(rep_rate > 0 && ((a.canonical && b.canonical) ||
+                       Diff_t<pyview>(a.getitem(x), b.getitem(j)).similar(rep_rate) * 100 < rep_rate)) {
                         makelist_pyn(ops, pyn, ED_DELETE, x, j);
                         makelist_pyn(ops, pyn, ED_INSERT, x, j);
                     } else {
                         makelist_pyn(ops, pyn, ED_REPLACE, x, j);
                     }
+
                 } else {
                     makelist_pyn(ops, pyn, ED_INSERT, x, j);
                 }
@@ -419,7 +420,7 @@ class Diff_t {
                 return core_distance_bp_simple(fp, max, weight);
             } else if(B < 16) {
                 std::array<uint16_t, 128> fp = {ZERO_128};
-                return core_distance_bp(fp, max, weight);
+                return core_distance_bp_simple(fp, max, weight);
             } else if(B < 32) {
                 std::array<uint32_t, 128> fp = {ZERO_128};
                 return core_distance_bp_simple(fp, max, weight);
@@ -494,9 +495,9 @@ class Diff_t {
             https://susisu.hatenablog.com/entry/2017/10/09/134032
          */
         std::size_t dist = A + B, i = 0, j = 0, sj = 0, mj = 0;
-        using _Vty = std::remove_reference<decltype(fp[0])>::type;
+        using _Vty = typename std::remove_reference<decltype(fp[0])>::type;
         _Vty found = 0, adat = 0, trb = 0;
-        const std::size_t BITS = std::min(64ULL, sizeof(_Vty) * 8);
+        const std::size_t BITS = std::min(std::size_t(64), (std::size_t)(sizeof(_Vty) * 8));
 
         for(std::size_t y = 0, len = std::min(BITS, B); y < len; ++y)
             fp[b[y]] |= 1ULL << (y % BITS);
@@ -522,7 +523,7 @@ class Diff_t {
                  bit                | adat << (BITS - (j % BITS))   |
                                     --------------------------------- */
 
-                if((found = (_Vty)(trb & ~trb + 1)) != 0) {
+                if((found = (_Vty)(trb & (~trb + 1))) != 0) {
                     // ED_INSERT and ED_EQUAL
                     dist -= 2;
                     while(found > 1) {
@@ -556,7 +557,7 @@ class Diff_t {
         /* under 64 charactors
          */
         std::size_t dist = A + B, i = 0, j = 0;
-        using _Vty = std::remove_reference<decltype(fp[0])>::type;
+        using _Vty = typename std::remove_reference<decltype(fp[0])>::type;
         _Vty found = _Vty(0), trb = _Vty(0);
 
         for(std::size_t y = 0; y < B; ++y)
@@ -571,7 +572,7 @@ class Diff_t {
                 dist -= 2;
             else if((trb = (_Vty)(fp[ai] >> j)) != 0) {
                 dist -= 2;
-                found = (_Vty)(trb & ~trb + 1);
+                found = (_Vty)(trb & (~trb + 1));
                 while(found > 1) {
                     ++j;
                     found >>= 1;
@@ -586,7 +587,7 @@ class Diff_t {
         return dist;
     }
 
-   private:
+   public:
     std::size_t similar_p(std::size_t min = error_n) {
         std::size_t L;
         if((L = A + B) > 0) {
@@ -615,22 +616,6 @@ class Diff {
             kind1 = -kind1;
     }
 
-    double similar(double min = -1.0) {
-        if(kind1 == 1)
-            return Diff_t<pyview_t<uint8_t>>(a, b).similar(min);
-        else if(kind1 == 2)
-            return Diff_t<pyview_t<uint16_t>>(a, b).similar(min);
-        else if(kind1 == 8) {
-            if(PyAny_Length(a) == 1 && PyAny_Length(b) == 1)
-                return 0.f;
-            else
-                return Diff_t<pyview_t<uint64_t>>(a, b).similar(min);
-        } else if(kind1 < 0)
-            return 0.f;
-        else
-            return Diff_t<pyview_t<uint32_t>>(a, b).similar(min);
-    }
-
     std::size_t distance(std::size_t max = error_n, bool weight = true) {
         if(kind1 == 1)
             return Diff_t<pyview_t<uint8_t>>(a, b).distance(max, weight);
@@ -645,6 +630,22 @@ class Diff {
             return PyAny_Length(a, 1) + PyAny_Length(b, 1);
         else
             return Diff_t<pyview_t<uint32_t>>(a, b).distance(max, weight);
+    }
+
+    double similar(double min = -1.0) {
+        if(kind1 == 1)
+            return Diff_t<pyview_t<uint8_t>>(a, b).similar(min);
+        else if(kind1 == 2)
+            return Diff_t<pyview_t<uint16_t>>(a, b).similar(min);
+        else if(kind1 == 8) {
+            if(PyAny_Length(a) == 1 && PyAny_Length(b) == 1)
+                return 0.f;
+            else
+                return Diff_t<pyview_t<uint64_t>>(a, b).similar(min);
+        } else if(kind1 < 0)
+            return 0.f;
+        else
+            return Diff_t<pyview_t<uint32_t>>(a, b).similar(min);
     }
 
     PyObject* difference(bool _diffonly = false, int _rep_rate = REPLACEMENT_RATE) {

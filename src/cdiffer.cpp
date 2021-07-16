@@ -1,5 +1,3 @@
-#pragma once
-
 #define PY_SSIZE_T_CLEAN
 #include "cdiffer.hpp"
 #include <Python.h>
