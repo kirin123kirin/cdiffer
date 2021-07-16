@@ -84,8 +84,8 @@
       },
     },
     {
-      "type": "cppbuild",
-      "label": "DebugSetup_old",
+			"type": "cppbuild",
+			"label": "Debug C++",
       "command": "cmd.exe",
       "args": [
         "/C",
@@ -94,83 +94,111 @@
         ">nul",
         "&&",
         // https://docs.microsoft.com/ja-jp/cpp/build/reference/compiler-options-listed-alphabetically?view=msvc-160
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.28.29910\\bin\\HostX86\\x64\\cl.exe",
-        "/c", //リンクを行わないでコンパイルします。
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30037\\bin\\HostX86\\x64\\cl.exe",
+        "/DDBUG",
+        // "/c", //リンクを行わないでコンパイルします。
         "/source-charset:utf-8",
-        // "/std:c++17",
-        "/I${env:PYTHONPATH}\\include",
-        "/I${env:PYTHONPATH}\\libs",
-        "-IC:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.28.29910\\ATLMFC\\include",
-        "-IC:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.28.29910\\include",
+        "/std:c++14",
+        "/Wall",
+        "/wd","4514", "/wd 4820", "/wd 5045", "/wd 4100", "/wd 4191","/wd 4710", "/wd 4668",
+        "/sdl",
+        "-IC:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30037\\ATLMFC\\include",
+        "-IC:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30037\\include",
         "-IC:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\ucrt",
         "-IC:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\shared",
         "-IC:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\um",
         "-IC:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\winrt",
         "-IC:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\cppwinrt",
-        "/Zi", //詳細なデバッグ情報を生成します。
-        "/nologo", //著作権情報を表示しません。
-        "/W3", //出力する警告レベルを設定します。
-        "/WX-", //すべての警告をエラーとして扱います。
-        "/diagnostics:column", //診断メッセージの形式を制御します。
-        "/sdl", //追加のセキュリティ機能と警告を有効にします。
-        // "/Od", //コードを最速化しません
-        "/Ox", //コードを最速化します。
-        "/Oi", //組み込み関数を生成します。
-        "/GL", //プログラム全体の最適化を有効にします。
-        "/D_WINDLL",
-        "/D_MBCS",
-        "/Gm-", //非推奨になりました。 簡易リビルドを有効にします。
-        "/EHsc", //コンパイラによって生成される例外処理モデルのサポートを指定します。s:標準 C++ スタックアンワインドを有効にします。c:ンパイラは、 ** extern "c"** として宣言された関数が C++ 例外ではないと見なし throw ます。
-        "/MD", //MSVCRT.lib を使用して、マルチスレッド DLL を作成します。
-        "/GS", //バッファーのセキュリティをチェックします。
-        "/Gy", //関数レベルのリンクを有効にします。
-        "/fp:precise", //浮動小数点の動作を厳密に指定します。
-        "/permissive-", //標準準拠モードを設定します。
-        "/Zc:wchar_t", //標準動作を指定します。
-        "/Zc:forScope", //標準動作を指定します。
-        "/Zc:inline", //標準動作を指定します。
-        "/Fobuild\\Debug\\", //オブジェクト ファイルを作成します。
-        "/Fdbuild\\Debug\\vc142.pdb", //プログラム データベース ファイルの名前を変更します。
-        "/Gd", //呼び出し規約を使用し __cdecl ます (x86 のみ)。
-        "/TP", //すべてのソースファイルが C++ であることを指定します。
-        "/FC", //診断テキストで cl.exe に渡されるソース コード ファイルの完全パスを表示します。
-        "${workspaceFolder}\\cdiffer.cpp", //入力ファイルソース
-        "&&",
-        // https://docs.microsoft.com/ja-jp/cpp/build/reference/linker-options?view=msvc-160
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.28.29910\\bin\\HostX86\\x64\\link.exe",
-        "/OUT:${workspaceFolder}\\cdiffer.cp37-win_amd64.pyd", //出力ファイル名を指定します。
-        "/INCREMENTAL:NO", //インクリメンタル リンクの処理方法を制御します。
-        "/NOLOGO", //開始メッセージを表示しません。
+        "/I${env:PYTHONPATH}\\include",
+        "/I${env:PYTHONPATH}\\libs",
+        "/IY:\\usr\\local\\include",
+        "/IC:\\usr\\lib\\include",
+				"/Zi",
+				"/EHsc",
+        "/Od",
+				"/nologo",
+				"/Fe:","${workspaceFolder}\\build\\${fileBasenameNoExtension}.exe",
+				"${file}",
+        "/link",
+        // "/LIBPATH:${workspaceFolder}\\build",
+        // "/LIBPATH:${workspaceFolder}\\build\\Debug\\src",
         "/LIBPATH:${env:PYTHONPATH}\\libs",
         "/LIBPATH:${env:PYTHONPATH}\\PCbuild\\amd64",
-        "/LIBPATH:C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.28.29910\\ATLMFC\\lib\\x64",
-        "/LIBPATH:C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.28.29910\\lib\\x64",
+        "/LIBPATH:C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30037\\ATLMFC\\lib\\x64",
+        "/LIBPATH:C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30037\\lib\\x64",
         "/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.18362.0\\ucrt\\x64",
         "/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.18362.0\\um\\x64",
-        "/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.18362.0\\x64",
-        "/MANIFEST", //side-by-side マニフェスト ファイルを作成し、バイナリに埋め込むことができるようにします。(https://docs.microsoft.com/ja-jp/cpp/build/reference/manifest-create-side-by-side-assembly-manifest?view=msvc-160)
-        "/MANIFESTUAC:NO", //ユーザー アカウント制御 (UAC) 情報をプログラム マニフェストに組み込むかどうかを指定します。
-        "/manifest:embed", //リンカーが RT_MANIFEST 型のリソースとしてイメージにマニフェスト ファイルを埋め込む必要があることを指定します。
-        "/DEBUG:FULL", //デバッグ情報を作成します。
-        "/PDB:${workspaceFolder}\\build\\Debug\\cdiffer.cp37-win_amd64.pdb", //PDB ファイルを作成します。
-        "/SUBSYSTEM:CONSOLE", //ファイルの実行方法をオペレーティングシステムに指示し .exe ます。
-        "/OPT:REF", //LINK の最適化, 参照されない関数とデータを排除します。
-        "/OPT:ICF", //LINK の最適化, デバッグビルドでは、COMDAT 圧縮を有効にするために /opt: ICF を明示的に指定する必要があります(https://docs.microsoft.com/ja-jp/cpp/build/reference/opt-optimizations?view=msvc-160)
-        // "/LTCG:incremental", //リンク時のコード生成を指定します。プロジェクト全体ではなく、編集の影響を受けるファイルに対して、プログラム全体の最適化またはリンク時のコード生成 (LTCG) のみを適用するように指定します。
-        "/LTCG", //リンク時のコード生成を指定します。プロジェクト全体ではなく、編集の影響を受けるファイルに対して、プログラム全体の最適化またはリンク時のコード生成 (LTCG) のみを適用するように指定します。
-        "/LTCGOUT:build\\Debug\\cdiffer.cp37-win_amd64.iobj",
-        "/TLBID:1", //リンカーによって生成されたタイプ ライブラリのリソース ID を指定します。
-        "/DYNAMICBASE", //アドレス空間レイアウトのランダム化 (ASLR) 機能を使用して、読み込み時に再配置される実行可能イメージを生成するかどうかを指定します。
-        "/NXCOMPAT", //Windows データ実行防止機能との互換性が確認済みとして実行可能ファイルをマークします。
-        "/IMPLIB:${workspaceFolder}\\build\\Debug\\cdiffer.cp37-win_amd64.lib", //既定のインポート ライブラリ名をオーバーライドします。
-        "/MACHINE:X64", //ターゲット プラットフォームを指定します。
-        "/EXPORT:PyInit_cdiffer", //関数をエクスポートします。
-        "/DLL", //DLL をビルドします。
-        "build\\Debug\\cdiffer.obj" //リンカー入力ファイル
+        "/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.18362.0\\x64"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}\\build"
+			},
+      "problemMatcher": [
+        "$msCompile"
       ],
-      "options": {
-        "cwd": "${workspaceFolder}"
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
       },
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "prebuild"
+      ],
+      "group": "build",
+      "detail": "cl.exe"
+    },
+        {
+			"type": "cppbuild",
+			"label": "Release C++",
+      "command": "cmd.exe",
+      "args": [
+        "/C",
+        "chcp",
+        "65001",
+        ">nul",
+        "&&",
+        // https://docs.microsoft.com/ja-jp/cpp/build/reference/compiler-options-listed-alphabetically?view=msvc-160
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30037\\bin\\HostX86\\x64\\cl.exe",
+        // "/c", //リンクを行わないでコンパイルします。
+        "/source-charset:utf-8",
+        "/std:c++14",
+        // "/Wall",
+        // "/wd","4514", "/wd 4820", "/wd 5045", "/wd 4100", "/wd 4191","/wd 4710", "/wd 4668",
+        "-IC:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30037\\ATLMFC\\include",
+        "-IC:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30037\\include",
+        "-IC:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\ucrt",
+        "-IC:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\shared",
+        "-IC:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\um",
+        "-IC:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\winrt",
+        "-IC:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\cppwinrt",
+        "/I${env:PYTHONPATH}\\include",
+        "/I${env:PYTHONPATH}\\libs",
+        "/IY:\\usr\\local\\include",
+        "/IC:\\usr\\lib\\include",
+				"/Zi",
+				"/EHsc",
+        "/Ox",
+				"/nologo",
+				"/Fe:","${workspaceFolder}\\build\\${fileBasenameNoExtension}.exe",
+				"${file}",
+        "/link",
+        // "/LIBPATH:${workspaceFolder}\\build",
+        // "/LIBPATH:${workspaceFolder}\\build\\Debug\\src",
+        "/LIBPATH:${env:PYTHONPATH}\\libs",
+        "/LIBPATH:${env:PYTHONPATH}\\PCbuild\\amd64",
+        "/LIBPATH:C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30037\\ATLMFC\\lib\\x64",
+        "/LIBPATH:C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30037\\lib\\x64",
+        "/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.18362.0\\ucrt\\x64",
+        "/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.18362.0\\um\\x64",
+        "/LIBPATH:C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.18362.0\\x64"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}\\build"
+			},
       "problemMatcher": [
         "$msCompile"
       ],

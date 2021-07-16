@@ -17,6 +17,7 @@
   // for the documentation about the tasks.json format
   "version": "0.2.0",
   "configurations": [
+
     //
     // from pytest Run Debugger
     //
@@ -68,6 +69,20 @@
       "console": "internalConsole",
       "preLaunchTask": "DebugSetup.py"
     },
+    {
+      "name": "Instant Release from py",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "python",
+      "args": [
+        "${file}"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}/build",
+      "environment": [],
+      "console": "internalConsole",
+      "preLaunchTask": "ReleaseSetup.py"
+    },
     //
     // Python and C++ Mix Debug Mode Setting
     //
@@ -92,7 +107,7 @@
     },
     // // for C/C++
     {
-      "name": "C/C++: PureRun",
+      "name": "C/C++: Debug Run",
       "type": "cppvsdbg",
       "request": "launch",
       "program": "build/${fileBasenameNoExtension}.exe",
@@ -100,17 +115,37 @@
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
-      // "preLaunchTask": "DebugBuildCpp",
+      "preLaunchTask": "Debug C++",
       // "console": "newExternalWindow",
       // "console": "integratedTerminal"
       "console": "internalConsole"
     },
+    {
+      "name": "C/C++: Release Run",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "build/${fileBasenameNoExtension}.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "preLaunchTask": "Release C++",
+      "console": "internalConsole"
+    },
     // for Python
     {
-      "name": "Python: Pure Run",
+      "name": "Python: Normal Run",
       "type": "python",
       "request": "launch",
       "program": "${file}",
+      "console": "internalConsole"
+    },
+    {
+      "name": "Python: Profile run",
+      "type": "python",
+      "request": "launch",
+      "program": "-m",
+      "args": ["cProfile", "-s", "cumulative", "${file}"],
       "console": "internalConsole"
     },
   ]

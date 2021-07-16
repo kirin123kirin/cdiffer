@@ -1,7 +1,7 @@
 
 
 # Python C Extention 2 Sequence Compare
-[![Upload pypi.org](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml/badge.svg?branch=v0.2.4)](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml)
+[![Upload pypi.org](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml/badge.svg?branch=v0.4.0)](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml)
 
 **Usefull differ function with Levenshtein distance.**
 
@@ -26,17 +26,17 @@ dist(sequence, sequence)
 >>> from cdiffer import dist
 >>>
 >>> dist('coffee', 'cafe')
-3
+4
 >>> dist(list('coffee'), list('cafe'))
-3
+4
 >>> dist(tuple('coffee'), tuple('cafe'))
-3
+4
 >>> dist(iter('coffee'), iter('cafe'))
-3
+4
 >>> dist(range(4), range(5))
 1
 >>> dist('coffee', 'xxxxxx')
-6
+12
 >>> dist('coffee', 'coffee')
 0
 ```
@@ -56,7 +56,7 @@ base on levenshtein edit distance.
 >>> from cdiffer import similar
 >>>
 >>> similar('coffee', 'cafe')
-0.7
+0.6
 >>> similar('hoge', 'bar')
 0.0
 
@@ -78,28 +78,28 @@ differ(source_sequence, destination_sequence, diffonly=False, rep_rate=60)
 ...     print(x)
 ...
 ['equal', 0, 0, 'c', 'c']
-['insert', None, 1, None, 'a']
 ['delete', 1, None, 'o', None]
-['equal', 2, 2, 'f', 'f']
-['delete', 3, None, 'f', None]
-['delete', 4, None, 'e', None]
-['equal', 5, 3, 'e', 'e']
+['insert', None, 1, None, 'a']
+['delete', 2, None, 'f', None]
+['equal', 3, 2, 'f', 'f']
+['equal', 4, 3, 'e', 'e']
+['delete', 5, None, 'e', None]
 >>> for x in differ('coffee', 'cafe', diffonly=True):
 ...     print(x)
 ...
-['insert', None, 1, None, 'a']
 ['delete', 1, None, 'o', None]
-['delete', 3, None, 'f', None]
-['delete', 4, None, 'e', None]
+['insert', None, 1, None, 'a']
+['delete', 2, None, 'f', None]
+['delete', 5, None, 'e', None]
 >>> # Matching rate option is `rep_rate` (default is 60(%))
 >>> for x in differ('coffee', 'cafe', rep_rate=0):
 ...     print(x)
 ['equal', 0, 0, 'c', 'c']
 ['replace', 1, 1, 'o', 'a']
-['equal', 2, 2, 'f', 'f']
-['delete', 3, None, 'f', None]
-['delete', 4, None, 'e', None]
-['equal', 5, 3, 'e', 'e']
+['delete', 2, None, 'f', None]
+['equal', 3, 2, 'f', 'f']
+['equal', 4, 3, 'e', 'e']
+['delete', 5, None, 'e', None]
 ```
 
 ## Performance
@@ -120,13 +120,13 @@ In [2]: %timeit dist('coffee', 'cafe')
     ...: %timeit dist(range(4), range(5))
     ...: %timeit dist('coffee', 'xxxxxx')
     ...: %timeit dist('coffee', 'coffee')
-162 ns ± 0.752 ns per loop (mean ± std. dev. of 7 runs, 10000000 loops each)
-709 ns ± 3.33 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-658 ns ± 7.6 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-1.08 µs ± 6 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-1.14 µs ± 5.15 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-199 ns ± 0.38 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-50.3 ns ± 0.103 ns per loop (mean ± std. dev. of 7 runs, 10000000 loops each)
+148 ns ± 1.1 ns per loop (mean ± std. dev. of 7 runs, 10000000 loops each)
+728 ns ± 1.24 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+689 ns ± 1.73 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+1.13 µs ± 8.66 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+1.15 µs ± 6.32 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+163 ns ± 2.3 ns per loop (mean ± std. dev. of 7 runs, 10000000 loops each)
+50.1 ns ± 1.05 ns per loop (mean ± std. dev. of 7 runs, 10000000 loops each)
 
 In [3]: %timeit similar('coffee', 'cafe')
     ...: %timeit similar(list('coffee'), list('cafe'))
@@ -135,13 +135,13 @@ In [3]: %timeit similar('coffee', 'cafe')
     ...: %timeit similar(range(4), range(5))
     ...: %timeit similar('coffee', 'xxxxxx')
     ...: %timeit similar('coffee', 'coffee')
-161 ns ± 0.079 ns per loop (mean ± std. dev. of 7 runs, 10000000 loops each)
-708 ns ± 5.43 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-671 ns ± 2.35 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-1.11 µs ± 15.6 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-1.15 µs ± 7.85 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-196 ns ± 0.242 ns per loop (mean ± std. dev. of 7 runs, 10000000 loops each)
-50.9 ns ± 0.628 ns per loop (mean ± std. dev. of 7 runs, 10000000 loops each)
+150 ns ± 1.01 ns per loop (mean ± std. dev. of 7 runs, 10000000 loops each)
+729 ns ± 3.55 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+705 ns ± 9.76 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+1.14 µs ± 14.3 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+1.15 µs ± 6.97 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+166 ns ± 0.888 ns per loop (mean ± std. dev. of 7 runs, 10000000 loops each)
+51 ns ± 0.698 ns per loop (mean ± std. dev. of 7 runs, 10000000 loops each)
 
 In [4]: %timeit differ('coffee', 'cafe')
     ...: %timeit differ(list('coffee'), list('cafe'))
@@ -150,22 +150,21 @@ In [4]: %timeit differ('coffee', 'cafe')
     ...: %timeit differ(range(4), range(5))
     ...: %timeit differ('coffee', 'xxxxxx')
     ...: %timeit differ('coffee', 'coffee')
-683 ns ± 1.41 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-1.21 µs ± 9.12 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-1.16 µs ± 13.9 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-1.63 µs ± 9.98 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-2.1 µs ± 8.4 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
-1 µs ± 3.05 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-493 ns ± 1.28 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+907 ns ± 4.58 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+1.47 µs ± 3.49 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+1.42 µs ± 2.57 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+1.89 µs ± 4.2 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+2.31 µs ± 35 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+1.03 µs ± 1.18 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+409 ns ± 1.66 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
 
 In [5]: a = dict(zip('012345', 'coffee'))
     ...: b = dict(zip('0123', 'cafe'))
     ...: %timeit dist(a, b)
     ...: %timeit similar(a, b)
     ...: %timeit differ(a, b)
-436 ns ± 1.45 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-434 ns ± 2.07 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-932 ns ± 3.91 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-
+511 ns ± 2 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+519 ns ± 5.69 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+1.16 µs ± 2.81 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
 
 ```
