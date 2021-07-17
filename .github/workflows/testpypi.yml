@@ -20,7 +20,7 @@ jobs:
                   macos-latest
             ]
             python-version: [
-                  2.7,
+                  # 2.7,
                   3.6,
                   3.7,
                   3.8,
@@ -28,7 +28,10 @@ jobs:
             ]
             exclude:
                -
-                  platform:       [windows-latest, macos-latest]
+                  platform:       windows-latest
+                  python-version: 2.7
+               -
+                  platform:       macos-latest
                   python-version: 2.7
 
       steps:
