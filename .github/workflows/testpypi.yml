@@ -15,8 +15,8 @@ jobs:
          max-parallel: 15
          matrix:
             platform: [
-                  # windows-latest,
-                  # ubuntu-latest,
+                  windows-latest,
+                  ubuntu-latest,
                   macos-latest
             ]
             python-version: [
@@ -89,10 +89,10 @@ jobs:
          max-parallel: 5
          matrix:
             python-version: [ 
-                  # python27,
-                  # python36,
-                  # python37,
-                  # python38,
+                  python27,
+                  python36,
+                  python37,
+                  python38,
                   python39,
             ]
       steps:

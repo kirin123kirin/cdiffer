@@ -46,7 +46,7 @@ struct through_pass_hash {
     T operator()(const std::string& s) const { return (T)s.data(); }
     T operator()(const pyview& s) const { return (T)s.data_64; }
     T operator()(PyObject*& s) const {
-        T hash;
+        T hash = T();
         if((hash = (T)PyObject_Hash(s)) == -1) {
             PyObject* item = PySequence_Tuple(s);
             hash = (T)PyObject_Hash(s);
