@@ -2,4 +2,4 @@ include README.md
 include LICENSE
 include setup.cfg
 include platname.py
-recursive-include src *
+recursive-include src/*
