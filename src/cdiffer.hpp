@@ -6,6 +6,7 @@
 #include <array>
 #include <string>
 #include <unordered_map>
+#include <Python.h>
 #include "pyyou.hpp"
 
 namespace gammy {
