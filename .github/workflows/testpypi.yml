@@ -71,7 +71,7 @@ jobs:
             run:   |
                    python setup.py sdist
                    twine check --strict dist/*
-         
+         -
             name: Save whl file to artifact
             uses: actions/upload-artifact@v2
             with:
