@@ -28,7 +28,7 @@ jobs:
             ]
             exclude:
                -
-                  platform:       windows-latest
+                  platform:       [windows-latest, macos-latest]
                   python-version: 2.7
 
       steps:
