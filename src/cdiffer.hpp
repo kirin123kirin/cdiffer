@@ -2,10 +2,10 @@
 #ifndef CDIFFER_H
 #define CDIFFER_H
 
-#define PY_SSIZE_T_CLEAN
 #include <array>
 #include <string>
 #include <unordered_map>
+#define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include "pyyou.hpp"
 
@@ -45,15 +45,15 @@ struct through_pass_hash {
     T operator()(const uint64_t& s) const { return s; }
     T operator()(const std::string& s) const { return (T)s.data(); }
     T operator()(const pyview& s) const { return (T)s.data_64; }
-    T operator()(const PyObject* s) const {
-        T hash;
-        if((hash = (T)PyObject_Hash(s)) == -1) {
-            PyObject* item = PySequence_Tuple(s);
-            hash = (T)PyObject_Hash(s);
-            Py_DECREF(item);
-        }
-        return hash;
-    }
+    // T operator()(const PyObject* s) const {
+    //     T hash;
+    //     if((hash = (T)PyObject_Hash(s)) == -1) {
+    //         PyObject* item = PySequence_Tuple(s);
+    //         hash = (T)PyObject_Hash(s);
+    //         Py_DECREF(item);
+    //     }
+    //     return hash;
+    // }
 };
 
 template <typename BitTy = uint64_t, std::size_t fraction_size = 83>
