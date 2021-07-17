@@ -56,7 +56,7 @@ struct through_pass_hash {
     }
 };
 
-template <typename BitTy = uint64_t, std::size_t fraction_size = 83>
+template <typename BitTy = uint64_t, std::size_t fraction_size = 131>
 struct MappingBlock {
     using value_type = BitTy;
     using size_type = typename std::make_unsigned<BitTy>::type;
@@ -222,43 +222,25 @@ class Diff_t {
             return ops;
         }
 
-        else if(B < 256) {
+        else if(B < 64) {
             if(B < 8) {
                 MappingBlock<uint8_t> fp = {};
-                fp.pair = std::array<std::array<uint8_t, 83>, 2>{
-                    {{ZERO_64, ZERO_16, ZERO_2, ZERO_1}, {ZERO_64, ZERO_16, ZERO_2, ZERO_1}}};
+                fp.pair =
+                    std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
                 return core_difference(fp);
             } else if(B < 16) {
                 MappingBlock<uint16_t> fp = {};
-                fp.pair = std::array<std::array<uint16_t, 83>, 2>{
-                    {{ZERO_64, ZERO_16, ZERO_2, ZERO_1}, {ZERO_64, ZERO_16, ZERO_2, ZERO_1}}};
+                fp.pair =
+                    std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
                 return core_difference(fp);
             } else if(B < 32) {
-                MappingBlock<uint32_t> fp = {};
-                fp.pair = std::array<std::array<uint32_t, 83>, 2>{
-                    {{ZERO_64, ZERO_16, ZERO_2, ZERO_1}, {ZERO_64, ZERO_16, ZERO_2, ZERO_1}}};
-                return core_difference(fp);
-            } else if(B < 64) {
-                MappingBlock<uint64_t, 127> fp = {};
-                fp.pair = std::array<std::array<uint64_t, 127>, 2>{
-                    {{ZERO_64, ZERO_32, ZERO_16, ZERO_8, ZERO_4, ZERO_2, ZERO_1},
-                     {ZERO_64, ZERO_32, ZERO_16, ZERO_8, ZERO_4, ZERO_2, ZERO_1}}};
-                return core_difference(fp);
-            } else if(B < 128) {
-                MappingBlock<uint64_t, 211> fp = {};
-                fp.pair = std::array<std::array<uint64_t, 211>, 2>{
-                    {{ZERO_128, ZERO_64, ZERO_16, ZERO_2, ZERO_1}, {ZERO_128, ZERO_64, ZERO_16, ZERO_2, ZERO_1}}};
-                return core_difference(fp);
-            } else if(B < 192) {
-                MappingBlock<uint64_t, 313> fp = {};
-                fp.pair = std::array<std::array<uint64_t, 313>, 2>{
-                    {{ZERO_256, ZERO_32, ZERO_16, ZERO_8, ZERO_1}, {ZERO_256, ZERO_32, ZERO_16, ZERO_8, ZERO_1}}};
+                MappingBlock<uint32_t, 257> fp = {};
+                fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
                 return core_difference(fp);
             } else {
-                MappingBlock<uint64_t, 599> fp = {};
-                fp.pair = std::array<std::array<uint64_t, 599>, 2>{
-                    {{ZERO_256, ZERO_256, ZERO_64, ZERO_16, ZERO_4, ZERO_2, ZERO_1},
-                     {ZERO_256, ZERO_256, ZERO_64, ZERO_16, ZERO_4, ZERO_2, ZERO_1}}};
+                MappingBlock<uint64_t, 521> fp = {};
+                fp.pair = std::array<std::array<uint64_t, 521>, 2>{
+                    {{ZERO_256, ZERO_256, ZERO_8, ZERO_1}, {ZERO_256, ZERO_256, ZERO_8, ZERO_1}}};
                 return core_difference(fp);
             }
         }
@@ -445,44 +427,26 @@ class Diff_t {
             }
         }
 
-        else if(B < 256) {
+        else if(B < 64) {
             if(B < 8) {
                 MappingBlock<uint8_t> fp = {};
-                fp.pair = std::array<std::array<uint8_t, 83>, 2>{
-                    {{ZERO_64, ZERO_16, ZERO_2, ZERO_1}, {ZERO_64, ZERO_16, ZERO_2, ZERO_1}}};
+                fp.pair =
+                    std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
                 return core_distance_bp_simple(fp, max, weight);
             } else if(B < 16) {
                 MappingBlock<uint16_t> fp = {};
-                fp.pair = std::array<std::array<uint16_t, 83>, 2>{
-                    {{ZERO_64, ZERO_16, ZERO_2, ZERO_1}, {ZERO_64, ZERO_16, ZERO_2, ZERO_1}}};
+                fp.pair =
+                    std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
                 return core_distance_bp_simple(fp, max, weight);
             } else if(B < 32) {
-                MappingBlock<uint32_t> fp = {};
-                fp.pair = std::array<std::array<uint32_t, 83>, 2>{
-                    {{ZERO_64, ZERO_16, ZERO_2, ZERO_1}, {ZERO_64, ZERO_16, ZERO_2, ZERO_1}}};
+                MappingBlock<uint32_t, 257> fp = {};
+                fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
                 return core_distance_bp_simple(fp, max, weight);
-            } else if(B < 64) {
-                MappingBlock<uint64_t, 127> fp = {};
-                fp.pair = std::array<std::array<uint64_t, 127>, 2>{
-                    {{ZERO_64, ZERO_32, ZERO_16, ZERO_8, ZERO_4, ZERO_2, ZERO_1},
-                     {ZERO_64, ZERO_32, ZERO_16, ZERO_8, ZERO_4, ZERO_2, ZERO_1}}};
-                return core_distance_bp_simple(fp, max, weight);
-            } else if(B < 128) {
-                MappingBlock<uint64_t, 211> fp = {};
-                fp.pair = std::array<std::array<uint64_t, 211>, 2>{
-                    {{ZERO_128, ZERO_64, ZERO_16, ZERO_2, ZERO_1}, {ZERO_128, ZERO_64, ZERO_16, ZERO_2, ZERO_1}}};
-                return core_distance_bp(fp, max, weight);
-            } else if(B < 192) {
-                MappingBlock<uint64_t, 313> fp = {};
-                fp.pair = std::array<std::array<uint64_t, 313>, 2>{
-                    {{ZERO_256, ZERO_32, ZERO_16, ZERO_8, ZERO_1}, {ZERO_256, ZERO_32, ZERO_16, ZERO_8, ZERO_1}}};
-                return core_distance_bp(fp, max, weight);
             } else {
-                MappingBlock<uint64_t, 599> fp = {};
-                fp.pair = std::array<std::array<uint64_t, 599>, 2>{
-                    {{ZERO_256, ZERO_256, ZERO_64, ZERO_16, ZERO_4, ZERO_2, ZERO_1},
-                     {ZERO_256, ZERO_256, ZERO_64, ZERO_16, ZERO_4, ZERO_2, ZERO_1}}};
-                return core_distance_bp(fp, max, weight);
+                MappingBlock<uint64_t, 521> fp = {};
+                fp.pair = std::array<std::array<uint64_t, 521>, 2>{
+                    {{ZERO_256, ZERO_256, ZERO_8, ZERO_1}, {ZERO_256, ZERO_256, ZERO_8, ZERO_1}}};
+                return core_distance_bp_simple(fp, max, weight);
             }
         }
 
