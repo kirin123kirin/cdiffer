@@ -417,6 +417,8 @@ def test_dist_perf():
     dist('coffee'*20, 'cafe'*20)
     dist('coffee'*40, 'cafe'*40)
     dist('coffee'*80, 'cafe'*80)
+    dist(u'ＣＯＦＦＥＥ', u'ＣＡＦＥ')
+    dist(u'あいう'*40, u'あえう!'*40)
     dist(list('coffee'), list('cafe'))
     dist(tuple('coffee'), tuple('cafe'))
     dist(iter('coffee'), iter('cafe'))
