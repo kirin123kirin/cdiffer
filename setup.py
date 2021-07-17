@@ -31,7 +31,7 @@ ext_modules = [
         sources=['src/cdiffer.cpp'],
         language="c++",
         include_dirs=["src"],
-        extra_compile_args=[]
+        extra_compile_args=["-std=c++14"]
     )]
 
 if any("--debug" in x or "-g" in x for x in sys.argv) and get_default_compiler() == "msvc":
