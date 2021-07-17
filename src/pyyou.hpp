@@ -15,7 +15,7 @@ std::size_t error_n = (std::size_t)(-1);
     PyUnicode_Check(op) || PyTuple_Check(op) || PyNumber_Check(op) || PyBytes_Check(op) || PyByteArray_Check(op) || \
         PyBool_Check(op) || op == Py_None
 
-constexpr inline std::size_t PyAny_KIND(PyObject*& o) {
+inline std::size_t PyAny_KIND(PyObject*& o) {
     if(PyUnicode_Check(o)) {
 #if PY_MAJOR_VERSION >= 3
         return PyUnicode_KIND(o);
