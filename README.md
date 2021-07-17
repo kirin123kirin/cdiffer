@@ -1,7 +1,7 @@
 
 
 # Python C Extention 2 Sequence Compare
-[![Upload pypi.org](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml/badge.svg?branch=v0.4.0)](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml)
+[![Upload pypi.org](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml/badge.svg?branch=v0.4.2)](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml)
 
 **Edit distance, Similarity and 2 sequence differences printing.**
 

@@ -94,7 +94,7 @@ class pyview_t {
           be_ref_clear(false),
           is_sequence(true),
           auto_close(true) {}
-    pyview_t(nullptr_t)
+    pyview_t(std::nullptr_t)
         : py(NULL),
           kind(0),
           data_(nullptr),
@@ -323,7 +323,7 @@ class pyview {
           be_ref_clear(false),
           is_sequence(true),
           auto_close(true) {}
-    pyview(nullptr_t)
+    pyview(std::nullptr_t)
         : py(NULL),
           kind(0),
           data_64(nullptr),

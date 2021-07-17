@@ -1,6 +1,6 @@
 #define PY_SSIZE_T_CLEAN
 #include "cdiffer.hpp"
-#include <Python.h>
+// #include <Python.h>
 
 PyObject* gammy::DIFFTP[2][ED_LAST] = {{
                                     PyUnicode_FromString("equal"),    // 0: EQUAL

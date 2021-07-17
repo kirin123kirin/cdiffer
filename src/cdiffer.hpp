@@ -4,6 +4,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <array>
+#include <string>
 #include <unordered_map>
 #include "pyyou.hpp"
 
@@ -161,7 +162,16 @@ class Diff_t {
           swapflag(false),
           diffonly(false),
           rep_rate(REPLACEMENT_RATE) {}
-    Diff_t(nullptr_t) { Diff_t::Diff_t(); }
+    Diff_t(std::nullptr_t)
+        : a(nullptr),
+          b(nullptr),
+          A(error_n),
+          B(error_n),
+          D(error_n),
+          SIZE(SIZE_MAX),
+          swapflag(false),
+          diffonly(false),
+          rep_rate(REPLACEMENT_RATE) {}
 
     Diff_t(PyObject* _a, PyObject* _b) : a(CharT(_a)), b(CharT(_b)) {
         A = a.size();
@@ -319,8 +329,8 @@ class Diff_t {
             return ops;
         }
         if(A == 1 && B == 1) {
-            if(rep_rate > 0 &&
-               ((a.canonical && b.canonical) || Diff_t<pyview>(a.getitem(0), b.getitem(0)).similar(rep_rate) * 100 < rep_rate)) {
+            if(rep_rate > 0 && ((a.canonical && b.canonical) ||
+                                Diff_t<pyview>(a.getitem(0), b.getitem(0)).similar(rep_rate) * 100 < rep_rate)) {
                 makelist(ops, ED_DELETE, x, 0, a.py, b.py, swapflag);
                 makelist(ops, ED_INSERT, 0, y, a.py, b.py, swapflag);
             } else {
@@ -362,8 +372,9 @@ class Diff_t {
                     if(!diffonly)
                         makelist_pyn(ops, pyn, ED_EQUAL, x, j);
                 } else if(i < A) {
-                    if(rep_rate > 0 && ((a.canonical && b.canonical) ||
-                       Diff_t<pyview>(a.getitem(x), b.getitem(j)).similar(rep_rate) * 100 < rep_rate)) {
+                    if(rep_rate > 0 &&
+                       ((a.canonical && b.canonical) ||
+                        Diff_t<pyview>(a.getitem(x), b.getitem(j)).similar(rep_rate) * 100 < rep_rate)) {
                         makelist_pyn(ops, pyn, ED_DELETE, x, j);
                         makelist_pyn(ops, pyn, ED_INSERT, x, j);
                     } else {
