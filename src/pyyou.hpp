@@ -4,6 +4,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include <limits>
 
 std::size_t error_n = (std::size_t)(-1);
 
@@ -89,21 +90,19 @@ struct PyMallocator {
         ;
     }
 
-    template <class T>
     bool operator==(const PyMallocator<T>&) {
         return true;
     }
 
-    template <class T>
     bool operator!=(const PyMallocator<T>&) {
         return false;
     }
 
-   private:
-    void report(T* p, std::size_t n, bool alloc = true) const {
-        std::cout << (alloc ? "Alloc: " : "Dealloc: ") << sizeof(T) * n << " bytes at " << std::hex << std::showbase
-                  << reinterpret_cast<void*>(p) << std::dec << '\n';
-    }
+//    private:
+//     void report(T* p, std::size_t n, bool alloc = true) const {
+//         std::cout << (alloc ? "Alloc: " : "Dealloc: ") << sizeof(T) * n << " bytes at " << std::hex << std::showbase
+//                   << reinterpret_cast<void*>(p) << std::dec << '\n';
+//     }
 };
 
 template <typename CharT>

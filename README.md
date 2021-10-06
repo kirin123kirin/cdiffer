@@ -1,7 +1,7 @@
 
 
 # Python C Extention 2 Sequence Compare
-[![Upload pypi.org](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml/badge.svg?branch=v0.5.1)](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml)
+[![Upload pypi.org](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml/badge.svg?branch=v0.5.2)](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml)
 
 **Edit distance, Similarity and 2 sequence differences printing.**
 
@@ -117,6 +117,23 @@ differ(source_sequence, destination_sequence, diffonly=False, rep_rate=60)
 
 ```
 
+# cdiffer.compare
+
+compare and prety printing 2 sequence data.
+
+## Usage
+compare(source_sequence, destination_sequence, diffonly=False, rep_rate=60, condition_value=" ---> ")
+
+## Examples
+
+```python
+>>> from cdiffer import compare
+... compare('coffee', 'cafe')
+[[60, 'insert', 'c', 'a', 'f', 'e'],
+ [60, 'delete', 'c', 'o', 'f', 'f', 'e', 'e']]
+
+```
+
 ## Performance
 
 
@@ -181,4 +198,13 @@ In [5]: a = dict(zip('012345', 'coffee'))
 524 ns ± 2.6 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
 539 ns ± 2.23 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
 1.07 µs ± 1.9 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+
+In [6]: %timeit compare("coffee", "cafe")
+    ...: %timeit compare([list("abc"), list("abc")], [list("abc"), list("acc"), list("xtz")], rep_rate=50)
+    ...: %timeit compare(["abc", "abc"], ["abc", "acc", "xtz"], rep_rate=40)
+    ...: %timeit compare(["abc", "abc"], ["abc", "acc", "xtz"], rep_rate=50)
+844 ns ± 3.88 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+3.32 µs ± 6.92 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+1.16 µs ± 3.94 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+1.3 µs ± 31.5 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
 ```

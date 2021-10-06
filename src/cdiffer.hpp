@@ -896,12 +896,6 @@ class Diff {
     }
 
     std::size_t distance(std::size_t max = error_n, bool weight = true) {
-        std::size_t len1 = PyAny_Length(a);
-        std::size_t len2 = PyAny_Length(b);
-
-        if(len1 + len2 == 0 || len1 == 1 && len2 == 1)
-            return 1ULL + weight;
-
         if(kind1 == 1)
             return Diff_t<pyview_t<uint8_t>>(a, b).distance(max, weight);
         else if(kind1 == 2)
@@ -915,12 +909,6 @@ class Diff {
     }
 
     double similar(double min = -1.0) {
-        std::size_t len1 = PyAny_Length(a);
-        std::size_t len2 = PyAny_Length(b);
-
-        if(len1 + len2 == 0 || len1 == 1 && len2 == 1)
-            return 0.f;
-
         if(kind1 == 1)
             return Diff_t<pyview_t<uint8_t>>(a, b).similar(min);
         else if(kind1 == 2)
@@ -934,20 +922,6 @@ class Diff {
     }
 
     PyObject* difference(bool _diffonly = false, int _rep_rate = REPLACEMENT_RATE) {
-        std::size_t len1 = PyAny_Length(a);
-        std::size_t len2 = PyAny_Length(b);
-
-        if(len1 + len2 == 0 || len1 == 1 && len2 == 1) {
-            PyObject* ops = PyList_New(0);
-            if(_rep_rate < 1)
-                makelist(ops, ED_REPLACE, 0, 0, a, b);
-            else {
-                makelist(ops, ED_DELETE, 0, 0, a, b);
-                makelist(ops, ED_INSERT, 0, 0, a, b);
-            }
-            return ops;
-        }
-
         if(kind1 == 1)
             return Diff_t<pyview_t<uint8_t>>(a, b).difference(_diffonly, _rep_rate);
         else if(kind1 == 2)
@@ -955,6 +929,20 @@ class Diff {
         else if(kind1 == 8)
             return Diff_t<pyview_t<uint64_t>>(a, b).difference(_diffonly, _rep_rate);
         else if(kind1 < 0){
+            std::size_t len1 = PyAny_Length(a);
+            std::size_t len2 = PyAny_Length(b);
+
+            if(len1 + len2 == 0 || (len1 == 1 && len2 == 1)) {
+                PyObject* ops = PyList_New(0);
+                if(_rep_rate < 1)
+                    makelist(ops, ED_REPLACE, 0, 0, a, b);
+                else {
+                    makelist(ops, ED_DELETE, 0, 0, a, b);
+                    makelist(ops, ED_INSERT, 0, 0, a, b);
+                }
+                return ops;
+            }
+
             if(len1 <= len2)
                 return Diff_t<pyview>(a, b).difference(_diffonly, _rep_rate);
             else {
@@ -969,36 +957,6 @@ class Diff {
 
     PyObject* compare(bool _diffonly, int _rep_rate, PyObject* _condition_value) {
 
-        std::size_t len1 = PyAny_Length(a);
-        std::size_t len2 = PyAny_Length(b);
-
-        if(len1 + len2 == 0 || len1 == 1 && len2 == 1) {
-            PyObject* list = PyList_New(2);
-            PyObject* ops = PyList_New(0);
-
-            if(_rep_rate < 1) {
-                PyList_SET_ITEM(list, 0, PyLong_FromLong(_rep_rate));
-                Py_INCREF(DIFFTP[0][ED_REPLACE]);
-                PyList_SET_ITEM(list, 1, DIFFTP[0][ED_REPLACE]);
-                complist(list, ED_REPLACE, 0, 0, a, b, false, _condition_value);
-                PyList_Append(ops, list);
-            } else {
-                PyList_SET_ITEM(list, 0, PyLong_FromLong(0));
-                Py_INCREF(DIFFTP[0][ED_DELETE]);
-                PyList_SET_ITEM(list, 1, DIFFTP[0][ED_DELETE]);
-                complist(list, ED_DELETE, 0, 0, a, b, false, _condition_value);
-                PyList_Append(ops, list);
-                Py_DECREF(list);
-                list = PyList_New(2);
-                PyList_SET_ITEM(list, 0, PyLong_FromLong(0));
-                Py_INCREF(DIFFTP[0][ED_INSERT]);
-                PyList_SET_ITEM(list, 1, DIFFTP[0][ED_INSERT]);
-                complist(list, ED_INSERT, 0, 0, a, b, false, _condition_value);
-                PyList_Append(ops, list);
-            }
-            Py_DECREF(list);
-            return ops;
-        }
 
         if(kind1 == 1)
             return Diff_t<pyview_t<uint8_t>>(a, b).compare(_diffonly, _rep_rate, _condition_value);
@@ -1007,6 +965,36 @@ class Diff {
         else if(kind1 == 8)
             return Diff_t<pyview_t<uint64_t>>(a, b).compare(_diffonly, _rep_rate, _condition_value);
         else if(kind1 < 0) {
+            std::size_t len1 = PyAny_Length(a);
+            std::size_t len2 = PyAny_Length(b);
+
+            if(len1 + len2 == 0 || (len1 == 1 && len2 == 1)) {
+                PyObject* list = PyList_New(2);
+                PyObject* ops = PyList_New(0);
+
+                if(_rep_rate < 1) {
+                    PyList_SET_ITEM(list, 0, PyLong_FromLong(_rep_rate));
+                    Py_INCREF(DIFFTP[0][ED_REPLACE]);
+                    PyList_SET_ITEM(list, 1, DIFFTP[0][ED_REPLACE]);
+                    complist(list, ED_REPLACE, 0, 0, a, b, false, _condition_value);
+                    PyList_Append(ops, list);
+                } else {
+                    PyList_SET_ITEM(list, 0, PyLong_FromLong(0));
+                    Py_INCREF(DIFFTP[0][ED_DELETE]);
+                    PyList_SET_ITEM(list, 1, DIFFTP[0][ED_DELETE]);
+                    complist(list, ED_DELETE, 0, 0, a, b, false, _condition_value);
+                    PyList_Append(ops, list);
+                    Py_DECREF(list);
+                    list = PyList_New(2);
+                    PyList_SET_ITEM(list, 0, PyLong_FromLong(0));
+                    Py_INCREF(DIFFTP[0][ED_INSERT]);
+                    PyList_SET_ITEM(list, 1, DIFFTP[0][ED_INSERT]);
+                    complist(list, ED_INSERT, 0, 0, a, b, false, _condition_value);
+                    PyList_Append(ops, list);
+                }
+                Py_DECREF(list);
+                return ops;
+            }
             if (len1 <= len2)
                 return Diff_t<pyview>(a, b).compare(_diffonly, _rep_rate, _condition_value);
             else {
