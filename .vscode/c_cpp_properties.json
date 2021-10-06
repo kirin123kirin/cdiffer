@@ -3,6 +3,7 @@
         {
             "name": "win64_d",
             "includePath": [
+                ".",
                 "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30037\\ATLMFC\\include",
                 "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30037\\include",
                 "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.18362.0\\ucrt",
@@ -21,11 +22,30 @@
                 "_UNICODE"
             ],
             "windowsSdkVersion": "10.0.18362.0",
-            "compilerPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30037\\bin\\Hostx64\\x64\\cl.exe",
+            "compilerPath": "cl.exe",
             "cStandard": "c11",
             "cppStandard": "c++14",
             "intelliSenseMode": "windows-msvc-x64"
+        },
+        {
+            "name": "linux64_d",
+            "includePath": [
+                ".",
+                "/usr/include/python3.6",
+                "/usr/local/include",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "gcc-x64"
         }
+
     ],
     "version": 4
 }

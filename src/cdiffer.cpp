@@ -3,17 +3,20 @@
 // #include <Python.h>
 
 PyObject* gammy::DIFFTP[2][ED_LAST] = {{
-                                    PyUnicode_FromString("equal"),    // 0: EQUAL
-                                    PyUnicode_FromString("replace"),  // 1: REPLACE
-                                    PyUnicode_FromString("insert"),   // 2: INSERT
-                                    PyUnicode_FromString("delete")    // 3: DELETE
-                                },
-                                {
-                                    PyUnicode_FromString("equal"),    // 0: EQUAL
-                                    PyUnicode_FromString("replace"),  // 1: REPLACE
-                                    PyUnicode_FromString("delete"),   // 2: DELETE
-                                    PyUnicode_FromString("insert")    // 3: INSERT
-                                }};
+                                           PyUnicode_FromString("equal"),    // 0: EQUAL
+                                           PyUnicode_FromString("replace"),  // 1: REPLACE
+                                           PyUnicode_FromString("insert"),   // 2: INSERT
+                                           PyUnicode_FromString("delete")    // 3: DELETE
+                                       },
+                                       {
+                                           PyUnicode_FromString("equal"),    // 0: EQUAL
+                                           PyUnicode_FromString("replace"),  // 1: REPLACE
+                                           PyUnicode_FromString("delete"),   // 2: DELETE
+                                           PyUnicode_FromString("insert")    // 3: INSERT
+                                       }};
+
+PyObject* gammy::DEL_Flag = PyUnicode_FromString("DEL");
+PyObject* gammy::ADD_Flag = PyUnicode_FromString("ADD");
 
 /*
  * python Interface function
@@ -67,8 +70,8 @@ PyObject* differ_py(PyObject* self, PyObject* args, PyObject* kwargs) {
         PyObject* ops = PyList_New(0);
         if(diffonly)
             return ops;
-        if (PyMapping_Check(arg1))
-            len1 = (std::size_t) PyObject_Length(arg1);
+        if(PyMapping_Check(arg1))
+            len1 = (std::size_t)PyObject_Length(arg1);
         if(len1 == error_n || len1 == 0) {
             gammy::makelist(ops, ED_EQUAL, 0, 0, arg1, arg2);
             return ops;
@@ -79,6 +82,64 @@ PyObject* differ_py(PyObject* self, PyObject* args, PyObject* kwargs) {
     }
 
     return gammy::Diff(arg1, arg2).difference((bool)diffonly, rep_rate);
+}
+
+PyObject* compare_py(PyObject* self, PyObject* args, PyObject* kwargs) {
+    PyObject *arg1, *arg2;
+    int diffonly = false;
+    int rep_rate = REPLACEMENT_RATE;
+    PyObject* condition_value = NULL;
+    PyObject* ret = NULL;
+    bool need_clean = false;
+
+    const char* kwlist[8] = {"a", "b", "diffonly", "rep_rate", "condition_value", NULL};
+
+    if(!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iiOO", (char**)kwlist, &arg1, &arg2, &diffonly, &rep_rate,
+                                    &condition_value))
+        return NULL;
+
+    if(condition_value == NULL) {
+        condition_value = PyUnicode_FromString(" ---> ");
+        need_clean = true;
+    } else if(!PyUnicode_Check(condition_value)) {
+        return PyErr_Format(PyExc_AttributeError, "`condition_value` should be unicode string.");
+    }
+
+    if(PyObject_RichCompareBool(arg1, arg2, Py_EQ)) {
+        std::size_t len1 = error_n, i;
+        PyObject* ops = PyList_New(0);
+        if(diffonly) {
+            if(need_clean)
+                Py_XDECREF(condition_value);
+            return ops;
+        }
+
+        PyObject* list = PyList_New(2);
+        PyList_SET_ITEM(list, 0, PyLong_FromLong(100));
+        Py_INCREF(gammy::DIFFTP[0][ED_EQUAL]);
+        PyList_SET_ITEM(list, 1, gammy::DIFFTP[0][ED_EQUAL]);
+
+        if(PyMapping_Check(arg1))
+            len1 = (std::size_t)PyObject_Length(arg1);
+
+        if(len1 == error_n || len1 == 0) {
+            PyList_Append(list, arg1);
+        } else {
+            for(i = 0; i < len1; i++)
+                gammy::complist(list, ED_EQUAL, i, i, arg1, arg2, false, condition_value);
+        }
+        PyList_Append(ops, list);
+        if(need_clean)
+            Py_XDECREF(condition_value);
+        Py_DECREF(list);
+        return ops;
+    }
+
+    ret = gammy::Diff(arg1, arg2).compare((bool)diffonly, rep_rate, condition_value);
+
+    if(need_clean)
+        Py_XDECREF(condition_value);
+    return ret;
 }
 
 #define MODULE_NAME cdiffer
@@ -158,8 +219,8 @@ PyObject* differ_py(PyObject* self, PyObject* args, PyObject* kwargs) {
     "...     print(x)\n"                                                      \
     "...\n"                                                                   \
     "['equal',   0, 0,   'c', 'c']\n"                                         \
-    "['delete',  1, None,'o',None]\n"                                          \
-    "['insert',  None, 1,None,'a']\n"                                          \
+    "['delete',  1, None,'o',None]\n"                                         \
+    "['insert',  None, 1,None,'a']\n"                                         \
     "['equal',   2, 2,   'f', 'f']\n"                                         \
     "['delete',  3, None,'f',None]\n"                                         \
     "['delete',  4, None,'e',None]\n"                                         \
@@ -167,8 +228,8 @@ PyObject* differ_py(PyObject* self, PyObject* args, PyObject* kwargs) {
     ">>> for x in differ('coffee', 'cafe', diffonly=True):\n"                 \
     "...     print(x)\n"                                                      \
     "...\n"                                                                   \
-    "['delete',  1, None,'o',None]\n"                                          \
-    "['insert',  None, 1,None,'a']\n"                                          \
+    "['delete',  1, None,'o',None]\n"                                         \
+    "['insert',  None, 1,None,'a']\n"                                         \
     "['delete',  3, None,'f',None]\n"                                         \
     "['delete',  4, None,'e',None]\n"                                         \
     "\n"                                                                      \
@@ -189,6 +250,28 @@ PyObject* differ_py(PyObject* self, PyObject* args, PyObject* kwargs) {
     "['delete',  4, None,'e',None]\n"                                         \
     "\n"
 
+#define compare_DESC                                                                                        \
+    "This Function is compare and prety printing 2 sequence data.\n"                                        \
+    "\n"                                                                                                    \
+    "# Parameters :\n"                                                                                      \
+    "    a -> object : left comare target data.\n"                                                          \
+    "    b -> object : right comare target data.\n"                                                         \
+    "    diffonly -> bool: Ignore Equal data. If Equal then return empty list.\n"                           \
+    "    rep_rate -> int: Threshold to be considered as replacement.(-1 ~ 100). -1: allways replacement.\n" \
+    "    condition_value -> str : Conjunctions for comparison.\n"                                           \
+    "\n"                                                                                                    \
+    "# Return : Lists of List\n"                                                                            \
+    "    1st column -> matching rate (0 ~ 100).\n"                                                          \
+    "    2nd column -> matching tagname (unicode string).\n"                                                \
+    "    3rd over   -> compare data.\n"                                                                     \
+    "\n"                                                                                                    \
+    "# Example\n"                                                                                           \
+    "    >>> from cdiffer import compare\n"                                                                 \
+    "    ... compare('coffee', 'cafe')\n"                                                                   \
+    "    [[60, 'insert', 'c', 'a', 'f', 'e'],\n"                                                            \
+    "     [60, 'delete', 'c', 'o', 'f', 'f', 'e', 'e']]\n"                                                  \
+    "\n"
+
 /* }}} */
 
 #define PY_ADD_METHOD(py_func, c_func, desc) \
@@ -203,6 +286,7 @@ PyObject* differ_py(PyObject* self, PyObject* args, PyObject* kwargs) {
 static PyMethodDef py_methods[] = {PY_ADD_METHOD("dist", dist_py, dist_DESC),
                                    PY_ADD_METHOD("similar", similar_py, similar_DESC),
                                    PY_ADD_METHOD_KWARGS("differ", differ_py, differ_DESC),
+                                   PY_ADD_METHOD_KWARGS("compare", compare_py, compare_DESC),
 
                                    {NULL, NULL, 0, NULL}};
 

@@ -9,7 +9,7 @@ import sys
 from os.path import dirname, join as pjoin
 
 
-__version__ = '0.4.4'
+__version__ = '0.5.1'
 
 # Edit posix platname for pypi upload error
 if os.name == "posix" and any(x.startswith("bdist") for x in sys.argv) \

@@ -66,6 +66,46 @@ inline std::size_t PyAny_Length(PyObject*& o, int deal_iter_level = 0) {
     }
 }
 
+template <class T>
+struct PyMallocator {
+    typedef T value_type;
+
+    PyMallocator() = default;
+    template <class U>
+    constexpr PyMallocator(const PyMallocator<U>&) noexcept {}
+
+    [[nodiscard]] T* allocate(std::size_t n) {
+        if(n > std::numeric_limits<std::size_t>::max() / sizeof(T))
+            throw std::bad_array_new_length();
+        if(auto p = PyMem_New(T, n)) {
+            // report(p, n);
+            return p;
+        }
+        throw std::bad_alloc();
+    }
+
+    void deallocate(T* p, std::size_t n) noexcept {
+        PyMem_Del(p);
+        ;
+    }
+
+    template <class T>
+    bool operator==(const PyMallocator<T>&) {
+        return true;
+    }
+
+    template <class T>
+    bool operator!=(const PyMallocator<T>&) {
+        return false;
+    }
+
+   private:
+    void report(T* p, std::size_t n, bool alloc = true) const {
+        std::cout << (alloc ? "Alloc: " : "Dealloc: ") << sizeof(T) * n << " bytes at " << std::hex << std::showbase
+                  << reinterpret_cast<void*>(p) << std::dec << '\n';
+    }
+};
+
 template <typename CharT>
 class pyview_t {
    public:
@@ -114,20 +154,18 @@ class pyview_t {
 
     const void open() {
         PyObject* o = py;
-        if(size_ == error_n) {
-            if(PyNumber_Check(py) || PyBool_Check(py) || py == Py_None) {
-                size_ = 1;
-                kind = 8;
-                data_ = new CharT[1];
-                if(data_ == NULL) {
-                    PyErr_NoMemory();
-                    return;
-                }
-                be_hash_clear = true;
-                *data_ = (CharT)(PyBool_Check(py) ? (uint64_t)py : PyObject_Hash(py));
-                is_sequence = false;
+        if(PyNumber_Check(py) || PyBool_Check(py) || py == Py_None) {
+            size_ = 1;
+            kind = 8;
+            data_ = new CharT[1];
+            if(data_ == NULL) {
+                PyErr_NoMemory();
                 return;
             }
+            be_hash_clear = true;
+            *data_ = (CharT)(PyBool_Check(py) ? (uint64_t)py : PyObject_Hash(py));
+            is_sequence = false;
+            return;
         } else {
             if (PyUnicode_Check(o)) {
 #if PY_MAJOR_VERSION >= 3
@@ -154,7 +192,7 @@ class pyview_t {
         if(size_ == 0)
             return;
 
-        if(!PySequence_Check(py) || PyRange_Check(py)) {
+        if(size_ == error_n || !PySequence_Check(py) || PyRange_Check(py)) {
             py = PySequence_Tuple(py);
             size_ = (std::size_t)PyObject_Length(py);
             be_ref_clear = true;
@@ -343,22 +381,20 @@ class pyview {
 
     const void open() {
         PyObject* o = py;
-        if(size_ == error_n) {
-            if(PyNumber_Check(py) || PyBool_Check(py) || py == Py_None) {
-                size_ = 1;
-                kind = 8;
-                data_64 = new uint64_t[1];
-                if(data_64 == NULL) {
-                    PyErr_NoMemory();
-                    return;
-                }
-                *data_64 = (uint64_t)PyObject_Hash(py);
-                *data_64 = PyBool_Check(py) ? (uint64_t)py : (uint64_t)PyObject_Hash(py);
-                be_hash_clear = true;
-                is_sequence = false;
+        if(PyNumber_Check(py) || PyBool_Check(py) || py == Py_None) {
+            size_ = 1;
+            kind = 8;
+            data_64 = new uint64_t[1];
+            if(data_64 == NULL) {
+                PyErr_NoMemory();
                 return;
             }
-        } else {
+            *data_64 = (uint64_t)PyObject_Hash(py);
+            *data_64 = PyBool_Check(py) ? (uint64_t)py : (uint64_t)PyObject_Hash(py);
+            be_hash_clear = true;
+            is_sequence = false;
+            return;
+        } else if (size_ != error_n){
             if (PyUnicode_Check(o)) {
 #if PY_MAJOR_VERSION >= 3
                 kind = PyUnicode_KIND(o);
@@ -384,7 +420,7 @@ class pyview {
         if(size_ == 0)
             return;
 
-        if(!PySequence_Check(py) || PyRange_Check(py)) {
+        if(size_ == error_n || !PySequence_Check(py) || PyRange_Check(py)) {
             py = PySequence_Tuple(py);
             size_ = (std::size_t)PyObject_Length(py);
             be_ref_clear = true;

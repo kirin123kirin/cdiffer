@@ -17,12 +17,41 @@
   // for the documentation about the tasks.json format
   "version": "0.2.0",
   "configurations": [
-
+    {
+      //
+      // from C++ Run Debugger
+      //
+      "name": "Win : C++ Debug",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/${fileBasenameNoExtension}.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "preLaunchTask": "Win : Debug C++",
+      "console": "internalConsole"
+    },
     //
-    // from pytest Run Debugger
+    // from C++ Run Release
     //
     {
-      "name": "Debug Setup.py",
+      "name": "Win : C++ Release",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/${fileBasenameNoExtension}.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "preLaunchTask": "Win : Release C++",
+      "console": "internalConsole"
+    },
+    //
+    // from Debug Setup Running
+    //
+    {
+      "name": "Win : Debug Setup.py",
       "type": "cppvsdbg",
       "request": "launch",
       "program": "python",
@@ -34,12 +63,12 @@
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/build",
       "environment": [],
-      "preLaunchTask": "DebugSetup.py",
+      "preLaunchTask": "Win : DebugSetup.py",
       "console": "internalConsole"
     },
     // for Release Setup Running
     {
-      "name": "Release Setup.py",
+      "name": "Win : Release Setup.py",
       "type": "python",
       "request": "launch",
       "program": "-m",
@@ -49,14 +78,28 @@
       ],
       "justMyCode": false,
       "cwd": "${workspaceFolder}/build",
-      "preLaunchTask": "ReleaseSetup.py",
+      "preLaunchTask": "Win : ReleaseSetup.py",
       "console": "internalConsole"
     },
     //
     // from Python to C++ Debug Run
     //
     {
-      "name": "Instant Debug from py",
+      "name": "Win : Instant Debug from py",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "python",
+      "args": [
+        "${file}"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "console": "internalConsole",
+      "preLaunchTask": "Win : DebugSetup.py"
+    },
+    {
+      "name": "Win : Instant Release from py",
       "type": "cppvsdbg",
       "request": "launch",
       "program": "python",
@@ -67,69 +110,128 @@
       "cwd": "${workspaceFolder}/build",
       "environment": [],
       "console": "internalConsole",
-      "preLaunchTask": "DebugSetup.py"
+      "preLaunchTask": "Win : ReleaseSetup.py"
     },
     {
-      "name": "Instant Release from py",
-      "type": "cppvsdbg",
+      //
+      // from C++ Run Debugger for linux
+      //
+      "name": "linux : C++ Debug",
+      "type": "cppdbg",
       "request": "launch",
-      "program": "python",
+      "program": "${workspaceFolder}/build/${fileBasenameNoExtension}",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "preLaunchTask": "linux : Debug C++",
+      "console": "internalConsole"
+    },
+    {
+      //
+      // from C++ Release Run for linux
+      //
+      "name": "linux : C++ Release",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/${fileBasenameNoExtension}",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "preLaunchTask": "linux : Release C++",
+      "console": "internalConsole"
+    },
+    // //
+    // // from pytest Run Debugger
+    // //
+    {
+      "name": "linux : Debug Setup.py",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "/usr/bin/python3",
       "args": [
-        "${file}"
+        "-m",
+        "pytest",
+        ".."
       ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/build",
       "environment": [],
-      "console": "internalConsole",
-      "preLaunchTask": "ReleaseSetup.py"
+      "preLaunchTask": "linux : DebugSetup.py",
+      "console": "internalConsole"
     },
-    //
-    // Python and C++ Mix Debug Mode Setting
-    //
+    // for Release Setup Running
     {
-      "name": "1_混合モードデバッグ(python側)",
-      "type": "python",
+      "name": "linux : Release Setup.py",
+      "type": "cppdbg",
       "request": "launch",
-      "program": "-m",
+      "program": "/usr/bin/python3",
       "args": [
-        "pytest"
+        "-m",
+        "pytest",
+        ".."
       ],
       "justMyCode": false,
-      "preLaunchTask": "DebugSetup.py",
+      "cwd": "${workspaceFolder}/build",
+      "preLaunchTask": "linux : ReleaseSetup.py",
       "console": "internalConsole"
     },
-    // for MIX Mode
+    //
+    // from Python to C++ Debug Run for Linux
+    //
     {
-      "name": "2_混合モード C++ デバッグアタッチ",
-      "type": "cppvsdbg",
-      "request": "attach",
-      "processId": "${command:pickProcess}"
-    },
-    // // for C/C++
-    {
-      "name": "C/C++: Debug Run",
-      "type": "cppvsdbg",
+      "name": "linux : Instant Debug from py",
+      "type": "cppdbg",
       "request": "launch",
-      "program": "build/${fileBasenameNoExtension}.exe",
-      "args": [],
+      "program": "/usr/bin/python3",
+      "args": [
+        "${file}"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      // "cwd": "${workspaceFolder}/build",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable reformat of gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "miDebuggerPath": "/usr/bin/gdb",
+      "miDebuggerArgs": "-q -ex quit; wait() { fg >/dev/null; }; /usr/bin/gdb -q -f --interpreter=mi",
+      "preLaunchTask": "linux : DebugSetup.py",
+      "console": "internalConsole"
+    },
+    //
+    // from Python to C++ Release Run for Linux
+    //
+    {
+      "name": "linux : Instant Release from py",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "/usr/bin/python3",
+      "args": [
+        "${file}"
+      ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
-      "preLaunchTask": "Debug C++",
-      // "console": "newExternalWindow",
-      // "console": "integratedTerminal"
-      "console": "internalConsole"
-    },
-    {
-      "name": "C/C++: Release Run",
-      "type": "cppvsdbg",
-      "request": "launch",
-      "program": "build/${fileBasenameNoExtension}.exe",
-      "args": [],
-      "stopAtEntry": false,
-      "cwd": "${workspaceFolder}",
-      "environment": [],
-      "preLaunchTask": "Release C++",
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable reformat of gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "miDebuggerPath": "/usr/bin/gdb",
+      "miDebuggerArgs": "-q -ex quit; wait() { fg >/dev/null; }; /usr/bin/gdb -q -f --interpreter=mi",
+      "preLaunchTask": "linux : ReleaseSetup.py",
       "console": "internalConsole"
     },
     // for Python
@@ -138,14 +240,6 @@
       "type": "python",
       "request": "launch",
       "program": "${file}",
-      "console": "internalConsole"
-    },
-    {
-      "name": "Python: Profile run",
-      "type": "python",
-      "request": "launch",
-      "program": "-m",
-      "args": ["cProfile", "-s", "cumulative", "${file}"],
       "console": "internalConsole"
     },
   ]

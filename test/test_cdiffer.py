@@ -9,13 +9,13 @@ process = Process(os.getpid())
 print("\n\n", __file__, ":PID -> ", os.getpid(), "\n\n")
 
 try:
-    from cdiffer import dist, differ, similar
+    from cdiffer import dist, differ, similar, compare
 
-    smip = "from cdiffer import dist, differ, similar"
+    smip = "from cdiffer import dist, differ, similar, compare"
 except ImportError:
-    from cdiffer.cdiffer import dist, differ, similar
+    from cdiffer.cdiffer import dist, differ, similar, compare
 
-    smip = "from cdiffer.cdiffer import dist, differ, similar"
+    smip = "from cdiffer.cdiffer import dist, differ, similar, compare"
 
 
 def test_import_dist():
@@ -259,9 +259,15 @@ def test_differ_Notype():
 
 def test_differ_complex_Nottype():
     assert(differ([None], None) == [['delete', 0, None, [None], None], ['insert', None, 0, None, None]])
-    assert(differ([None], "") == [['delete', 0, None, [None], None]])
-    assert(differ([None], []) == [['delete', 0, None, [], None], ['insert', None, 0, None, [None]]] )
+    assert(differ([None], "") == [['insert', None, 0, None, ''], ['delete', 0, None, [None], None]])
+    assert(differ([None], []) == [['insert', None, 0, None, []], ['delete', 0, None, [None], None]] )
     assert(differ("", []) == [['delete', 0, None, '', None],['insert', None, 0, None, []]])
+    assert(differ(None, "") == [['insert', None, 0, None, ''], ['delete', 0, None, None, None]])
+    assert(differ(None, []) == [['insert', None, 0, None, []], ['delete', 0, None, None, None]])
+    assert(differ("", []) == [['delete', 0, None, '', None], ['insert', None, 0, None, []]])
+    assert(differ([], "") == [['delete', 0, None, [], None], ['insert', None, 0, None, '']])
+    assert(differ("", None) == [['delete', 0, None, '', None], ['insert', None, 0, None, None]])
+    assert(differ([], None) == [['delete', 0, None, [], None], ['insert', None, 0, None, None]])
 
 
 def test_differ_value_test1():
@@ -387,6 +393,25 @@ def test_differ2d():
         ['insert', None, 2, None, ['x', 't', 'z']]
     ])
 
+def test_compare():
+    assert(compare('coffee', 'cafe') == [[60, 'replace', 'c', "ADD ---> 'a'", "'o' ---> DEL", 'f', "'f' ---> DEL", 'e', "'e' ---> DEL"]])
+    assert(compare([list("abc"), list("abc")], [list("abc"), list("acc"), list("xtz")], rep_rate=50) == [[40, 'delete', ['a', 'b', 'c'], ['a', 'b', 'c']], [40, 'insert', ['a', 'b', 'c'], ['a', 'c', 'c'], ['x', 't', 'z']]])
+    assert(compare(["abc", "abc"], ["abc", "acc", "xtz"], rep_rate=40) == [[40, 'replace', 'abc', "'abc' ---> 'acc'", "ADD ---> 'xtz'"]])
+    assert(compare(["abc", "abc"], ["abc", "acc", "xtz"], rep_rate=50) == [[40, 'delete', 'abc', 'abc'], [40, 'insert', 'abc', 'acc', 'xtz']])
+
+def test_compare_Nonetype():
+    assert(compare(None, None) == [[100, 'equal', None]])
+    assert(compare([None], [None]) == [[100, 'equal', None]])
+    assert(compare([], []) == [[100, 'equal', []]])
+    assert(compare("", "") == [[100, 'equal', '']])
+    assert(compare(None, "") == [[0, 'delete', "ADD ---> ''"], [0, 'insert', 'None ---> DEL']])
+    assert(compare(None, []) == [[0, 'delete', 'ADD ---> []'], [0, 'insert', 'None ---> DEL']])
+    assert(compare("", []) == [[0, 'delete', "'' ---> DEL"], [0, 'insert', 'ADD ---> []']])
+    assert(compare([], "") == [[0, 'delete', '[] ---> DEL'], [0, 'insert', "ADD ---> ''"]])
+    assert(compare("", None) == [[0, 'delete', "'' ---> DEL"], [0, 'insert', 'ADD ---> None']])
+    assert(compare([], None) == [[0, 'delete', '[] ---> DEL'], [0, 'insert', 'ADD ---> None']])
+
+
 def memusage():
     return process.memory_info()[0] / 1024
 
@@ -402,7 +427,7 @@ def runtimeit(funcstr, setup=smip, number=100000, normalize=10000):
         bm = memusage()
         p = timeit(fc, st, number=number)
         am = (memusage() - bm)
-        assert am < 10000, "{} function {}KB Memory Leak Error".format(fc, am)
+        assert am < 1000, "{} function {}KB Memory Leak Error".format(fc, am)
         print("{}: {} ns (mem after {}KB)".format(fc, int(p * normalize), am))
         i += 1
 
@@ -470,6 +495,23 @@ def test_other_perf():
     """
     print("\n### Perfomance & memory leak check other func ###")
     runtimeit(func, smip + "\n".join(map(str.strip, smipa)))
+
+def test_compare_perf():
+    func = """
+    compare("coffee", "cafe")
+    compare([list("abc"), list("abc")], [list("abc"), list("acc"), list("xtz")], rep_rate=50)
+    compare(["abc", "abc"], ["abc", "acc", "xtz"], rep_rate=40)
+    compare(["abc", "abc"], ["abc", "acc", "xtz"], rep_rate=50)
+    compare(None, None)
+    compare([None], [None])
+    compare([], [])
+    compare("", "")
+    compare("", [])
+    compare("", None)
+    compare(None, "")
+    """
+    print("\n### Perfomance & memory leak check compare func ###")
+    runtimeit(func, smip)
 
 
 if __name__ == '__main__':
