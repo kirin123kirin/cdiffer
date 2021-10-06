@@ -401,7 +401,10 @@ def test_compare():
 
 def test_compare_Nonetype():
     assert(compare(None, None) == [[100, 'equal', None]])
-    assert(compare([None], [None]) == [[100, 'equal', None]])
+    if sys.version_info[0] == 3:
+        assert(compare([None], [None]) == [[100, 'equal', None]])
+    else:
+        assert(compare([None], [None]) == [[100, 'equal', [None]]])
     assert(compare([], []) == [[100, 'equal', []]])
     assert(compare("", "") == [[100, 'equal', '']])
     assert(compare(None, "") == [[0, 'delete', "ADD ---> ''"], [0, 'insert', 'None ---> DEL']])
