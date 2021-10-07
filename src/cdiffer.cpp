@@ -94,7 +94,7 @@ PyObject* compare_py(PyObject* self, PyObject* args, PyObject* kwargs) {
 
     const char* kwlist[8] = {"a", "b", "diffonly", "rep_rate", "condition_value", NULL};
 
-    if(!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iiOO", (char**)kwlist, &arg1, &arg2, &diffonly, &rep_rate,
+    if(!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iiO", (char**)kwlist, &arg1, &arg2, &diffonly, &rep_rate,
                                     &condition_value))
         return NULL;
 
