@@ -1474,10 +1474,16 @@ class Compare {
 
         PyObject* la = PyDict_Keys(a);
         PyObject* lb = PyDict_Keys(b);
+        if(la == NULL || lb == NULL) {
+            Py_XDECREF(la);
+            Py_XDECREF(lb);
+            return PyErr_Format(PyExc_ValueError, "Cannnot `a` or `b` dict keys get.");
+        }
+
         PyObject* dfs = Diff(la, lb).difference(diffonly, rep_rate);
 
         if(dfs == NULL) {
-            return PyErr_Format(PyExc_ValueError, NULL);
+            return PyErr_Format(PyExc_ValueError, "Faiotal Error `Diff.difference` result get.");
         }
 
         if((len = PyObject_Length(dfs)) == -1) {
@@ -1517,8 +1523,6 @@ class Compare {
                 content = sa;
             }
 
-            Py_XDECREF(tag);
-
             for(j = 0, slen = PyObject_Length(df); j < slen; ++j) {
                 if((row = PySequence_ITEM(df, j)) == NULL) {
                     Py_XDECREF(ops);
@@ -1541,13 +1545,14 @@ class Compare {
                 Py_DECREF(row);
             }
 
+            Py_XDECREF(tag);
             Py_XDECREF(da);
             Py_XDECREF(db);
             Py_XDECREF(sa);
             Py_XDECREF(sb);
             Py_XDECREF(content);
             Py_XDECREF(arr);
-            Py_CLEAR(df);
+            Py_DECREF(df);
         }
 
         Py_CLEAR(dfs);
@@ -1577,7 +1582,6 @@ class Compare {
 
         return ops;
     }
-
 };
 
 }  // namespace gammy
