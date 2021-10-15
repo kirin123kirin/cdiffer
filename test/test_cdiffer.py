@@ -76,8 +76,7 @@ def test_differ_list_test():
 
 
 def test_differ_iter_test():
-    assert (differ(iter('coffee'), iter('cafe')) == ans1)
-
+    assert (sorted(differ(iter('coffee'), iter('cafe'))) == sorted(ans1))
 
 def test_diffonly_flag_test():
     assert (differ('coffee', 'cafe', True) == [x for x in ans1 if x[0] != "equal"])
@@ -234,7 +233,7 @@ def test_dist_Notype():
 def test_dist_complex_Nottype():
     assert(dist([None], None) == 2)
     assert(dist([None], "") == 1)
-    assert(dist([None], []) == 1) #@todo tamani 0 ninaru genin fumei
+    assert(dist([None], []) == 1)  # @todo tamani 0 ninaru genin fumei
 
 def test_similar_Notype():
     assert(similar(None, None) == 1.0)
@@ -247,7 +246,7 @@ def test_similar_Notype():
 def test_similar_complex_Nottype():
     assert(similar([None], None) == 0.0)
     assert(similar([None], "") == 0.0)
-    assert(similar([None], []) == 0.0)
+    assert(similar([None], []) == 0.0)  # @todo tamani 0 ninaru genin fumei
 
 def test_differ_Notype():
     assert(differ(None, None) == [['equal', 0, 0, None, None]])
@@ -258,10 +257,10 @@ def test_differ_Notype():
     assert(differ((), ()) == [['equal', 0, 0, (), ()]])
 
 def test_differ_complex_Nottype():
-    assert(differ([None], None) == [['delete', 0, None, [None], None], ['insert', None, 0, None, None]])
-    assert(differ([None], "") == [['insert', None, 0, None, ''], ['delete', 0, None, [None], None]])
-    assert(differ([None], []) == [['insert', None, 0, None, []], ['delete', 0, None, [None], None]] )
-    assert(differ("", []) == [['delete', 0, None, '', None],['insert', None, 0, None, []]])
+    assert(differ([None], None) == [['delete', 0, None, None, None], ['insert', None, 0, None, None]])
+    assert(differ([None], "") == [['insert', None, 0, None, ''], ['delete', 0, None, None, None]])
+    assert(differ([None], []) == [['insert', None, 0, None, []], ['delete', 0, None, None, None]])
+    assert(differ("", []) == [['delete', 0, None, '', None], ['insert', None, 0, None, []]])
     assert(differ(None, "") == [['insert', None, 0, None, ''], ['delete', 0, None, None, None]])
     assert(differ(None, []) == [['insert', None, 0, None, []], ['delete', 0, None, None, None]])
     assert(differ("", []) == [['delete', 0, None, '', None], ['insert', None, 0, None, []]])
@@ -374,6 +373,11 @@ def test_differ_value_test15():
 def test_differ_value_test16():
     assert differ("", "", True) == []
 
+def test_differ_value_test17():
+    assert(differ("aaf", "caf", rep_rate=-1) == [['replace', 0, 0, 'a', 'c'], ['equal', 1, 1, 'a', 'a'], ['equal', 2, 2, 'f', 'f']])
+    assert(differ("aaf", "caf") == [['delete', 0, None, 'a', None], ['insert', None, 0, None, 'c'], ['equal', 1, 1, 'a', 'a'], ['equal', 2, 2, 'f', 'f']])
+
+
 def test_2d_list():
     a = ["hoge", "foo", "bar"]
     b = ["fuge", "faa", "bar"]
@@ -388,32 +392,49 @@ def test_differ2d():
     a = [list("abc"), list("abc")]
     b = [list("abc"), list("acc"), list("xtz")]
     assert(differ(a, b, rep_rate=50) == [
-        ['equal', 0, 0, ['a', 'b', 'c'], ['a', 'b', 'c']],
-        ['replace', 1, 1, ['a', 'b', 'c'], ['a', 'c', 'c']],
-        ['insert', None, 2, None, ['x', 't', 'z']]
+        ['equal', 0, 0, ('a', 'b', 'c'), ('a', 'b', 'c')],
+        ['replace', 1, 1, ('a', 'b', 'c'), ('a', 'c', 'c')],
+        ['insert', None, 2, None, ('x', 't', 'z')]
     ])
 
-def test_compare():
-    assert(compare('coffee', 'cafe') == [[60, 'replace', 'c', "ADD ---> 'a'", "'o' ---> DEL", 'f', "'f' ---> DEL", 'e', "'e' ---> DEL"]])
-    assert(compare([list("abc"), list("abc")], [list("abc"), list("acc"), list("xtz")], rep_rate=50) == [[40, 'delete', ['a', 'b', 'c'], ['a', 'b', 'c']], [40, 'insert', ['a', 'b', 'c'], ['a', 'c', 'c'], ['x', 't', 'z']]])
-    assert(compare(["abc", "abc"], ["abc", "acc", "xtz"], rep_rate=40) == [[40, 'replace', 'abc', "'abc' ---> 'acc'", "ADD ---> 'xtz'"]])
-    assert(compare(["abc", "abc"], ["abc", "acc", "xtz"], rep_rate=50) == [[40, 'delete', 'abc', 'abc'], [40, 'insert', 'abc', 'acc', 'xtz']])
+def test_compare_1d_array():
+    assert(compare("aaf", "caf", rep_rate=-1) == [['tag', 'index_a', 'index_b', 'data'], ['replace', 0, 0, 'a ---> c'], ['equal', 1, 1, 'a'], ['equal', 2, 2, 'f']])
+    assert(compare('coffee', 'cafe', header=False, delete_sign_value="DEL", insert_sign_value="ADD") == [['equal', 0, 0, 'c'], ['insert', '-', 1, 'ADD ---> a'], ['delete', 1, '-', 'o ---> DEL'], ['equal', 2, 2, 'f'], ['delete', 3, '-', 'f ---> DEL'], ['equal', 4, 3, 'e'], ['delete', 5, '-', 'e ---> DEL']])
+    assert(compare('coffee', 'cafe', header=False, rep_rate=-1, delete_sign_value="DEL", insert_sign_value="ADD") == [['equal', 0, 0, 'c'], ['replace', 1, 1, 'o ---> a'], ['equal', 2, 2, 'f'], ['delete', 3, '-', 'f ---> DEL'], ['equal', 4, 3, 'e'], ['delete', 5, '-', 'e ---> DEL']])
+    assert(compare(["abc", "abc"], ["abc", "acc", "xtz"], rep_rate=40) == [['tag', 'index_a', 'index_b', 'data'], ['equal', 0, 0, 'abc'], ['replace', 1, 1, 'abc ---> acc'], ['insert', '-', 2, 'ADD ---> xtz']])
+    assert(compare(["abc", "abc"], ["abc", "acc", "xtz"], rep_rate=50) == [['tag', 'index_a', 'index_b', 'data'], ['equal', 0, 0, 'abc'], ['replace', 1, 1, 'abc ---> acc'], ['insert', '-', 2, 'ADD ---> xtz']])
 
-def test_compare_Nonetype():
-    assert(compare(None, None) == [[100, 'equal', None]])
+def test_compare_2d_array():
+    assert(compare([list("abc"), list("abc")], [list("abc"), list("acc"), list("xtz")], rep_rate=50) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'], ['equal', 0, 0, 'a', 'b', 'c'], ['replace', 1, 1, 'a', 'b ---> DEL', 'ADD ---> c', 'c'], ['insert', '-', 2, 'ADD ---> x', 'ADD ---> t', 'ADD ---> z']])
     if sys.version_info[0] == 3:
-        assert(compare([None], [None]) == [[100, 'equal', None]])
+        assert(compare([None], [None]) == [['tag', 'index_a', 'index_b', 'data'], ['equal', 0, 0, None]])
     else:
-        assert(compare([None], [None]) == [[100, 'equal', [None]]])
-    assert(compare([], []) == [[100, 'equal', []]])
-    assert(compare("", "") == [[100, 'equal', '']])
-    assert(compare(None, "") == [[0, 'delete', "ADD ---> ''"], [0, 'insert', 'None ---> DEL']])
-    assert(compare(None, []) == [[0, 'delete', 'ADD ---> []'], [0, 'insert', 'None ---> DEL']])
-    assert(compare("", []) == [[0, 'delete', "'' ---> DEL"], [0, 'insert', 'ADD ---> []']])
-    assert(compare([], "") == [[0, 'delete', '[] ---> DEL'], [0, 'insert', "ADD ---> ''"]])
-    assert(compare("", None) == [[0, 'delete', "'' ---> DEL"], [0, 'insert', 'ADD ---> None']])
-    assert(compare([], None) == [[0, 'delete', '[] ---> DEL'], [0, 'insert', 'ADD ---> None']])
+        assert(compare([None], [None]) == [['tag', 'index_a', 'index_b', 'data'], ['equal', 0, 0, [None]]])
 
+def test_compare_Nonetype_complex():
+    assert(compare(None, None) == [['tag', 'index_a', 'index_b', 'data'], ['equal', 0, 0, None]])
+    assert(repr(compare([], [])) == repr([['tag', 'index_a', 'index_b', 'data'], ['equal', 0, 0, []]]))
+    assert(compare("", "") == [['tag', 'index_a', 'index_b', 'data'], ['equal', 0, 0, '']])
+    assert(compare(None, "") == [['tag', 'index_a', 'index_b', 'data'], ['insert', '-', 0, 'ADD ---> ']])
+    assert(compare("", None) == [['tag', 'index_a', 'index_b', 'data'], ['delete', 0, '-', ' ---> DEL']])
+    assert(compare(None, []) ==[['tag', 'index_a', 'index_b', 'data'], ['insert', '-', 0, 'ADD ---> []']])
+    assert(compare([], None) == [['tag', 'index_a', 'index_b', 'data'], ['delete', 0, '-', '[] ---> DEL']])
+    assert(compare("", []) == [['tag', 'index_a', 'index_b', 'data'], ['delete', 0, '-', ' ---> DEL'], ['insert', '-', 0, 'ADD ---> []']])
+    assert(compare([], "") == [['tag', 'index_a', 'index_b', 'data'], ['delete', 0, '-', '[] ---> DEL'], ['insert', '-', 0, 'ADD ---> ']])
+
+def test_compare_rep_rate():
+    assert(compare([list('coffee')], [list('cafe')], rep_rate=70) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03', 'COL_04', 'COL_05'], ['delete', 0, '-', 'c ---> DEL', 'o ---> DEL', 'f ---> DEL', 'f ---> DEL', 'e ---> DEL', 'e ---> DEL'], ['insert', '-', 0, 'ADD ---> c', 'ADD ---> a', 'ADD ---> f', 'ADD ---> e']])
+    assert(compare([list('coffee')], [list('cafe')], rep_rate=-1) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03', 'COL_04', 'COL_05'], ['replace', 0, 0, 'c', 'o ---> a', 'f', 'f ---> DEL', 'e', 'e ---> DEL']])
+    assert(compare([list('coffee')], [list('cafe')], rep_rate=60) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03', 'COL_04', 'COL_05', 'COL_06'], ['replace', 0, 0, 'c', 'ADD ---> a', 'o ---> DEL', 'f', 'f ---> DEL', 'e', 'e ---> DEL']])
+    assert(compare([list('cafe')], [list('coffee')], rep_rate=60) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03', 'COL_04', 'COL_05', 'COL_06'], ['replace', 0, 0, 'c', 'a ---> DEL', 'ADD ---> o', 'f', 'ADD ---> f', 'e', 'ADD ---> e']])
+    assert(compare([list('cafe')], [list('coffee')], rep_rate=-1) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03', 'COL_04', 'COL_05'], ['replace', 0, 0, 'c', 'a ---> o', 'f', 'ADD ---> f', 'e', 'ADD ---> e']])
+    assert(compare([list('cafe')], [list('cafe'), list('cafe')]) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'], ['equal', 0, 0, 'c', 'a', 'f', 'e'], ['insert', '-', 1, 'ADD ---> c', 'ADD ---> a', 'ADD ---> f', 'ADD ---> e']])
+    assert(compare([list('aafe'), list('cafe')], [list('cafe'), list('cafe')], rep_rate=-1) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'], ['replace', 0, 0, 'a ---> c', 'a', 'f', 'e'], ['equal', 1, 1, 'c', 'a', 'f', 'e']])
+
+def test_compare_complex_datatype():
+    assert(compare([iter('cafe'), iter('cafe'), iter('cafe')], [iter('cafe'), iter('cafe'), iter('cafe')]) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'], ['equal', 0, 0, 'c', 'a', 'f', 'e'], ['equal', 1, 1, 'c', 'a', 'f', 'e'], ['equal', 2, 2, 'c', 'a', 'f', 'e']])
+    assert(compare([tuple('cafe')], [tuple('cafo')], rep_rate=-1) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'], ['replace', 0, 0, 'c', 'a', 'f', 'e ---> o']])
+    assert(compare([list("abc"), list("abc")], [list("abc"), list("acc"), list("xtz")], rep_rate=50) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'], ['equal', 0, 0, 'a', 'b', 'c'], ['replace', 1, 1, 'a', 'b ---> DEL', 'ADD ---> c', 'c'], ['insert', '-', 2, 'ADD ---> x', 'ADD ---> t', 'ADD ---> z']])
 
 def memusage():
     return process.memory_info()[0] / 1024
@@ -503,6 +524,8 @@ def test_compare_perf():
     func = """
     compare("coffee", "cafe")
     compare([list("abc"), list("abc")], [list("abc"), list("acc"), list("xtz")], rep_rate=50)
+    compare([iter('cafe'), iter('cafe'), iter('cafe')], [iter('cafe'), iter('cafe'), iter('cafe')])
+    compare([tuple('cafe')], [tuple('cafo')], rep_rate=-1)
     compare(["abc", "abc"], ["abc", "acc", "xtz"], rep_rate=40)
     compare(["abc", "abc"], ["abc", "acc", "xtz"], rep_rate=50)
     compare(None, None)

@@ -2,6 +2,7 @@
 #ifndef CDIFFER_H
 #define CDIFFER_H
 
+#include <algorithm>
 #include <array>
 #include <string>
 #include <unordered_map>
@@ -22,8 +23,6 @@ namespace gammy {
 #define ARRAY_SIZE 1536
 
 extern PyObject* DIFFTP[2][ED_LAST];
-extern PyObject* DEL_Flag;
-extern PyObject* ADD_Flag;
 
 #define ZERO_1 0U
 #define ZERO_2 ZERO_1, ZERO_1
@@ -103,11 +102,12 @@ PyObject* makelist(int dtype, std::size_t x, std::size_t y, PyObject*& a, PyObje
         PyList_SetItem(list, 3L + swapflag, Py_None);
     } else {
         PyList_SetItem(list, 1L + swapflag, PyLong_FromSize_t(x));
-        if(len1 <= 1) {
+        if(len1 == 0 || len1 == error_n || (len1 == 1 && !PySequence_Check(a))) {
             Py_INCREF(a);
             PyList_SetItem(list, 3L + swapflag, a);
-        } else
+        } else {
             PyList_SetItem(list, 3L + swapflag, PySequence_GetItem(a, (Py_ssize_t)x));
+        }
     }
     if(dtype == ED_DELETE) {
         Py_INCREF(Py_None);
@@ -116,11 +116,12 @@ PyObject* makelist(int dtype, std::size_t x, std::size_t y, PyObject*& a, PyObje
         PyList_SetItem(list, 4L - swapflag, Py_None);
     } else {
         PyList_SetItem(list, 2L - swapflag, PyLong_FromSize_t(y));
-        if(len2 <= 1) {
+        if(len2 == 0 || len2 == error_n || (len2 == 1 && !PySequence_Check(b))) {
             Py_INCREF(b);
             PyList_SetItem(list, 4L - swapflag, b);
-        } else
+        } else {
             PyList_SetItem(list, 4L - swapflag, PySequence_GetItem(b, (Py_ssize_t)y));
+        }
     }
     return list;
 }
@@ -148,62 +149,109 @@ void complist(PyObject*& ops,
               PyObject*& a,
               PyObject*& b,
               bool swapflag,
-              PyObject* condition_value) {
+              int startidx,
+              PyObject*& condition_value,
+              PyObject*& na_value,
+              PyObject*& DEL_Flag,
+              PyObject*& ADD_Flag) {
     if(swapflag) {
         if(dtype == ED_INSERT)
             dtype = ED_DELETE;
         else if(dtype == ED_DELETE)
             dtype = ED_INSERT;
-        return complist(ops, dtype, y, x, b, a, false, condition_value);
+        return complist(ops, dtype, y, x, b, a, false, startidx, condition_value, na_value, DEL_Flag, ADD_Flag);
     }
 
     PyObject* ret = NULL;
     PyObject* concat = NULL;
     PyObject* item = NULL;
-    PyObject* repr = NULL;
+    PyObject* forcestr = NULL;
     int result = -1;
 
+    PyObject* list = PyList_New(4);
+    Py_INCREF(DIFFTP[0][dtype]);
+    PyList_SetItem(list, 0, DIFFTP[0][dtype]);
+
     if(dtype == ED_DELETE) {
+        PyList_SetItem(list, 1, PyLong_FromSize_t(x + startidx));
+        Py_INCREF(na_value);
+        PyList_SetItem(list, 2, na_value);
+
         item = PySequence_GetItem(a, (Py_ssize_t)x);
-        repr = PyObject_Repr(item ? item : a);
-        concat = PyUnicode_Concat(repr, condition_value);
-        ret = PyUnicode_Concat(concat, DEL_Flag);
-        result = PyList_Append(ops, ret);
+        if(DEL_Flag && condition_value) {
+            if(item && PyUnicode_Check(item)) {
+                concat = PyUnicode_Concat(item, condition_value);
+                ret = PyUnicode_Concat(concat, DEL_Flag);
+            } else {
+                forcestr = PyObject_Str(item ? item : a);
+                concat = PyUnicode_Concat(forcestr, condition_value);
+                ret = PyUnicode_Concat(concat, DEL_Flag);
+            }
+        } else {
+            ret = item ? item : a;
+        }
     } else if(dtype == ED_INSERT) {
-        concat = PyUnicode_Concat(ADD_Flag, condition_value);
+        Py_INCREF(na_value);
+        PyList_SetItem(list, 1, na_value);
+        PyList_SetItem(list, 2, PyLong_FromSize_t(y + startidx));
+
         item = PySequence_GetItem(b, (Py_ssize_t)y);
-        repr = PyObject_Repr(item ? item : b);
-        ret = PyUnicode_Concat(concat, repr);
-        result = PyList_Append(ops, ret);
+        if(ADD_Flag && condition_value) {
+            concat = PyUnicode_Concat(ADD_Flag, condition_value);
+            if(item && PyUnicode_Check(item)) {
+                ret = PyUnicode_Concat(concat, item);
+            } else {
+                forcestr = PyObject_Str(item ? item : b);
+                ret = PyUnicode_Concat(concat, forcestr);
+            }
+        } else {
+            ret = item ? item : b;
+        }
     } else if(dtype == ED_REPLACE) {
+        PyList_SetItem(list, 1, PyLong_FromSize_t(x + startidx));
+        PyList_SetItem(list, 2, PyLong_FromSize_t(y + startidx));
+
         item = PySequence_GetItem(a, (Py_ssize_t)x);
-        repr = PyObject_Repr(item ? item : a);
-        concat = PyUnicode_Concat(repr, condition_value);
-        Py_XDECREF(item);
-        Py_XDECREF(repr);
+        if(item && PyUnicode_Check(item)) {
+            concat = PyUnicode_Concat(item, condition_value);
+        } else {
+            forcestr = PyObject_Str(item ? item : a);
+            concat = PyUnicode_Concat(forcestr, condition_value);
+        }
+        Py_CLEAR(item);  //@todo ????
+        Py_XDECREF(forcestr);
         item = PySequence_GetItem(b, (Py_ssize_t)y);
-        repr = PyObject_Repr(item ? item : b);
-        ret = PyUnicode_Concat(concat, repr);
-        result = PyList_Append(ops, ret);
+        if(item && PyUnicode_Check(item)) {
+            ret = PyUnicode_Concat(concat, item);
+        } else {
+            forcestr = PyObject_Str(item ? item : b);
+            ret = PyUnicode_Concat(concat, forcestr);
+        }
     } else {
+        PyList_SetItem(list, 1, PyLong_FromSize_t(x + startidx));
+        PyList_SetItem(list, 2, PyLong_FromSize_t(y + startidx));
+
         ret = PySequence_GetItem(a, (Py_ssize_t)x);
-        // item = PySequence_GetItem(a, (Py_ssize_t)x);
-        // ret = PyObject_Repr(item ? item : a);
-        result = PyList_Append(ops, ret);
+        if(ret == NULL) {
+            ret = a;
+        }
     }
     PyErr_Clear();
 
-    Py_XDECREF(concat);
-    Py_XDECREF(item);
-    Py_XDECREF(repr);
+    result = PyList_SetItem(list, 3, ret);
 
-    if(result == -1) {
+    Py_XDECREF(item);
+    Py_XDECREF(forcestr);
+    Py_XDECREF(concat);
+
+    if(result == -1 || (PyList_Append(ops, list)) == -1) {
         Py_CLEAR(ops);
+        Py_CLEAR(list);
         Py_XDECREF(ret);
         PyErr_Format(PyExc_MemoryError, "Failed while creating result list.");
         return;
     }
-    Py_XDECREF(ret);
+    Py_DECREF(list);
 }
 
 template <typename CharT>
@@ -244,7 +292,8 @@ class Diff_t {
           rep_rate(REPLACEMENT_RATE),
           need_clear_py(false) {}
 
-    Diff_t(PyObject* _a, PyObject* _b, bool _need_clear_py = false) : a(CharT(_a)), b(CharT(_b)), need_clear_py(_need_clear_py) {
+    Diff_t(PyObject* _a, PyObject* _b, bool _need_clear_py = false)
+        : a(CharT(_a)), b(CharT(_b)), need_clear_py(_need_clear_py) {
         A = a.size();
         B = b.size();
         swapflag = A > B;
@@ -285,7 +334,7 @@ class Diff_t {
             }
         }
 
-        if(A < 2 && B < 2) {
+        if((a.canonical || b.canonical) && (A + B <= 1 || (A == 1 && B == 1))) {
             PyObject* ops = PyList_New(0);
             if(rep_rate < 1) {
                 makelist(ops, ED_REPLACE, 0, 0, a.py, b.py, swapflag);
@@ -326,7 +375,13 @@ class Diff_t {
         }
     }
 
-    PyObject* compare(bool _diffonly, int _rep_rate, PyObject* _condition_value) {
+    PyObject* compare(bool _diffonly,
+                      int _rep_rate,
+                      int _startidx,
+                      PyObject* _condition_value,
+                      PyObject* _na_value,
+                      PyObject* _DEL_Flag,
+                      PyObject* _ADD_Flag) {
         this->diffonly = _diffonly;
         this->rep_rate = _rep_rate;
 
@@ -334,45 +389,31 @@ class Diff_t {
             /* for ASCII */
             if(B < 8) {
                 std::array<uint8_t, 128> fp = {ZERO_128};
-                return core_compare(fp, _condition_value);
+                return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
             } else if(B < 16) {
                 std::array<uint16_t, 128> fp = {ZERO_128};
-                return core_compare(fp, _condition_value);
+                return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
             } else if(B < 32) {
                 std::array<uint32_t, 128> fp = {ZERO_128};
-                return core_compare(fp, _condition_value);
+                return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
             } else {
                 std::array<uint64_t, 128> fp = {ZERO_128};
-                return core_compare(fp, _condition_value);
+                return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
             }
         }
 
-        if(A < 2 && B < 2) {
-            PyObject* list = PyList_New(2);
+        if((a.canonical || b.canonical) && (A + B <= 1 || (A == 1 && B == 1))) {
             PyObject* ops = PyList_New(0);
 
             if(rep_rate < 1) {
-                PyList_SET_ITEM(list, 0, PyLong_FromLong(0));
-                Py_INCREF(DIFFTP[0][ED_REPLACE]);
-                PyList_SET_ITEM(list, 1, DIFFTP[0][ED_REPLACE]);
-                complist(list, ED_REPLACE, 0, 0, a.py, b.py, swapflag, _condition_value);
+                complist(ops, ED_REPLACE, 0, 0, a.py, b.py, swapflag, _startidx, _condition_value, _na_value, _DEL_Flag,
+                         _ADD_Flag);
             } else {
-                PyList_SET_ITEM(list, 0, PyLong_FromLong(0));
-                Py_INCREF(DIFFTP[0][ED_DELETE]);
-                PyList_SET_ITEM(list, 1, DIFFTP[0][ED_DELETE]);
-                complist(list, ED_DELETE, 0, 0, a.py, b.py, swapflag, _condition_value);
-                PyList_Append(ops, list);
-                Py_DECREF(list);
-
-                list = PyList_New(2);
-                PyList_SET_ITEM(list, 0, PyLong_FromLong(0));
-                Py_INCREF(DIFFTP[0][ED_INSERT]);
-                PyList_SET_ITEM(list, 1, DIFFTP[0][ED_INSERT]);
-
-                complist(list, ED_INSERT, 0, 0, a.py, b.py, swapflag, _condition_value);
+                complist(ops, ED_DELETE, 0, 0, a.py, b.py, swapflag, _startidx, _condition_value, _na_value, _DEL_Flag,
+                         _ADD_Flag);
+                complist(ops, ED_INSERT, 0, 0, a.py, b.py, swapflag, _startidx, _condition_value, _na_value, _DEL_Flag,
+                         _ADD_Flag);
             }
-            PyList_Append(ops, list);
-            Py_DECREF(list);
             return ops;
         }
 
@@ -381,28 +422,28 @@ class Diff_t {
                 MappingBlock<uint8_t> fp = {};
                 fp.pair =
                     std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
-                return core_compare(fp, _condition_value);
+                return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
             } else if(B < 16) {
                 MappingBlock<uint16_t> fp = {};
                 fp.pair =
                     std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
-                return core_compare(fp, _condition_value);
+                return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
             } else if(B < 32) {
                 MappingBlock<uint32_t, 257> fp = {};
                 fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
-                return core_compare(fp, _condition_value);
+                return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
             } else {
                 MappingBlock<uint64_t, 521> fp = {};
                 fp.pair = std::array<std::array<uint64_t, 521>, 2>{
                     {{ZERO_256, ZERO_256, ZERO_8, ZERO_1}, {ZERO_256, ZERO_256, ZERO_8, ZERO_1}}};
-                return core_compare(fp, _condition_value);
+                return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
             }
         }
 
         else {
             /* for Big Size ANY data. */
             std::unordered_map<uint64_t, uint64_t, through_pass_hash<uint64_t>> fp = {};
-            return core_compare(fp, _condition_value);
+            return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
         }
     }
 
@@ -421,7 +462,8 @@ class Diff_t {
         } else {
             Py_INCREF(pyn[x]);
             PyList_SetItem(list, 1L + swapflag, pyn[x]);
-            PyList_SetItem(list, 3L + swapflag, a.getitem(x));
+            PyObject* pya = a.getitem(x);
+            PyList_SetItem(list, 3L + swapflag, pya);
         }
         if(dtype == ED_DELETE) {
             Py_INCREF(Py_None);
@@ -431,7 +473,8 @@ class Diff_t {
         } else {
             Py_INCREF(pyn[y]);
             PyList_SetItem(list, 2L - swapflag, pyn[y]);
-            PyList_SetItem(list, 4L - swapflag, b.getitem(y));
+            PyObject* pyb = b.getitem(y);
+            PyList_SetItem(list, 4L - swapflag, pyb);
         }
 
         if((PyList_Append(ops, list)) == -1) {
@@ -494,14 +537,15 @@ class Diff_t {
         while(i < A && j < B) {
             auto ai = a[i];
 
-            if(!diffonly && ai == b[j]) {
-                makelist_pyn(ops, pyn, ED_EQUAL, x, j);
+            if(ai == b[j]) {
+                if(!diffonly)
+                    makelist_pyn(ops, pyn, ED_EQUAL, x, j);
             } else {
                 adat = fp[ai];
                 mj = j % BITS;
                 trb = (adat << (BITS - mj + 1)) | (adat >> mj);
-                if((found = trb & (~trb + 1)) != 0) {
-                    while(found > 1) {
+                if(x > 0 && (found = trb & (~trb + 1)) != 0) {
+                    while(found > 1 && j < B) {
                         found >>= 1;
                         makelist_pyn(ops, pyn, ED_INSERT, x, j);
                         ++j;
@@ -547,44 +591,37 @@ class Diff_t {
         return ops;
     }
     template <typename Storage>
-    PyObject* core_compare(Storage& fp, PyObject* condition_value) {
+    PyObject* core_compare(Storage& fp,
+                           int startidx,
+                           PyObject* condition_value,
+                           PyObject* _na_value,
+                           PyObject* _DEL_Flag,
+                           PyObject* _ADD_Flag) {
         std::size_t i = 0, j = 0, x = 0, y = 0, len = 0, sj = 0, mj = 0;
         uint64_t found = 0, adat = 0, trb = 0;
         const std::size_t BITS = std::min(std::size_t(64), (std::size_t)(sizeof(fp[0]) * 8));
-        PyObject* list = PyList_New(2);
         PyObject* ops = PyList_New(0);
 
         if(a == b) {
             if(!diffonly) {
-                PyList_SET_ITEM(list, 0, PyLong_FromLong(100));
-                Py_INCREF(DIFFTP[swapflag][ED_EQUAL]);
-                PyList_SET_ITEM(list, 1, DIFFTP[swapflag][ED_EQUAL]);
                 for(x = 0; x < A; x++)
-                    complist(list, ED_EQUAL, x, x, a.py, b.py, false, condition_value);
-                PyList_Append(ops, list);
-                Py_DECREF(list);
+                    complist(ops, ED_EQUAL, x, x, a.py, b.py, false, startidx, condition_value, _na_value, _DEL_Flag,
+                             _ADD_Flag);
             }
             return ops;
         }
         if(B == 0) {
-            PyList_SET_ITEM(list, 0, PyLong_FromLong(0));
-            Py_INCREF(DIFFTP[swapflag][ED_DELETE]);
-            PyList_SET_ITEM(list, 1, DIFFTP[swapflag][ED_DELETE]);
+            // if(B == 0 || (B == 1 && b.py == Py_None)) {
             for(x = 0; x < A; x++)
-                complist(list, ED_DELETE, x, 0, a.py, b.py, swapflag, condition_value);
-            PyList_Append(ops, list);
-            Py_DECREF(list);
+                complist(ops, ED_DELETE, x, 0, a.py, b.py, swapflag, startidx, condition_value, _na_value, _DEL_Flag,
+                         _ADD_Flag);
             return ops;
         }
         if(A == 0) {
-            PyList_SET_ITEM(list, 0, PyLong_FromLong(0));
-            Py_INCREF(DIFFTP[swapflag][ED_INSERT]);
-            PyList_SET_ITEM(list, 1, DIFFTP[swapflag][ED_INSERT]);
+            // if(A == 0 || (A == 1 && a.py == Py_None)) {
             for(y = 0; y < B; y++)
-                complist(list, ED_INSERT, 0, y, a.py, b.py, swapflag, condition_value);
-            PyList_Append(ops, list);
-            Py_DECREF(list);
-
+                complist(ops, ED_INSERT, 0, y, a.py, b.py, swapflag, startidx, condition_value, _na_value, _DEL_Flag,
+                         _ADD_Flag);
             return ops;
         }
 
@@ -595,42 +632,46 @@ class Diff_t {
             fp[b[y]] |= 1ULL << (y % BITS);
 
         x = 0;
-        int cost = 0;
 
         while(i < A && j < B) {
             auto ai = a[i];
 
             if(ai == b[j]) {
-                complist(list, ED_EQUAL, x, j, a.py, b.py, swapflag, condition_value);
+                if(!diffonly)
+                    complist(ops, ED_EQUAL, x, j, a.py, b.py, swapflag, startidx, condition_value, _na_value, _DEL_Flag,
+                             _ADD_Flag);
             } else {
                 adat = fp[ai];
                 mj = j % BITS;
                 trb = (adat << (BITS - mj + 1)) | (adat >> mj);
-                if((found = trb & (~trb + 1)) != 0) {
-                    while(found > 1) {
+                if(x > 0 && (found = trb & (~trb + 1)) != 0) {
+                    while(found > 1 && j < B) {
                         found >>= 1;
-                        complist(list, ED_INSERT, x, j, a.py, b.py, swapflag, condition_value);
+                        complist(ops, ED_INSERT, x, j, a.py, b.py, swapflag, startidx, condition_value, _na_value,
+                                 _DEL_Flag, _ADD_Flag);
                         ++j;
-                        ++cost;
                     }
-                    complist(list, ED_EQUAL, x, j, a.py, b.py, swapflag, condition_value);
+                    if(!diffonly && j < B)
+                        complist(ops, ED_EQUAL, x, j, a.py, b.py, swapflag, startidx, condition_value, _na_value,
+                                 _DEL_Flag, _ADD_Flag);
                 } else if(i < A) {
                     if(rep_rate > 0 &&
                        ((a.canonical && b.canonical) ||
                         Diff_t<pyview>(a.getitem(x), b.getitem(j), true).similar(rep_rate) * 100 < rep_rate)) {
-                        complist(list, ED_DELETE, x, j, a.py, b.py, swapflag, condition_value);
-                        complist(list, ED_INSERT, x, j, a.py, b.py, swapflag, condition_value);
+                        complist(ops, ED_DELETE, x, j, a.py, b.py, swapflag, startidx, condition_value, _na_value,
+                                 _DEL_Flag, _ADD_Flag);
+                        complist(ops, ED_INSERT, x, j, a.py, b.py, swapflag, startidx, condition_value, _na_value,
+                                 _DEL_Flag, _ADD_Flag);
                     } else {
-                        complist(list, ED_REPLACE, x, j, a.py, b.py, swapflag, condition_value);
+                        complist(ops, ED_REPLACE, x, j, a.py, b.py, swapflag, startidx, condition_value, _na_value,
+                                 _DEL_Flag, _ADD_Flag);
                     }
-                    ++++cost;
 
                 } else {
-                    complist(list, ED_INSERT, x, j, a.py, b.py, swapflag, condition_value);
-                    ++cost;
+                    complist(ops, ED_INSERT, x, j, a.py, b.py, swapflag, startidx, condition_value, _na_value,
+                             _DEL_Flag, _ADD_Flag);
                 }
             }
-
 
             do {
                 mj = sj % BITS;
@@ -649,49 +690,9 @@ class Diff_t {
         }
 
         for(; j < B; ++j) {
-            complist(list, ED_INSERT, x, j, a.py, b.py, swapflag, condition_value);
-            ++cost;
+            complist(ops, ED_INSERT, x, j, a.py, b.py, swapflag, startidx, condition_value, _na_value, _DEL_Flag,
+                     _ADD_Flag);
         }
-
-        int rate = (100 * (int(A + B) - cost)) / int(A + B);
-
-        if(cost == 0) {
-            if(diffonly)
-                return ops;
-            PyList_SET_ITEM(list, 0, PyLong_FromLong(rate));
-            Py_INCREF(DIFFTP[swapflag][ED_EQUAL]);
-            PyList_SET_ITEM(list, 1, DIFFTP[swapflag][ED_EQUAL]);
-        } else if(rate >= rep_rate) {
-            PyList_SET_ITEM(list, 0, PyLong_FromLong(rate));
-            Py_INCREF(DIFFTP[swapflag][ED_REPLACE]);
-            PyList_SET_ITEM(list, 1, DIFFTP[swapflag][ED_REPLACE]);
-        } else {
-            Py_CLEAR(list);
-            list = PyList_New(2);
-            PyList_SET_ITEM(list, 0, PyLong_FromLong(rate));
-            Py_INCREF(DIFFTP[swapflag][ED_DELETE]);
-            PyList_SET_ITEM(list, 1, DIFFTP[swapflag][ED_DELETE]);
-            for(std::size_t m = 0; m < A; ++m) {
-                PyObject* pa = a.getitem(m);
-                PyList_Append(list, pa);
-                Py_DECREF(pa);
-            }
-            PyList_Append(ops, list);
-            Py_DECREF(list);
-
-            list = PyList_New(2);
-            PyList_SET_ITEM(list, 0, PyLong_FromLong(rate));
-            Py_INCREF(DIFFTP[swapflag][ED_INSERT]);
-            PyList_SET_ITEM(list, 1, DIFFTP[swapflag][ED_INSERT]);
-            for(std::size_t n = 0; n < B; ++n) {
-                PyObject* pb = b.getitem(n);
-                PyList_Append(list, pb);
-                Py_DECREF(pb);
-            }
-        }
-
-        PyList_Append(ops, list);
-        Py_XDECREF(list);
 
         return ops;
     }
@@ -802,10 +803,10 @@ class Diff_t {
                  bit                | adat << (BITS - (j % BITS))   |
                                     --------------------------------- */
 
-                if((found = (_Vty)(trb & (~trb + 1))) != 0) {
+                if(i > 0 && (found = (_Vty)(trb & (~trb + 1))) != 0) {
                     // ED_INSERT and ED_EQUAL
                     dist -= 2;
-                    while(found > 1) {
+                    while(found > 1 && j < B) {
                         ++j;
                         found >>= 1;
                     }
@@ -849,10 +850,10 @@ class Diff_t {
 
             if(ai == b[j])
                 dist -= 2;
-            else if((trb = (_Vty)(fp[ai] >> j)) != 0) {
+            else if(i > 0 && (trb = (_Vty)(fp[ai] >> j)) != 0) {
                 dist -= 2;
                 found = (_Vty)(trb & (~trb + 1));
-                while(found > 1) {
+                while(found > 1 && j < B) {
                     ++j;
                     found >>= 1;
                 }
@@ -922,13 +923,29 @@ class Diff {
     }
 
     PyObject* difference(bool _diffonly = false, int _rep_rate = REPLACEMENT_RATE) {
+        if(PyObject_RichCompareBool(a, b, Py_EQ)) {
+            std::size_t len1 = error_n, i;
+            PyObject* ops = PyList_New(0);
+            if(_diffonly)
+                return ops;
+            if(PyMapping_Check(a))
+                len1 = (std::size_t)PyObject_Length(a);
+            if(len1 == error_n || len1 == 0) {
+                makelist(ops, ED_EQUAL, 0, 0, a, b);
+                return ops;
+            }
+            for(i = 0; i < len1; i++)
+                makelist(ops, ED_EQUAL, i, i, a, b);
+            return ops;
+        }
+
         if(kind1 == 1)
             return Diff_t<pyview_t<uint8_t>>(a, b).difference(_diffonly, _rep_rate);
         else if(kind1 == 2)
             return Diff_t<pyview_t<uint16_t>>(a, b).difference(_diffonly, _rep_rate);
         else if(kind1 == 8)
             return Diff_t<pyview_t<uint64_t>>(a, b).difference(_diffonly, _rep_rate);
-        else if(kind1 < 0){
+        else if(kind1 < 0) {
             std::size_t len1 = PyAny_Length(a);
             std::size_t len2 = PyAny_Length(b);
 
@@ -950,63 +967,644 @@ class Diff {
                 dt.swapflag = true;
                 return dt.difference(_diffonly, _rep_rate);
             }
-        }else if(kind1 == 4)
+        } else if(kind1 == 4)
             return Diff_t<pyview_t<uint32_t>>(a, b).difference(_diffonly, _rep_rate);
         return NULL;
     }
 
-    PyObject* compare(bool _diffonly, int _rep_rate, PyObject* _condition_value) {
+    PyObject* compare(bool _diffonly,
+                      int _rep_rate,
+                      int _startidx,
+                      PyObject* _condition_value,
+                      PyObject* _na_value,
+                      PyObject* _DEL_Flag,
+                      PyObject* _ADD_Flag) {
+        if(PyObject_RichCompareBool(a, b, Py_EQ)) {
+            std::size_t len1 = error_n, i = 0;
+            PyObject* ops = PyList_New(0);
+            if(_diffonly)
+                return ops;
 
+            if(PyMapping_Check(a))
+                len1 = (std::size_t)PyObject_Length(a);
 
-        if(kind1 == 1)
-            return Diff_t<pyview_t<uint8_t>>(a, b).compare(_diffonly, _rep_rate, _condition_value);
-        else if(kind1 == 2)
-            return Diff_t<pyview_t<uint16_t>>(a, b).compare(_diffonly, _rep_rate, _condition_value);
-        else if(kind1 == 8)
-            return Diff_t<pyview_t<uint64_t>>(a, b).compare(_diffonly, _rep_rate, _condition_value);
-        else if(kind1 < 0) {
+            if(len1 == error_n || len1 == 0) {
+                complist(ops, ED_EQUAL, i, i, a, b, false, _startidx, _condition_value, _na_value, _DEL_Flag,
+                         _ADD_Flag);
+            } else {
+                for(i = 0; i < len1; i++)
+                    complist(ops, ED_EQUAL, i, i, a, b, false, _startidx, _condition_value, _na_value, _DEL_Flag,
+                             _ADD_Flag);
+            }
+            return ops;
+        }
+
+        if(kind1 == 1) {
+            return Diff_t<pyview_t<uint8_t>>(a, b).compare(_diffonly, _rep_rate, _startidx, _condition_value, _na_value,
+                                                           _DEL_Flag, _ADD_Flag);
+        } else if(kind1 == 2) {
+            return Diff_t<pyview_t<uint16_t>>(a, b).compare(_diffonly, _rep_rate, _startidx, _condition_value,
+                                                            _na_value, _DEL_Flag, _ADD_Flag);
+        } else if(a == Py_None) {
+            std::size_t len2 = PyAny_Length(b);
+            PyObject* ops = PyList_New(0);
+            for(std::size_t i = 0, end = len2 ? len2 : 1; i < end; i++)
+                complist(ops, ED_INSERT, 0, i, a, b, false, _startidx, _condition_value, _na_value, _DEL_Flag,
+                         _ADD_Flag);
+            return ops;
+        } else if(b == Py_None) {
+            std::size_t len1 = PyAny_Length(a);
+            PyObject* ops = PyList_New(0);
+            for(std::size_t i = 0, end = len1 ? len1 : 1; i < end; i++)
+                complist(ops, ED_DELETE, i, 0, a, b, false, _startidx, _condition_value, _na_value, _DEL_Flag,
+                         _ADD_Flag);
+            return ops;
+        } else if(kind1 == 8) {
+            return Diff_t<pyview_t<uint64_t>>(a, b).compare(_diffonly, _rep_rate, _startidx, _condition_value,
+                                                            _na_value, _DEL_Flag, _ADD_Flag);
+        } else if(kind1 < 0) {
             std::size_t len1 = PyAny_Length(a);
             std::size_t len2 = PyAny_Length(b);
 
             if(len1 + len2 == 0 || (len1 == 1 && len2 == 1)) {
-                PyObject* list = PyList_New(2);
                 PyObject* ops = PyList_New(0);
 
                 if(_rep_rate < 1) {
-                    PyList_SET_ITEM(list, 0, PyLong_FromLong(_rep_rate));
-                    Py_INCREF(DIFFTP[0][ED_REPLACE]);
-                    PyList_SET_ITEM(list, 1, DIFFTP[0][ED_REPLACE]);
-                    complist(list, ED_REPLACE, 0, 0, a, b, false, _condition_value);
-                    PyList_Append(ops, list);
+                    complist(ops, ED_REPLACE, 0, 0, a, b, false, _startidx, _condition_value, _na_value, _DEL_Flag,
+                             _ADD_Flag);
                 } else {
-                    PyList_SET_ITEM(list, 0, PyLong_FromLong(0));
-                    Py_INCREF(DIFFTP[0][ED_DELETE]);
-                    PyList_SET_ITEM(list, 1, DIFFTP[0][ED_DELETE]);
-                    complist(list, ED_DELETE, 0, 0, a, b, false, _condition_value);
-                    PyList_Append(ops, list);
-                    Py_DECREF(list);
-                    list = PyList_New(2);
-                    PyList_SET_ITEM(list, 0, PyLong_FromLong(0));
-                    Py_INCREF(DIFFTP[0][ED_INSERT]);
-                    PyList_SET_ITEM(list, 1, DIFFTP[0][ED_INSERT]);
-                    complist(list, ED_INSERT, 0, 0, a, b, false, _condition_value);
-                    PyList_Append(ops, list);
+                    complist(ops, ED_DELETE, 0, 0, a, b, false, _startidx, _condition_value, _na_value, _DEL_Flag,
+                             _ADD_Flag);
+                    complist(ops, ED_INSERT, 0, 0, a, b, false, _startidx, _condition_value, _na_value, _DEL_Flag,
+                             _ADD_Flag);
                 }
-                Py_DECREF(list);
                 return ops;
             }
-            if (len1 <= len2)
-                return Diff_t<pyview>(a, b).compare(_diffonly, _rep_rate, _condition_value);
+
+            if(len1 <= len2)
+                return Diff_t<pyview>(a, b).compare(_diffonly, _rep_rate, _startidx, _condition_value, _na_value,
+                                                    _DEL_Flag, _ADD_Flag);
             else {
                 auto dt = Diff_t<pyview>(b, a);
                 dt.swapflag = true;
-                return dt.compare(_diffonly, _rep_rate, _condition_value);
+                return dt.compare(_diffonly, _rep_rate, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
             }
-        } else if(kind1 == 4)
-            return Diff_t<pyview_t<uint32_t>>(a, b).compare(_diffonly, _rep_rate, _condition_value);
+        } else if(kind1 == 4) {
+            return Diff_t<pyview_t<uint32_t>>(a, b).compare(_diffonly, _rep_rate, _startidx, _condition_value,
+                                                            _na_value, _DEL_Flag, _ADD_Flag);
+        }
         return NULL;
     }
 };
+
+class Compare {
+   public:
+    PyObject* a;
+    PyObject* b;
+    PyObject* keya;
+    PyObject* keyb;
+    bool header;
+    bool diffonly;
+    int rep_rate;
+    int startidx;
+    PyObject* condition_value;
+    PyObject* na_value;
+    PyObject* delete_sign_value = NULL;
+    PyObject* insert_sign_value = NULL;
+
+   private:
+    int* idxa = NULL;
+    int* idxb = NULL;
+    Py_ssize_t maxcol = 0;
+    bool need_clean_cv = false;
+    bool need_clean_nv = false;
+    PyObject* DEL_Flag = NULL;
+    PyObject* ADD_Flag = NULL;
+
+   public:
+    Compare()
+        : a(NULL),
+          b(NULL),
+          keya(NULL),
+          keyb(NULL),
+          header(true),
+          diffonly(false),
+          rep_rate(REPLACEMENT_RATE),
+          startidx(0),
+          condition_value(NULL),
+          na_value(NULL),
+          delete_sign_value(NULL),
+          insert_sign_value(NULL),
+          idxa(NULL),
+          idxb(NULL),
+          maxcol(0),
+          need_clean_cv(false),
+          need_clean_nv(false),
+          DEL_Flag(NULL),
+          ADD_Flag(NULL) {}
+
+    Compare(PyObject* args, PyObject* kwargs)
+        : a(),
+          b(),
+          keya(NULL),
+          keyb(NULL),
+          header(true),
+          diffonly(false),
+          rep_rate(REPLACEMENT_RATE),
+          startidx(0),
+          condition_value(NULL),
+          na_value(NULL),
+          delete_sign_value(NULL),
+          insert_sign_value(NULL),
+          idxa(NULL),
+          idxb(NULL),
+          maxcol(0),
+          need_clean_cv(false),
+          need_clean_nv(false),
+          DEL_Flag(NULL),
+          ADD_Flag(NULL) {
+        const char* kwlist[13] = {"a",
+                                  "b",
+                                  "keya",
+                                  "keyb",
+                                  "header",
+                                  "diffonly",
+                                  "rep_rate",
+                                  "startidx",
+                                  "condition_value",
+                                  "na_value",
+                                  "delete_sign_value",
+                                  "insert_sign_value",
+                                  NULL};
+
+        if(!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|OOiiiiOOOO", (char**)kwlist, &a, &b, &keya, &keyb, &header,
+                                        &diffonly, &rep_rate, &startidx, &condition_value, &na_value,
+                                        &delete_sign_value, &insert_sign_value))
+            return;
+
+        initialize();
+    }
+
+    Compare(PyObject* _a,
+            PyObject* _b,
+            PyObject* _keya,
+            PyObject* _keyb,
+            bool _header,
+            bool _diffonly,
+            int _rep_rate,
+            int _startidx,
+            PyObject* _condition_value,
+            PyObject* _na_value,
+            PyObject* _delete_sign_value,
+            PyObject* _insert_sign_value)
+        : a(_a),
+          b(_b),
+          keya(_keya),
+          keyb(_keyb),
+          header(_header),
+          diffonly(_diffonly),
+          rep_rate(_rep_rate),
+          startidx(_startidx),
+          condition_value(_condition_value),
+          na_value(_na_value),
+          delete_sign_value(_delete_sign_value),
+          insert_sign_value(_insert_sign_value),
+          idxa(NULL),
+          idxb(NULL),
+          maxcol(0),
+          need_clean_cv(false),
+          need_clean_nv(false),
+          DEL_Flag(NULL),
+          ADD_Flag(NULL) {
+        initialize();
+    }
+
+    void initialize() {
+        if(keya)
+            a = sortWithKey(idxa, a, keya);
+        if(keyb)
+            b = sortWithKey(idxb, b, keyb);
+
+        if(condition_value == NULL) {
+            condition_value = PyUnicode_FromString(" ---> ");
+            need_clean_cv = true;
+        } else if(!PyUnicode_Check(condition_value)) {
+            PyErr_Format(PyExc_AttributeError, "`condition_value` should be unicode string.");
+            return;
+        }
+
+        if(na_value == NULL) {
+            na_value = PyUnicode_FromString("-");
+            need_clean_nv = true;
+        } else if(!PyUnicode_Check(na_value)) {
+            PyErr_Format(PyExc_AttributeError, "`na_value` should be unicode string.");
+            return;
+        }
+
+        DEL_Flag = delete_sign_value ? delete_sign_value : PyUnicode_FromString("DEL");
+        ADD_Flag = insert_sign_value ? insert_sign_value : PyUnicode_FromString("ADD");
+    }
+
+    ~Compare() {
+        if(idxa)
+            PyMem_DEL(idxa);
+        if(idxb)
+            PyMem_DEL(idxb);
+        if(need_clean_cv)
+            Py_XDECREF(condition_value);
+        if(need_clean_nv)
+            Py_DECREF(na_value);
+        if(delete_sign_value == NULL)
+            Py_XDECREF(DEL_Flag);
+        if(insert_sign_value == NULL)
+            Py_XDECREF(ADD_Flag);
+    }
+
+   private:
+    /* thank you for
+     * https://stackoverflow.com/questions/51959095/how-to-sort-a-list-with-a-custom-key-using-the-python-c-api */
+    PyObject* sortWithKey(int*& indexes, PyObject*& list, PyObject* key) {
+        PyObject* argTuple = PyTuple_New(0);
+        PyObject* keywords = PyDict_New();
+        PyObject* keyString = PyUnicode_FromString("key");
+        PyDict_SetItem(keywords, keyString, key);
+
+        Py_ssize_t len = PyObject_Length(list);
+        std::unordered_map<uint64_t, int> idict = {};
+
+        for(Py_ssize_t i = 0; i < len; ++i) {
+            PyObject* row = PySequence_ITEM(list, i);
+
+            if(PyTuple_Check(row) || PyIter_Check(row) || PyGen_Check(row) || PyRange_Check(row)) {
+                PyObject* rerow = PySequence_List(row);
+                PySequence_SetItem(list, i, rerow);
+                idict[uint64_t(rerow)] = (int)i;
+                Py_DECREF(rerow);
+            } else {
+                idict[uint64_t(row)] = (int)i;
+            }
+            Py_DECREF(row);
+            if(PyErr_Occurred()) {
+                return PyErr_Format(PyExc_TypeError, "Can not append index data.");
+            }
+        }
+
+        PyObject* sortMethod = PyObject_GetAttrString(list, "sort");
+
+        PyObject* result = PyObject_Call(sortMethod, argTuple, keywords);
+        if(result == NULL) {
+            return PyErr_Format(PyExc_TypeError, "Can not call sort method.");
+        }
+        Py_DECREF(result);
+
+        indexes = PyMem_New(int, len);
+
+        for(Py_ssize_t i = 0; i < len; ++i) {
+            PyObject* row = PySequence_ITEM(list, i);
+            indexes[i] = idict[uint64_t(row)];
+        }
+
+        Py_DECREF(keyString);
+        Py_DECREF(keywords);
+        Py_DECREF(argTuple);
+
+        return list;
+    }
+
+    PyObject* intercomplist(PyObject*& row) {
+        Py_ssize_t rlen, j = 0;
+        PyObject *id_a = NULL, *id_b = NULL, *it_a = NULL, *it_b = NULL, *cmp = NULL, *tag = NULL;
+
+        it_a = PySequence_ITEM(row, 3);
+        if(!it_a || PyUnicode_Check(it_a) || PyNumber_Check(it_a) || PyBytes_Check(it_a) || PyByteArray_Check(it_a)) {
+            Py_CLEAR(it_a);
+            return NULL;
+        }
+        it_b = PySequence_ITEM(row, 4);
+        if(!it_b || PyUnicode_Check(it_b) || PyNumber_Check(it_b) || PyBytes_Check(it_b) || PyByteArray_Check(it_b)) {
+            Py_DECREF(it_b);
+            return NULL;
+        }
+
+        PyObject* list = PyList_New(3);
+
+        tag = PySequence_ITEM(row, 0);
+        if(tag == NULL)
+            return PyErr_Format(PyExc_ValueError, "`Tag name` value Not Found.");
+
+        PyList_SetItem(list, 0, tag);
+
+        if((id_a = PySequence_ITEM(row, 1)) == Py_None) {
+            Py_INCREF(na_value);
+            PyList_SetItem(list, 1, na_value);
+            // j = 1; //@todo ... ok?
+        } else if(keya && idxa) {
+            PyList_SetItem(list, 1, PyLong_FromLong(idxa[PyLong_AsSize_t(id_a)] + startidx));
+            Py_XDECREF(id_a);
+        } else {
+            std::size_t ia = PyLong_AsSize_t(id_a) + startidx;
+            PyList_SetItem(list, 1, PyLong_FromSize_t(ia));
+        }
+
+        if((id_b = PySequence_ITEM(row, 2)) == Py_None) {
+            Py_INCREF(na_value);
+            PyList_SetItem(list, 2, na_value);
+            // j = 1; //@todo ... ok?
+        } else if(keyb && idxb) {
+            PyList_SetItem(list, 2, PyLong_FromLong(idxb[PyLong_AsSize_t(id_b)] + startidx));
+            Py_XDECREF(id_b);
+        } else {
+            std::size_t ib = PyLong_AsSize_t(id_b) + startidx;
+            PyList_SetItem(list, 2, PyLong_FromSize_t(ib));
+        }
+
+        cmp = Diff(it_a, it_b).compare(false, rep_rate, startidx, condition_value, na_value, DEL_Flag, ADD_Flag);
+        Py_DECREF(it_a);
+        Py_DECREF(it_b);
+
+        if((rlen = PyObject_Length(cmp)) == -1)
+            return PyErr_Format(PyExc_ValueError, "Atribute(`a` or `b`) is not a two-dimensional array.");
+
+        for(; j < rlen; j++) {
+            PyObject* cols = PySequence_ITEM(cmp, j);
+            if(cols == NULL)
+                return PyErr_Format(PyExc_ValueError, "Atribute(`a` or `b`) is not a two-dimensional array.");
+
+            PyObject* cell = PySequence_ITEM(cols, 3);
+            if(cell == NULL)
+                return PyErr_Format(PyExc_ValueError, "Atribute(`a` or `b`) is not a two-dimensional array.");
+
+            PyList_Append(list, cell);
+            Py_DECREF(cell);
+            Py_DECREF(cols);
+        }
+
+        if(maxcol < rlen)
+            maxcol = rlen;
+
+        Py_XDECREF(cmp);
+
+        return list;
+    }
+
+   public:
+    PyObject* _1d(bool is_initialcall = true) {
+        if(is_initialcall) {
+            Py_INCREF(a);
+            Py_INCREF(b);
+        }
+
+        PyObject* cmp = Diff(a, b).compare(diffonly, rep_rate, startidx, condition_value, na_value, DEL_Flag, ADD_Flag);
+
+        if(keya || keyb) {
+            Py_ssize_t len = PyObject_Length(cmp);
+            std::vector<std::pair<std::size_t, PyObject*>> tmp;
+            tmp.reserve((std::size_t)len);
+
+            for(Py_ssize_t i = 0; i < len; i++) {
+                PyObject* row = PySequence_ITEM(cmp, i);
+                PyObject* id_a = PySequence_ITEM(row, 1);
+                PyObject* id_b = PySequence_ITEM(row, 2);
+                std::size_t ia = id_a == na_value ? INT_MAX : PyLong_AsSize_t(id_a);
+                std::size_t ib = id_b == na_value ? INT_MAX : PyLong_AsSize_t(id_b);
+                PySequence_SetItem(row, 1, id_a == na_value ? id_a : PyLong_FromLong(idxa[ia] + startidx));
+                PySequence_SetItem(row, 2, id_b == na_value ? id_b : PyLong_FromLong(idxb[ib] + startidx));
+                tmp.emplace_back(std::min(ia, ib), row);
+                Py_XDECREF(id_a);
+                Py_XDECREF(id_b);
+            }
+            std::sort(tmp.begin(), tmp.end());
+            for(std::size_t i = 0, count = tmp.size(); i < count; ++i) {
+                PyList_SetItem(cmp, (Py_ssize_t)i, tmp[i].second);
+            }
+        }
+
+        if(header) {
+            PyObject* head = Py_BuildValue("[ssss]", "tag", "index_a", "index_b", "data");
+            if((PyList_Insert(cmp, 0, head)) == -1)
+                return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _1d() near");
+            Py_DECREF(head);
+        }
+
+        return cmp;
+    }
+
+    PyObject* _2d(bool is_initialcall = true) {
+        Py_ssize_t len, i;
+        PyObject* df = Diff(a, b).difference(diffonly, rep_rate);
+
+        if(df == NULL) {
+            return PyErr_Format(PyExc_ValueError, NULL);
+        }
+
+        if((len = PyObject_Length(df)) == -1) {
+            return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() head");
+        }
+
+        PyObject* ops = PyList_New(len + header);
+
+        int need_ommit = 0;
+        if(a == Py_None && b != Py_None)
+            need_ommit = ED_INSERT;
+        else if(a != Py_None && b == Py_None)
+            need_ommit = ED_DELETE;
+
+        for(i = 0; i < len; i++) {
+            PyObject* row = PySequence_ITEM(df, i);
+            if(row == NULL) {
+                Py_XDECREF(ops);
+                Py_CLEAR(df);
+                return PyErr_Format(PyExc_ValueError, "Atribute(`a` or `b`) is not a two-dimensional array.");
+            }
+            if(need_ommit) {
+                PyObject* ctag = PySequence_ITEM(row, 0);
+                if(PyObject_RichCompareBool(ctag, DIFFTP[0][need_ommit], Py_NE)) {
+                    Py_CLEAR(ctag);
+                    Py_CLEAR(ops);
+                    Py_CLEAR(df);
+                    return this->_1d(false);
+                }
+                Py_XDECREF(ctag);
+            }
+            PyObject* list = intercomplist(row);
+            if(list == NULL) {
+                Py_CLEAR(ops);
+                Py_CLEAR(df);
+                Py_CLEAR(row);
+                return this->_1d(false);
+            }
+            PyList_SET_ITEM(ops, i + header, list);
+            Py_XDECREF(row);
+
+            if(PyErr_Occurred() != NULL)
+                return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() below");
+        }
+
+        Py_CLEAR(df);
+
+        if(header) {
+            PyObject* head = PyList_New(3 + maxcol);
+            PyList_SET_ITEM(head, 0, PyUnicode_FromString("tag"));
+            PyList_SET_ITEM(head, 1, PyUnicode_FromString("index_a"));
+            PyList_SET_ITEM(head, 2, PyUnicode_FromString("index_b"));
+            if(maxcol == 1) {
+                PyList_SET_ITEM(head, 3, PyUnicode_FromString("data"));
+            } else {
+                for(int n = 0; n < maxcol; n++) {
+                    char colname[7] = {'C', 'O', 'L', '_', n < 10 ? '0' : char(0x30 + (n / 10)), char(0x30 + (n % 10)),
+                                       NULL};
+                    PyList_SET_ITEM(head, 3 + n, PyUnicode_FromString((const char*)colname));
+                }
+            }
+
+            if((PyList_SetItem(ops, 0, head)) == -1)
+                return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() header");
+        }
+
+        return ops;
+    }
+
+    PyObject* _3d(bool is_initialcall = true) {
+        if(is_initialcall) {
+            Py_INCREF(a);
+            Py_INCREF(b);
+        }
+
+        Py_ssize_t len, i, j, slen;
+
+        PyObject* la = PyDict_Keys(a);
+        PyObject* lb = PyDict_Keys(b);
+        PyObject* dfs = Diff(la, lb).difference(diffonly, rep_rate);
+        Py_XDECREF(la);
+        Py_XDECREF(lb);
+
+        if(dfs == NULL) {
+            return PyErr_Format(PyExc_ValueError, NULL);
+        }
+
+        if((len = PyObject_Length(dfs)) == -1) {
+            Py_CLEAR(dfs);
+            return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() head");
+        }
+
+        PyObject* ops = PyList_New(0);
+        Py_DECREF(a);
+        Py_DECREF(b);
+        return ops;
+
+        for(i = 0; i < len; ++i) {
+            PyObject *tag, *sa, *sb, *da, *db, *arr, *df, *concat, *content, *row;
+            arr = PySequence_ITEM(dfs, i);
+
+            tag = PySequence_ITEM(arr, 0);
+            sa = PySequence_ITEM(arr, 3);
+            sb = PySequence_ITEM(arr, 4);
+
+            da = PyDict_GetItem(a, sa);
+            db = PyDict_GetItem(b, sb);
+
+            Compare cmp(da, db, keya, keyb, false, diffonly, rep_rate, startidx, condition_value, na_value,
+                        delete_sign_value, insert_sign_value);
+
+            df = cmp._2d();
+            if (maxcol < cmp.maxcol)
+                maxcol = cmp.maxcol;
+
+            Py_XDECREF(sa);
+            Py_XDECREF(da);
+            Py_XDECREF(sb);
+            Py_XDECREF(db);
+            Py_XDECREF(arr);
+
+            if(tag == DIFFTP[0][ED_REPLACE]) {
+                concat = PyUnicode_Concat(sa, condition_value);
+                content = PyUnicode_Concat(concat, sb);
+                Py_XDECREF(concat);
+            } else if(tag == DIFFTP[0][ED_INSERT]) {
+                content = sb;
+            } else {
+                content = sa;
+            }
+
+            Py_XDECREF(tag);
+
+            for(j = 0, slen = PyObject_Length(df); j < slen; ++j) {
+                if((row = PySequence_ITEM(df, j)) == NULL) {
+                    Py_XDECREF(ops);
+                    Py_XDECREF(content);
+                    Py_CLEAR(df);
+                    Py_CLEAR(dfs);
+                    return PyErr_Format(PyExc_ValueError, "Cannot get a Dictionary Inner array.");
+                }
+
+                PyList_Insert(row, 0, content);
+                PyList_Append(ops, row);
+                Py_DECREF(row);
+            }
+
+            Py_XDECREF(content);
+            Py_CLEAR(df);
+        }
+
+        Py_CLEAR(dfs);
+
+        if(header) {
+            PyObject* head = PyList_New(4 + maxcol);
+            PyList_SET_ITEM(head, 0, PyUnicode_FromString("group"));
+            PyList_SET_ITEM(head, 1, PyUnicode_FromString("tag"));
+            PyList_SET_ITEM(head, 2, PyUnicode_FromString("index_a"));
+            PyList_SET_ITEM(head, 3, PyUnicode_FromString("index_b"));
+            if(maxcol == 1) {
+                PyList_SET_ITEM(head, 4, PyUnicode_FromString("data"));
+            } else {
+                for(int n = 0; n < maxcol; n++) {
+                    char colname[7] = {'C', 'O', 'L', '_', n < 10 ? '0' : char(0x30 + (n / 10)), char(0x30 + (n % 10)),
+                                       NULL};
+                    PyList_SET_ITEM(head, 4 + n, PyUnicode_FromString((const char*)colname));
+                }
+            }
+
+            if((PyList_Insert(ops, 0, head)) == -1)
+                return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() header");
+            Py_DECREF(head);
+        }
+
+        return ops;
+    }
+
+    // def _3d(self):
+    //     if self.header:
+    //         self.HEADER = ["tag", "target", "index_a", "index_b", ]
+
+    //     kw = dict(
+    //         keya=self.keya,
+    //         keyb=self.keyb,
+    //         header=False,
+    //         diffonly=self.diffonly,
+    //         rep_rate=self.rep_rate,
+    //         condition_value=self.condition_value,
+    //         na_value=self.na_value)
+
+    //     for tag, _, _, sa, sb in differ(self.a, self.b, self.diffonly, self.rep_rate):
+    //         if tag in ["equal", "replace"]:
+    //             df = Differ(self.a[sa], self.b[sb], **kw)
+    //             for ctag, *row in df._2d():
+    //                 yield [ctag, sa if tag == "equal" else sa + self.condition_value + sb, *row]
+    //             if self.maxcol < df.maxcol:
+    //                 self.maxcol = df.maxcol
+    //         else:
+    //             df = self.a[sa] if tag == "delete" else self.b[sb]
+    //             sh = sa if tag == "delete" else sb
+    //             for i, x in enumerate(df):
+    //                 yield [tag, sh, i, self.na_value, *x]
+    //                 rowlen = len(x)
+    //                 if self.maxcol < rowlen:
+    //                     self.maxcol = rowlen
+
+    //     if self.header:
+    //         self.HEADER.extend(list(map("COL{:02d}".format, range(self.maxcol))))
+};
+
 }  // namespace gammy
 
 /*

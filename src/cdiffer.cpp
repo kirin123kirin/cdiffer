@@ -15,9 +15,6 @@ PyObject* gammy::DIFFTP[2][ED_LAST] = {{
                                            PyUnicode_FromString("insert")    // 3: INSERT
                                        }};
 
-PyObject* gammy::DEL_Flag = PyUnicode_FromString("DEL");
-PyObject* gammy::ADD_Flag = PyUnicode_FromString("ADD");
-
 /*
  * python Interface function
  */
@@ -65,81 +62,29 @@ PyObject* differ_py(PyObject* self, PyObject* args, PyObject* kwargs) {
     if(!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|ii", (char**)kwlist, &arg1, &arg2, &diffonly, &rep_rate))
         return NULL;
 
-    if(PyObject_RichCompareBool(arg1, arg2, Py_EQ)) {
-        std::size_t len1 = error_n, i;
-        PyObject* ops = PyList_New(0);
-        if(diffonly)
-            return ops;
-        if(PyMapping_Check(arg1))
-            len1 = (std::size_t)PyObject_Length(arg1);
-        if(len1 == error_n || len1 == 0) {
-            gammy::makelist(ops, ED_EQUAL, 0, 0, arg1, arg2);
-            return ops;
-        }
-        for(i = 0; i < len1; i++)
-            gammy::makelist(ops, ED_EQUAL, i, i, arg1, arg2);
-        return ops;
-    }
-
     return gammy::Diff(arg1, arg2).difference((bool)diffonly, rep_rate);
 }
 
 PyObject* compare_py(PyObject* self, PyObject* args, PyObject* kwargs) {
-    PyObject *arg1, *arg2;
-    int diffonly = false;
-    int rep_rate = REPLACEMENT_RATE;
-    PyObject* condition_value = NULL;
-    PyObject* ret = NULL;
-    bool need_clean = false;
+    PyObject *a, *b;
 
-    const char* kwlist[8] = {"a", "b", "diffonly", "rep_rate", "condition_value", NULL};
-
-    if(!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iiO", (char**)kwlist, &arg1, &arg2, &diffonly, &rep_rate,
-                                    &condition_value))
+    if(!PyArg_UnpackTuple(args, (char*)("compare"), 2, 2, &a, &b))
         return NULL;
 
-    if(condition_value == NULL) {
-        condition_value = PyUnicode_FromString(" ---> ");
-        need_clean = true;
-    } else if(!PyUnicode_Check(condition_value)) {
-        return PyErr_Format(PyExc_AttributeError, "`condition_value` should be unicode string.");
+    if((a == Py_None || b == Py_None) ||
+       ((PyUnicode_Check(a) || PyBool_Check(a) || PyNumber_Check(a) || PyBytes_Check(a) || PyByteArray_Check(a)) &&
+        (PyUnicode_Check(b) || PyBool_Check(b) || PyNumber_Check(b) || PyBytes_Check(b) || PyByteArray_Check(b)))) {
+
+        return gammy::Compare(args, kwargs)._1d();
+
+    } else if(PyDict_Check(a) && PyDict_Check(b)) {
+        return gammy::Compare(args, kwargs)._3d();
+
+    } else {
+
+        return gammy::Compare(args, kwargs)._2d();
+
     }
-
-    if(PyObject_RichCompareBool(arg1, arg2, Py_EQ)) {
-        std::size_t len1 = error_n, i;
-        PyObject* ops = PyList_New(0);
-        if(diffonly) {
-            if(need_clean)
-                Py_XDECREF(condition_value);
-            return ops;
-        }
-
-        PyObject* list = PyList_New(2);
-        PyList_SET_ITEM(list, 0, PyLong_FromLong(100));
-        Py_INCREF(gammy::DIFFTP[0][ED_EQUAL]);
-        PyList_SET_ITEM(list, 1, gammy::DIFFTP[0][ED_EQUAL]);
-
-        if(PyMapping_Check(arg1))
-            len1 = (std::size_t)PyObject_Length(arg1);
-
-        if(len1 == error_n || len1 == 0) {
-            PyList_Append(list, arg1);
-        } else {
-            for(i = 0; i < len1; i++)
-                gammy::complist(list, ED_EQUAL, i, i, arg1, arg2, false, condition_value);
-        }
-        PyList_Append(ops, list);
-        if(need_clean)
-            Py_XDECREF(condition_value);
-        Py_DECREF(list);
-        return ops;
-    }
-
-    ret = gammy::Diff(arg1, arg2).compare((bool)diffonly, rep_rate, condition_value);
-
-    if(need_clean)
-        Py_XDECREF(condition_value);
-    return ret;
 }
 
 #define MODULE_NAME cdiffer

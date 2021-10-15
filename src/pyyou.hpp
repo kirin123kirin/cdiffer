@@ -90,19 +90,16 @@ struct PyMallocator {
         ;
     }
 
-    bool operator==(const PyMallocator<T>&) {
-        return true;
-    }
+    bool operator==(const PyMallocator<T>&) { return true; }
 
-    bool operator!=(const PyMallocator<T>&) {
-        return false;
-    }
+    bool operator!=(const PyMallocator<T>&) { return false; }
 
-//    private:
-//     void report(T* p, std::size_t n, bool alloc = true) const {
-//         std::cout << (alloc ? "Alloc: " : "Dealloc: ") << sizeof(T) * n << " bytes at " << std::hex << std::showbase
-//                   << reinterpret_cast<void*>(p) << std::dec << '\n';
-//     }
+    //    private:
+    //     void report(T* p, std::size_t n, bool alloc = true) const {
+    //         std::cout << (alloc ? "Alloc: " : "Dealloc: ") << sizeof(T) * n << " bytes at " << std::hex <<
+    //         std::showbase
+    //                   << reinterpret_cast<void*>(p) << std::dec << '\n';
+    //     }
 };
 
 template <typename CharT>
@@ -166,7 +163,7 @@ class pyview_t {
             is_sequence = false;
             return;
         } else {
-            if (PyUnicode_Check(o)) {
+            if(PyUnicode_Check(o)) {
 #if PY_MAJOR_VERSION >= 3
                 kind = PyUnicode_KIND(o);
                 data_ = (CharT*)PyUnicode_DATA(o);
@@ -212,6 +209,10 @@ class pyview_t {
             } else {
                 PyObject* tmp = PySequence_Tuple(item);
                 data_[i] = (CharT)PyObject_Hash(tmp);
+                if((PySequence_SetItem(py, (Py_ssize_t)i, tmp)) == -1) {
+                    PyErr_Format(PyExc_ReferenceError, "Unknown panic, pyyou.hpp pyview_t class.");
+                    return;
+                }
                 Py_DECREF(tmp);
             }
             Py_DECREF(item);
@@ -242,9 +243,14 @@ class pyview_t {
     inline constexpr std::size_t length() const noexcept { return size_; }
 
     constexpr PyObject* getitem(size_t index) const noexcept {
-        return (size() == 0 || is_sequence == false) ? Py_INCREF(py), py
-           : (size() > 0 && index < size())          ? PySequence_GetItem(py, (Py_ssize_t)index)
-                                                     : NULL;
+        if(size() == 0 || is_sequence == false) {
+            Py_INCREF(py);
+            return py;
+        } else if(size() > 0 && index < size()) {
+            return PySequence_GetItem(py, (Py_ssize_t)index);
+        } else {
+            return NULL;
+        }
     }
 
     constexpr CharT const* data() const noexcept { return data_; }
@@ -393,8 +399,8 @@ class pyview {
             be_hash_clear = true;
             is_sequence = false;
             return;
-        } else if (size_ != error_n){
-            if (PyUnicode_Check(o)) {
+        } else if(size_ != error_n) {
+            if(PyUnicode_Check(o)) {
 #if PY_MAJOR_VERSION >= 3
                 kind = PyUnicode_KIND(o);
                 data_32 = (uint32_t*)PyUnicode_DATA(o);
@@ -439,6 +445,10 @@ class pyview {
             } else {
                 PyObject* tmp = PySequence_Tuple(item);
                 data_64[i] = (uint64_t)PyObject_Hash(tmp);
+                if((PySequence_SetItem(py, (Py_ssize_t)i, tmp)) == -1) {
+                    PyErr_Format(PyExc_ReferenceError, "Unknown panic, pyyou.hpp pyview_t class.");
+                    return;
+                }
                 Py_DECREF(tmp);
             }
             Py_DECREF(item);
@@ -477,9 +487,13 @@ class pyview {
     inline constexpr std::size_t length() const noexcept { return size_; }
 
     constexpr PyObject* getitem(size_t index) const noexcept {
-        return (size() == 0 || is_sequence == false) ? py
-               : (size() > 0 && index < size())      ? PySequence_GetItem(py, (Py_ssize_t)index)
-                                                     : NULL;
+        if(size() == 0 || is_sequence == false) {
+            return py;
+        } else if(size() > 0 && index < size()) {
+            return PySequence_GetItem(py, (Py_ssize_t)index);
+        } else {
+            return NULL;
+        }
     }
     constexpr uint64_t const* data() const noexcept { return data_64; }
     constexpr uint64_t*& data() noexcept { return data_64; }
