@@ -1475,21 +1475,19 @@ class Compare {
         PyObject* la = PyDict_Keys(a);
         PyObject* lb = PyDict_Keys(b);
         PyObject* dfs = Diff(la, lb).difference(diffonly, rep_rate);
-        Py_XDECREF(la);
-        Py_XDECREF(lb);
 
         if(dfs == NULL) {
             return PyErr_Format(PyExc_ValueError, NULL);
         }
 
         if((len = PyObject_Length(dfs)) == -1) {
+            Py_CLEAR(la);
+            Py_CLEAR(lb);
             Py_CLEAR(dfs);
             return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() head");
         }
 
         PyObject* ops = PyList_New(0);
-        Py_DECREF(a);
-        Py_DECREF(b);
 
         for(i = 0; i < len; ++i) {
             PyObject *tag, *sa, *sb, *da, *db, *arr, *df, *concat, *content, *row;
@@ -1506,14 +1504,8 @@ class Compare {
                         delete_sign_value, insert_sign_value);
 
             df = cmp._2d();
-            if (maxcol < cmp.maxcol)
+            if(maxcol < cmp.maxcol)
                 maxcol = cmp.maxcol;
-
-            Py_XDECREF(sa);
-            Py_XDECREF(da);
-            Py_XDECREF(sb);
-            Py_XDECREF(db);
-            Py_XDECREF(arr);
 
             if(tag == DIFFTP[0][ED_REPLACE]) {
                 concat = PyUnicode_Concat(sa, condition_value);
@@ -1530,8 +1522,16 @@ class Compare {
             for(j = 0, slen = PyObject_Length(df); j < slen; ++j) {
                 if((row = PySequence_ITEM(df, j)) == NULL) {
                     Py_XDECREF(ops);
+                    Py_CLEAR(la);
+                    Py_CLEAR(lb);
+                    Py_XDECREF(da);
+                    Py_XDECREF(db);
+                    Py_XDECREF(sa);
+                    Py_XDECREF(sb);
                     Py_XDECREF(content);
+                    Py_XDECREF(arr);
                     Py_CLEAR(df);
+                    Py_CLEAR(row);
                     Py_CLEAR(dfs);
                     return PyErr_Format(PyExc_ValueError, "Cannot get a Dictionary Inner array.");
                 }
@@ -1541,11 +1541,18 @@ class Compare {
                 Py_DECREF(row);
             }
 
+            Py_XDECREF(da);
+            Py_XDECREF(db);
+            Py_XDECREF(sa);
+            Py_XDECREF(sb);
             Py_XDECREF(content);
+            Py_XDECREF(arr);
             Py_CLEAR(df);
         }
 
         Py_CLEAR(dfs);
+        Py_CLEAR(la);
+        Py_CLEAR(lb);
 
         if(header) {
             PyObject* head = PyList_New(4 + maxcol);
@@ -1571,37 +1578,6 @@ class Compare {
         return ops;
     }
 
-    // def _3d(self):
-    //     if self.header:
-    //         self.HEADER = ["tag", "target", "index_a", "index_b", ]
-
-    //     kw = dict(
-    //         keya=self.keya,
-    //         keyb=self.keyb,
-    //         header=False,
-    //         diffonly=self.diffonly,
-    //         rep_rate=self.rep_rate,
-    //         condition_value=self.condition_value,
-    //         na_value=self.na_value)
-
-    //     for tag, _, _, sa, sb in differ(self.a, self.b, self.diffonly, self.rep_rate):
-    //         if tag in ["equal", "replace"]:
-    //             df = Differ(self.a[sa], self.b[sb], **kw)
-    //             for ctag, *row in df._2d():
-    //                 yield [ctag, sa if tag == "equal" else sa + self.condition_value + sb, *row]
-    //             if self.maxcol < df.maxcol:
-    //                 self.maxcol = df.maxcol
-    //         else:
-    //             df = self.a[sa] if tag == "delete" else self.b[sb]
-    //             sh = sa if tag == "delete" else sb
-    //             for i, x in enumerate(df):
-    //                 yield [tag, sh, i, self.na_value, *x]
-    //                 rowlen = len(x)
-    //                 if self.maxcol < rowlen:
-    //                     self.maxcol = rowlen
-
-    //     if self.header:
-    //         self.HEADER.extend(list(map("COL{:02d}".format, range(self.maxcol))))
 };
 
 }  // namespace gammy
