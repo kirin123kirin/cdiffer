@@ -1497,8 +1497,8 @@ class Compare {
             sa = PySequence_ITEM(arr, 3);
             sb = PySequence_ITEM(arr, 4);
 
-            da = PyDict_GetItem(a, sa);
-            db = PyDict_GetItem(b, sb);
+            da = PyDict_GetItemWithError(a, sa);
+            db = PyDict_GetItemWithError(b, sb);
 
             Compare cmp(da, db, keya, keyb, false, diffonly, rep_rate, startidx, condition_value, na_value,
                         delete_sign_value, insert_sign_value);
