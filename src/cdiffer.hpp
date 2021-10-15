@@ -1490,7 +1490,6 @@ class Compare {
         PyObject* ops = PyList_New(0);
         Py_DECREF(a);
         Py_DECREF(b);
-        return ops;
 
         for(i = 0; i < len; ++i) {
             PyObject *tag, *sa, *sb, *da, *db, *arr, *df, *concat, *content, *row;
