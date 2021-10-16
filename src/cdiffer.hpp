@@ -1466,8 +1466,8 @@ class Compare {
 
     PyObject* _3d(bool is_initialcall = true) {
         if(is_initialcall) {
-            Py_INCREF(a);
-            Py_INCREF(b);
+            Py_XINCREF(a);
+            Py_XINCREF(b);
         }
 
         Py_ssize_t len, i, j, slen;
@@ -1487,17 +1487,23 @@ class Compare {
         }
 
         if((len = PyObject_Length(dfs)) == -1) {
-            Py_CLEAR(la);
-            Py_CLEAR(lb);
-            Py_CLEAR(dfs);
+            Py_XDECREF(la);
+            Py_XDECREF(lb);
+            Py_XDECREF(dfs);
             return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() head");
         }
 
-        PyObject* ops = PyList_New(0);
+        PyObject* ops = PyList_New(header == true);
 
         for(i = 0; i < len; ++i) {
             PyObject *tag, *sa, *sb, *da, *db, *arr, *df, *concat, *content, *row;
-            arr = PySequence_ITEM(dfs, i);
+            if((arr = PySequence_ITEM(dfs, i)) == NULL) {
+                Py_XDECREF(ops);
+                // Py_XDECREF(la);
+                // Py_XDECREF(lb);
+                Py_XDECREF(dfs);
+                return PyErr_Format(PyExc_ValueError, "Cannot get a Dictionary Inner array.");
+            }
 
             tag = PySequence_ITEM(arr, 0);
             sa = PySequence_ITEM(arr, 3);
@@ -1505,6 +1511,16 @@ class Compare {
 
             da = PyDict_GetItemWithError(a, sa);
             db = PyDict_GetItemWithError(b, sb);
+            if(da == NULL || db == NULL) {
+                Py_XDECREF(ops);
+                // Py_XDECREF(la);
+                // Py_XDECREF(lb);
+                Py_XDECREF(da);
+                Py_XDECREF(db);
+                Py_XDECREF(arr);
+                Py_XDECREF(dfs);
+                return PyErr_Format(PyExc_ValueError, "Not Found dict key is a_key=`%s` or a_key=`%s`", sa, sb);
+            }
 
             Compare cmp(da, db, keya, keyb, false, diffonly, rep_rate, startidx, condition_value, na_value,
                         delete_sign_value, insert_sign_value);
@@ -1525,39 +1541,31 @@ class Compare {
 
             for(j = 0, slen = PyObject_Length(df); j < slen; ++j) {
                 if((row = PySequence_ITEM(df, j)) == NULL) {
-                    Py_XDECREF(ops);
-                    Py_CLEAR(la);
-                    Py_CLEAR(lb);
+                    Py_DECREF(ops);
+                    // Py_XDECREF(la);
+                    // Py_XDECREF(lb);
                     Py_XDECREF(da);
                     Py_XDECREF(db);
-                    Py_XDECREF(sa);
-                    Py_XDECREF(sb);
-                    Py_XDECREF(content);
-                    Py_XDECREF(arr);
-                    Py_CLEAR(df);
-                    Py_CLEAR(row);
-                    Py_CLEAR(dfs);
+                    Py_DECREF(arr);
+                    Py_XDECREF(df);
+                    Py_DECREF(dfs);
                     return PyErr_Format(PyExc_ValueError, "Cannot get a Dictionary Inner array.");
                 }
 
                 PyList_Insert(row, 0, content);
                 PyList_Append(ops, row);
-                Py_DECREF(row);
+                Py_XDECREF(row);
             }
 
-            Py_XDECREF(tag);
             Py_XDECREF(da);
             Py_XDECREF(db);
-            Py_XDECREF(sa);
-            Py_XDECREF(sb);
-            Py_XDECREF(content);
-            Py_XDECREF(arr);
+            Py_DECREF(arr);
             Py_DECREF(df);
         }
 
-        Py_CLEAR(dfs);
-        Py_CLEAR(la);
-        Py_CLEAR(lb);
+        Py_DECREF(dfs);
+        // Py_XDECREF(la);
+        // Py_XDECREF(lb);
 
         if(header) {
             PyObject* head = PyList_New(4 + maxcol);
@@ -1569,15 +1577,15 @@ class Compare {
                 PyList_SET_ITEM(head, 4, PyUnicode_FromString("data"));
             } else {
                 for(int n = 0; n < maxcol; n++) {
-                    char colname[7] = {'C', 'O', 'L', '_', n < 10 ? '0' : char(0x30 + (n / 10)), char(0x30 + (n % 10)),
+                    char colname[7] = {'C', 'O', 'L', '_', n < 10 ? '0' : char(0x30 + (n / 10)), char(0x30 + (n %
+                    10)),
                                        NULL};
                     PyList_SET_ITEM(head, 4 + n, PyUnicode_FromString((const char*)colname));
                 }
             }
 
-            if((PyList_Insert(ops, 0, head)) == -1)
+            if((PyList_SetItem(ops, 0, head)) == -1)
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() header");
-            Py_DECREF(head);
         }
 
         return ops;
