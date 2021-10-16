@@ -1465,10 +1465,10 @@ class Compare {
     }
 
     PyObject* _3d(bool is_initialcall = true) {
-        if(is_initialcall) {
-            Py_XINCREF(a);
-            Py_XINCREF(b);
-        }
+        // if(is_initialcall) {
+        //     Py_XINCREF(a);
+        //     Py_XINCREF(b);
+        // }
 
         Py_ssize_t len, i, j, slen;
 
@@ -1481,15 +1481,16 @@ class Compare {
         }
 
         PyObject* dfs = Diff(la, lb).difference(diffonly, rep_rate);
+        Py_INCREF(la);
+        Py_INCREF(lb);
+
 
         if(dfs == NULL) {
             return PyErr_Format(PyExc_ValueError, "Faiotal Error `Diff.difference` result get.");
         }
 
         if((len = PyObject_Length(dfs)) == -1) {
-            Py_XDECREF(la);
-            Py_XDECREF(lb);
-            Py_XDECREF(dfs);
+            Py_DECREF(dfs);
             return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() head");
         }
 
@@ -1499,8 +1500,6 @@ class Compare {
             PyObject *tag, *sa, *sb, *da, *db, *arr, *df, *concat, *content, *row;
             if((arr = PySequence_ITEM(dfs, i)) == NULL) {
                 Py_XDECREF(ops);
-                // Py_XDECREF(la);
-                // Py_XDECREF(lb);
                 Py_XDECREF(dfs);
                 return PyErr_Format(PyExc_ValueError, "Cannot get a Dictionary Inner array.");
             }
@@ -1513,12 +1512,10 @@ class Compare {
             db = PyDict_GetItemWithError(b, sb);
             if(da == NULL || db == NULL) {
                 Py_XDECREF(ops);
-                // Py_XDECREF(la);
-                // Py_XDECREF(lb);
                 Py_XDECREF(da);
                 Py_XDECREF(db);
-                Py_XDECREF(arr);
-                Py_XDECREF(dfs);
+                Py_DECREF(arr);
+                Py_DECREF(dfs);
                 return PyErr_Format(PyExc_ValueError, "Not Found dict key is a_key=`%s` or a_key=`%s`", sa, sb);
             }
 
@@ -1528,6 +1525,9 @@ class Compare {
             df = cmp._2d();
             if(maxcol < cmp.maxcol)
                 maxcol = cmp.maxcol;
+
+            Py_XDECREF(da);
+            Py_XDECREF(db);
 
             if(tag == DIFFTP[0][ED_REPLACE]) {
                 concat = PyUnicode_Concat(sa, condition_value);
@@ -1539,13 +1539,13 @@ class Compare {
                 content = sa;
             }
 
+            Py_XDECREF(tag);
+            Py_XDECREF(sa);
+            Py_XDECREF(sb);
+
             for(j = 0, slen = PyObject_Length(df); j < slen; ++j) {
                 if((row = PySequence_ITEM(df, j)) == NULL) {
                     Py_DECREF(ops);
-                    // Py_XDECREF(la);
-                    // Py_XDECREF(lb);
-                    Py_XDECREF(da);
-                    Py_XDECREF(db);
                     Py_DECREF(arr);
                     Py_XDECREF(df);
                     Py_DECREF(dfs);
@@ -1554,18 +1554,16 @@ class Compare {
 
                 PyList_Insert(row, 0, content);
                 PyList_Append(ops, row);
+
                 Py_XDECREF(row);
             }
 
-            Py_XDECREF(da);
-            Py_XDECREF(db);
+            Py_XDECREF(content);
             Py_DECREF(arr);
             Py_DECREF(df);
         }
 
         Py_DECREF(dfs);
-        // Py_XDECREF(la);
-        // Py_XDECREF(lb);
 
         if(header) {
             PyObject* head = PyList_New(4 + maxcol);
@@ -1583,7 +1581,6 @@ class Compare {
                     PyList_SET_ITEM(head, 4 + n, PyUnicode_FromString((const char*)colname));
                 }
             }
-
             if((PyList_SetItem(ops, 0, head)) == -1)
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() header");
         }
