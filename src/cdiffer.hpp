@@ -1464,12 +1464,7 @@ class Compare {
         return ops;
     }
 
-    PyObject* _3d(bool is_initialcall = true) {
-        // if(is_initialcall) {
-        //     Py_XINCREF(a);
-        //     Py_XINCREF(b);
-        // }
-
+    PyObject* _3d() {
         Py_ssize_t len, i, j, slen;
 
         PyObject* la = PyDict_Keys(a);
@@ -1481,9 +1476,8 @@ class Compare {
         }
 
         PyObject* dfs = Diff(la, lb).difference(diffonly, rep_rate);
-        Py_INCREF(la);
-        Py_INCREF(lb);
-
+        Py_XDECREF(la);
+        Py_XDECREF(lb);
 
         if(dfs == NULL) {
             return PyErr_Format(PyExc_ValueError, "Faiotal Error `Diff.difference` result get.");
@@ -1558,7 +1552,6 @@ class Compare {
                 Py_XDECREF(row);
             }
 
-            Py_XDECREF(content);
             Py_DECREF(arr);
             Py_DECREF(df);
         }
