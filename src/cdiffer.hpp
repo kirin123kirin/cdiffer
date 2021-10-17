@@ -1422,6 +1422,7 @@ class Compare {
                     Py_CLEAR(ctag);
                     Py_CLEAR(ops);
                     Py_CLEAR(df);
+                    Py_CLEAR(row);
                     return this->_1d(false);
                 }
                 Py_XDECREF(ctag);
@@ -1441,6 +1442,7 @@ class Compare {
         }
 
         Py_CLEAR(df);
+
 
         if(header) {
             PyObject* head = PyList_New(3 + maxcol);
@@ -1511,6 +1513,7 @@ class Compare {
                         delete_sign_value, insert_sign_value);
 
             df = cmp._2d();
+
             if(maxcol < cmp.maxcol)
                 maxcol = cmp.maxcol;
 
@@ -1562,7 +1565,8 @@ class Compare {
                 PyList_SET_ITEM(head, 4, PyUnicode_FromString("data"));
             } else {
                 for(int n = 0; n < maxcol; n++) {
-                    char colname[7] = {'C', 'O', 'L', '_', n < 10 ? '0' : char(0x30 + (n / 10)), char(0x30 + (n % 10)), NULL};
+                    char colname[7] = {'C', 'O', 'L', '_', n < 10 ? '0' : char(0x30 + (n / 10)), char(0x30 + (n % 10)),
+                                       NULL};
                     PyList_SET_ITEM(head, 4 + n, PyUnicode_FromString((const char*)colname));
                 }
             }
