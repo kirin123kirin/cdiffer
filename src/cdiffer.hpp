@@ -1469,10 +1469,11 @@ class Compare {
 
         PyObject* la = PyDict_Keys(a);
         PyObject* lb = PyDict_Keys(b);
-        if(la == NULL || lb == NULL) {
-            Py_XDECREF(la);
-            Py_XDECREF(lb);
-            return PyErr_Format(PyExc_ValueError, "Cannnot `a` or `b` dict keys get.");
+        if(la == NULL) {
+            la = Py_None;
+        }
+        if(lb == NULL) {
+            lb = Py_None;
         }
 
         PyObject* dfs = Diff(la, lb).difference(diffonly, rep_rate);
@@ -1501,17 +1502,10 @@ class Compare {
             tag = PySequence_ITEM(arr, 0);
             sa = PySequence_ITEM(arr, 3);
             sb = PySequence_ITEM(arr, 4);
-
-            da = PyDict_GetItemWithError(a, sa);
-            db = PyDict_GetItemWithError(b, sb);
-            if(da == NULL || db == NULL) {
-                Py_XDECREF(ops);
-                Py_XDECREF(da);
-                Py_XDECREF(db);
-                Py_DECREF(arr);
-                Py_DECREF(dfs);
-                return PyErr_Format(PyExc_ValueError, "Not Found dict key is a_key=`%s` or a_key=`%s`", sa, sb);
-            }
+            da = sa == Py_None ? Py_None : PyDict_GetItemWithError(a, sa);
+            db = sb == Py_None ? Py_None : PyDict_GetItemWithError(b, sb);
+            Py_INCREF(da);
+            Py_INCREF(db);
 
             Compare cmp(da, db, keya, keyb, false, diffonly, rep_rate, startidx, condition_value, na_value,
                         delete_sign_value, insert_sign_value);
@@ -1520,8 +1514,8 @@ class Compare {
             if(maxcol < cmp.maxcol)
                 maxcol = cmp.maxcol;
 
-            Py_XDECREF(da);
-            Py_XDECREF(db);
+            Py_CLEAR(da);
+            Py_CLEAR(db);
 
             if(tag == DIFFTP[0][ED_REPLACE]) {
                 concat = PyUnicode_Concat(sa, condition_value);
@@ -1568,9 +1562,7 @@ class Compare {
                 PyList_SET_ITEM(head, 4, PyUnicode_FromString("data"));
             } else {
                 for(int n = 0; n < maxcol; n++) {
-                    char colname[7] = {'C', 'O', 'L', '_', n < 10 ? '0' : char(0x30 + (n / 10)), char(0x30 + (n %
-                    10)),
-                                       NULL};
+                    char colname[7] = {'C', 'O', 'L', '_', n < 10 ? '0' : char(0x30 + (n / 10)), char(0x30 + (n % 10)), NULL};
                     PyList_SET_ITEM(head, 4 + n, PyUnicode_FromString((const char*)colname));
                 }
             }
