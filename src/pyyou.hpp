@@ -210,7 +210,7 @@ class pyview_t {
                 PyObject* tmp = PySequence_Tuple(item);
                 data_[i] = (CharT)PyObject_Hash(tmp);
                 Py_XINCREF(tmp);
-                if((PyTuple_SetItem(py, (Py_ssize_t)i, tmp)) == -1) {
+                if((PySequence_SetItem(py, (Py_ssize_t)i, tmp)) == -1) {
                     PyErr_Format(PyExc_ReferenceError, "Unknown panic, pyyou.hpp pyview_t class.");
                     return;
                 }
