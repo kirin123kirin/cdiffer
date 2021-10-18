@@ -1443,7 +1443,6 @@ class Compare {
 
         Py_CLEAR(df);
 
-
         if(header) {
             PyObject* head = PyList_New(3 + maxcol);
             PyList_SET_ITEM(head, 0, PyUnicode_FromString("tag"));
@@ -1461,6 +1460,7 @@ class Compare {
 
             if((PyList_SetItem(ops, 0, head)) == -1)
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() header");
+            Py_DECREF(head);  //@todo honto?
         }
 
         return ops;
@@ -1504,21 +1504,77 @@ class Compare {
             tag = PySequence_ITEM(arr, 0);
             sa = PySequence_ITEM(arr, 3);
             sb = PySequence_ITEM(arr, 4);
-            da = sa == Py_None ? Py_None : PyDict_GetItemWithError(a, sa);
-            db = sb == Py_None ? Py_None : PyDict_GetItemWithError(b, sb);
-            Py_INCREF(da);
-            Py_INCREF(db);
+
+            bool need_decref_a = true;
+            bool need_decref_b = true;
+            da = PyDict_GetItemWithError(a, sa);
+            db = PyDict_GetItemWithError(b, sb);
+
+            if(da == Py_None || da == NULL) {
+                da = Py_None;
+                Py_INCREF(da);
+                need_decref_a = false;
+            } else if(PyIter_Check(da) || PyGen_Check(da) || PyRange_Check(da)) {
+                da = PySequence_Tuple(da);
+                if(PyObject_Length(da) == 0)
+                    need_decref_a = false;
+            } else if(PyTuple_Check(da)) {
+                if(PyObject_Length(da) == 0)
+                    Py_INCREF(da);
+                need_decref_a = false;
+            } else if(PyList_Check(da)) {
+                // Py_INCREF(da); //@todo iru iranai dotti?
+                if(PyObject_Length(da) == 0)
+                    need_decref_a = false;
+            } else if(PyNumber_Check(da)) {
+                Py_INCREF(da);
+                need_decref_a = false;
+            } else {
+                Py_INCREF(da);
+                if(PyUnicode_Check(da) && PyObject_Length(da) == 0) {
+                    need_decref_a = false;
+                }
+            }
+
+            if(db == Py_None || db == NULL) {
+                db = Py_None;
+                Py_INCREF(db);
+                need_decref_b = false;
+            } else if(PyIter_Check(db) || PyGen_Check(db) || PyRange_Check(db)) {
+                db = PySequence_Tuple(db);
+                if(PyObject_Length(db) == 0)
+                    need_decref_b = false;
+            } else if(PyTuple_Check(db)) {
+                if(PyObject_Length(db) == 0)
+                    Py_INCREF(db);
+                need_decref_b = false;
+            } else if(PyList_Check(db)) {
+                // Py_INCREF(db); //@todo iru iranai dotti?
+                if(PyObject_Length(db) == 0)
+                    need_decref_b = false;
+            } else if(PyNumber_Check(db)) {
+                Py_INCREF(db);
+                need_decref_b = false;
+            } else {
+                Py_INCREF(db);
+                if(PyUnicode_Check(db) && PyObject_Length(db) == 0) {
+                    need_decref_b = false;
+                }
+            }
 
             Compare cmp(da, db, keya, keyb, false, diffonly, rep_rate, startidx, condition_value, na_value,
                         delete_sign_value, insert_sign_value);
 
             df = cmp._2d();
 
+            if(need_decref_a)
+                Py_DECREF(da);
+            if(need_decref_b)
+                Py_DECREF(db);
+
+
             if(maxcol < cmp.maxcol)
                 maxcol = cmp.maxcol;
-
-            Py_CLEAR(da);
-            Py_CLEAR(db);
 
             if(tag == DIFFTP[0][ED_REPLACE]) {
                 concat = PyUnicode_Concat(sa, condition_value);
