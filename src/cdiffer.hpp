@@ -492,6 +492,7 @@ class Diff_t {
         uint64_t found = 0, adat = 0, trb = 0;
         const std::size_t BITS = std::min(std::size_t(64), (std::size_t)(sizeof(fp[0]) * 8));
         PyObject* ops = PyList_New(0);
+
         if(a == b) {
             if(!diffonly)
                 for(x = 0; x < A; x++)
@@ -1571,7 +1572,6 @@ class Compare {
                 Py_DECREF(da);
             if(need_decref_b)
                 Py_DECREF(db);
-
 
             if(maxcol < cmp.maxcol)
                 maxcol = cmp.maxcol;
