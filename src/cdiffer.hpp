@@ -1517,9 +1517,9 @@ class Compare {
                 Py_INCREF(da);
                 need_decref_a = false;
             } else if(PyIter_Check(da) || PyGen_Check(da) || PyRange_Check(da)) {
-                da = PySequence_Tuple(da);
-                if(PyObject_Length(da) == 0)
-                    need_decref_a = false;
+                da = PySequence_Fast(da, "from `da` iterator"); //@todo crash suru kamo?
+                // if(PyObject_Length(da) == 0)
+                //     need_decref_a = false;
             } else if(PyTuple_Check(da)) {
                 if(PyObject_Length(da) == 0)
                     Py_INCREF(da);
@@ -1543,9 +1543,9 @@ class Compare {
                 Py_INCREF(db);
                 need_decref_b = false;
             } else if(PyIter_Check(db) || PyGen_Check(db) || PyRange_Check(db)) {
-                db = PySequence_Tuple(db);
-                if(PyObject_Length(db) == 0)
-                    need_decref_b = false;
+                db = PySequence_Fast(db, "from `da` iterator"); //@todo crash suru kamo?
+                // if(PyObject_Length(db) == 0)
+                //     need_decref_b = false;
             } else if(PyTuple_Check(db)) {
                 if(PyObject_Length(db) == 0)
                     Py_INCREF(db);
