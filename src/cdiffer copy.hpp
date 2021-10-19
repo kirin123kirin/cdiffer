@@ -296,10 +296,11 @@ class Diff_t {
         : a(CharT(_a)), b(CharT(_b)), need_clear_py(_need_clear_py) {
         A = a.size();
         B = b.size();
-        swapflag = A > B && _a != Py_None && _b != Py_None;
+        swapflag = A > B && _a != Py_None;
         if(swapflag) {
             std::swap(A, B);
             std::swap(a, b);
+            Py_INCREF(b.py);
         }
         D = B - A;
         SIZE = (std::size_t)A + B + 1;
@@ -612,14 +613,14 @@ class Diff_t {
             return ops;
         }
         if(B == 0) {
-            // if(B == 0 || b.py == Py_None) {
+        // if(B == 0 || b.py == Py_None) {
             for(x = 0; x < A; x++)
                 complist(ops, ED_DELETE, x, 0, a.py, b.py, swapflag, startidx, condition_value, _na_value, _DEL_Flag,
                          _ADD_Flag);
             return ops;
         }
         if(A == 0) {
-            // if(A == 0 || a.py == Py_None) {
+        // if(A == 0 || a.py == Py_None) {
             for(y = 0; y < B; y++)
                 complist(ops, ED_INSERT, 0, y, a.py, b.py, swapflag, startidx, condition_value, _na_value, _DEL_Flag,
                          _ADD_Flag);
@@ -940,40 +941,13 @@ class Diff {
             return ops;
         }
 
-        if(a == Py_None && b != Py_None) {
-            std::size_t len2 = PyAny_Length(b);
-            if(len2 != error_n) {
-                PyObject* ops = PyList_New(0);
-                if(len2 > 0) {
-                    for(std::size_t i = 0; i < len2; i++)
-                        makelist(ops, ED_INSERT, 0, i, a, b);
-                } else {
-                    makelist(ops, ED_INSERT, 0, 0, a, b);
-                }
-                return ops;
-            }
-        }
-        if(b == Py_None && a != Py_None) {
-            std::size_t len1 = PyAny_Length(a);
-            if(len1 != error_n) {
-                PyObject* ops = PyList_New(0);
-                if(len1 > 0) {
-                    for(std::size_t i = 0; i < len1; i++)
-                        makelist(ops, ED_DELETE, i, 0, a, b);
-                } else {
-                    makelist(ops, ED_DELETE, 0, 0, a, b);
-                }
-                return ops;
-            }
-        }
-
         if(kind1 == 1)
             return Diff_t<pyview_t<uint8_t>>(a, b).difference(_diffonly, _rep_rate);
         else if(kind1 == 2)
             return Diff_t<pyview_t<uint16_t>>(a, b).difference(_diffonly, _rep_rate);
-        else if(kind1 == 8) {
+        else if(kind1 == 8)
             return Diff_t<pyview_t<uint64_t>>(a, b).difference(_diffonly, _rep_rate);
-        } else if(kind1 < 0) {
+        else if(kind1 < 0) {
             std::size_t len1 = PyAny_Length(a);
             std::size_t len2 = PyAny_Length(b);
 
@@ -1464,6 +1438,7 @@ class Compare {
             }
 
             PyList_SET_ITEM(ops, i + header, list);
+
 
             Py_XDECREF(row);
 
