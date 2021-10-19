@@ -296,10 +296,11 @@ class Diff_t {
         : a(CharT(_a)), b(CharT(_b)), need_clear_py(_need_clear_py) {
         A = a.size();
         B = b.size();
-        swapflag = A > B;
+        swapflag = A > B && _a != Py_None;
         if(swapflag) {
             std::swap(A, B);
             std::swap(a, b);
+            Py_INCREF(b.py);
         }
         D = B - A;
         SIZE = (std::size_t)A + B + 1;
@@ -511,7 +512,7 @@ class Diff_t {
         }
         if(A == 1 && B == 1) {
             if(rep_rate > 0 && ((a.canonical && b.canonical) ||
-                                Diff_t<pyview>(a.getitem(0), b.getitem(0)).similar(rep_rate) * 100 < rep_rate)) {
+                                Diff_t<pyview>(a.getitem(0), b.getitem(0), true).similar(rep_rate) * 100 < rep_rate)) {
                 makelist(ops, ED_DELETE, x, 0, a.py, b.py, swapflag);
                 makelist(ops, ED_INSERT, 0, y, a.py, b.py, swapflag);
             } else {
