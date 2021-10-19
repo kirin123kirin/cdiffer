@@ -218,7 +218,7 @@ void complist(PyObject*& ops,
             forcestr = PyObject_Str(item ? item : a);
             concat = PyUnicode_Concat(forcestr, condition_value);
         }
-        Py_CLEAR(item);  //@todo ????
+        Py_XDECREF(item);
         Py_XDECREF(forcestr);
         item = PySequence_GetItem(b, (Py_ssize_t)y);
         if(item && PyUnicode_Check(item)) {
@@ -1490,7 +1490,6 @@ class Compare {
 
             if((PyList_SetItem(ops, 0, head)) == -1)
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() header");
-            Py_DECREF(head);  //@todo honto?
         }
 
         return ops;
@@ -1540,55 +1539,65 @@ class Compare {
             da = PyDict_GetItemWithError(a, sa);
             db = PyDict_GetItemWithError(b, sb);
 
-            if(da == Py_None || da == NULL) {
+            if(da == NULL) {
                 da = Py_None;
                 Py_INCREF(da);
                 need_decref_a = false;
-            } else if(PyIter_Check(da) || PyGen_Check(da) || PyRange_Check(da)) {
-                da = PySequence_Fast(da, "from `da` iterator");  //@todo crash suru kamo?
-                // if(PyObject_Length(da) == 0)
-                //     need_decref_a = false;
-            } else if(PyTuple_Check(da)) {
-                if(PyObject_Length(da) == 0)
+            } else if(PyAny_KIND(da) == 8) {
+                if(da == Py_None) {
                     Py_INCREF(da);
-                need_decref_a = false;
-            } else if(PyList_Check(da)) {
-                // Py_INCREF(da); //@todo iru iranai dotti?
-                if(PyObject_Length(da) == 0)
                     need_decref_a = false;
-            } else if(PyNumber_Check(da)) {
-                Py_INCREF(da);
-                need_decref_a = false;
+                } else if(PyIter_Check(da) || PyGen_Check(da) || PyRange_Check(da)) {
+                    da = PySequence_Fast(
+                        da, "from `da` iterator");  //@note memory leak when PySequence_List or PySequence_Tuple
+                } else if(PyTuple_Check(da)) {
+                    if(PyObject_Length(da) == 0)
+                        Py_INCREF(da);
+                    need_decref_a = false;
+                } else if(PyList_Check(da)) {
+                    if(PyObject_Length(da) == 0)
+                        need_decref_a = false;
+                } else if(PyNumber_Check(da)) {
+                    Py_INCREF(da);
+                    need_decref_a = false;
+                }
             } else {
-                Py_INCREF(da);
-                if(PyUnicode_Check(da) && PyObject_Length(da) == 0) {
+                if(PyObject_Length(da) == 0) {
+                    Py_INCREF(da);
                     need_decref_a = false;
+                } else {
+                    da = Py_BuildValue("[O]", da);
                 }
             }
 
-            if(db == Py_None || db == NULL) {
+            if(db == NULL) {
                 db = Py_None;
                 Py_INCREF(db);
                 need_decref_b = false;
-            } else if(PyIter_Check(db) || PyGen_Check(db) || PyRange_Check(db)) {
-                db = PySequence_Fast(db, "from `da` iterator");  //@todo crash suru kamo?
-                // if(PyObject_Length(db) == 0)
-                //     need_decref_b = false;
-            } else if(PyTuple_Check(db)) {
-                if(PyObject_Length(db) == 0)
+            } else if(PyAny_KIND(db) == 8) {
+                if(db == Py_None) {
                     Py_INCREF(db);
-                need_decref_b = false;
-            } else if(PyList_Check(db)) {
-                // Py_INCREF(db); //@todo iru iranai dotti?
-                if(PyObject_Length(db) == 0)
                     need_decref_b = false;
-            } else if(PyNumber_Check(db)) {
-                Py_INCREF(db);
-                need_decref_b = false;
+                } else if(PyIter_Check(db) || PyGen_Check(db) || PyRange_Check(db)) {
+                    db = PySequence_Fast(
+                        db, "from `da` iterator");  //@note memory leak when PySequence_List or PySequence_Tuple
+                } else if(PyTuple_Check(db)) {
+                    if(PyObject_Length(db) == 0)
+                        Py_INCREF(db);
+                    need_decref_b = false;
+                } else if(PyList_Check(db)) {
+                    if(PyObject_Length(db) == 0)
+                        need_decref_b = false;
+                } else if(PyNumber_Check(db)) {
+                    Py_INCREF(db);
+                    need_decref_b = false;
+                }
             } else {
-                Py_INCREF(db);
-                if(PyUnicode_Check(db) && PyObject_Length(db) == 0) {
+                if(PyObject_Length(db) == 0) {
+                    Py_INCREF(db);
                     need_decref_b = false;
+                } else {
+                    db = Py_BuildValue("[O]", db);
                 }
             }
 

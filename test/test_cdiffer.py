@@ -436,6 +436,61 @@ def test_compare_complex_datatype():
     assert(compare([tuple('cafe')], [tuple('cafo')], rep_rate=-1) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'], ['replace', 0, 0, 'c', 'a', 'f', 'e ---> o']])
     assert(compare([list("abc"), list("abc")], [list("abc"), list("acc"), list("xtz")], rep_rate=50) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'], ['equal', 0, 0, 'a', 'b', 'c'], ['replace', 1, 1, 'a', 'b ---> DEL', 'ADD ---> c', 'c'], ['insert', '-', 2, 'ADD ---> x', 'ADD ---> t', 'ADD ---> z']])
 
+def test_comapare_3d():
+    assert(compare(dict(hoge=None), dict(hoge=[list("abc"), list("def")])) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02'], [
+        'hoge', 'insert', '-', 0, 'ADD ---> a', 'ADD ---> b', 'ADD ---> c'], ['hoge', 'insert', '-', 1, 'ADD ---> d', 'ADD ---> e', 'ADD ---> f']])
+    assert(compare(dict(hoge=[list("abc")]), dict(hoge=[list("abc")])) == [
+        ['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02'], ['hoge', 'equal', 0, 0, 'a', 'b', 'c']])
+    assert(compare(dict(hoge=[list("abc")]), dict(hoge=[list("abZ")])) == [['group', 'tag', 'index_a', 'index_b',
+                                                                           'COL_00', 'COL_01', 'COL_02', 'COL_03'], ['hoge', 'replace', 0, 0, 'a', 'b', 'c ---> DEL', 'ADD ---> Z']])
+    assert(compare(dict(hoge=[list("abc")]), dict(hoge=[list("abCefg")])) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03', 'COL_04', 'COL_05'], [
+        'hoge', 'delete', 0, '-', 'a ---> DEL', 'b ---> DEL', 'c ---> DEL'], ['hoge', 'insert', '-', 0, 'ADD ---> a', 'ADD ---> b', 'ADD ---> C', 'ADD ---> e', 'ADD ---> f', 'ADD ---> g']])
+    assert(compare(dict(hoge=[list("abc"), list("def")]), dict(hoge=[list("abc"), list("def")])) == [['group', 'tag', 'index_a',
+                                                                                                     'index_b', 'COL_00', 'COL_01', 'COL_02'], ['hoge', 'equal', 0, 0, 'a', 'b', 'c'], ['hoge', 'equal', 1, 1, 'd', 'e', 'f']])
+    assert(compare(dict(hoge=[list("abc"), list("def")]), dict(hoge=[list("abc"), list("DEF")])) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02'], [
+        'hoge', 'equal', 0, 0, 'a', 'b', 'c'], ['hoge', 'delete', 1, '-', 'd ---> DEL', 'e ---> DEL', 'f ---> DEL'], ['hoge', 'insert', '-', 1, 'ADD ---> D', 'ADD ---> E', 'ADD ---> F']])
+    assert(compare(dict(hoge=[list("abc"), list("def")]), dict(hoge=[list("abc"), list("def"), list("ghi")])) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02'], [
+        'hoge', 'equal', 0, 0, 'a', 'b', 'c'], ['hoge', 'equal', 1, 1, 'd', 'e', 'f'], ['hoge', 'insert', '-', 2, 'ADD ---> g', 'ADD ---> h', 'ADD ---> i']])
+    assert(compare(dict(hoge=[list("abc"), list("def"), list("GHI")]), dict(hoge=[list("abc"), list("def"), list("ghi")])) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02'], [
+        'hoge', 'equal', 0, 0, 'a', 'b', 'c'], ['hoge', 'equal', 1, 1, 'd', 'e', 'f'], ['hoge', 'delete', 2, '-', 'G ---> DEL', 'H ---> DEL', 'I ---> DEL'], ['hoge', 'insert', '-', 2, 'ADD ---> g', 'ADD ---> h', 'ADD ---> i']])
+    assert(compare(dict(hoge="foo"), dict(hoge="foo")) == [['group', 'tag', 'index_a', 'index_b'], ['hoge', 'equal', 0, 0, 'foo']])
+    assert(compare(dict(hoge="abc"), dict(hoge="abZ")) == [['group', 'tag', 'index_a', 'index_b'], ['hoge', 'replace', 0, 0, 'abc ---> abZ']])
+
+def test_comapare_3d_Complex():
+    assert(compare(dict(hoge=[list("あいうえお"), list("あいうえお")]), dict(hoge=[list("あいうえお"), list("あいうあお")])) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01',
+                                                                                                             'COL_02', 'COL_03', 'COL_04', 'COL_05'], ['hoge', 'equal', 0, 0, 'あ', 'い', 'う', 'え', 'お'], ['hoge', 'replace', 1, 1, 'あ', 'い', 'う', 'え ---> DEL', 'ADD ---> あ', 'お']])
+    assert(compare(dict(hoge=[list("あいうえお"), list("あいうえお")]), dict(hoge=[list("あいうえお"), list("あいうあお")]), rep_rate=-1) == [['group', 'tag', 'index_a', 'index_b',
+                                                                                                                          'COL_00', 'COL_01', 'COL_02', 'COL_03', 'COL_04'], ['hoge', 'equal', 0, 0, 'あ', 'い', 'う', 'え', 'お'], ['hoge', 'replace', 1, 1, 'あ', 'い', 'う', 'え ---> あ', 'お']])
+    assert(compare(dict(sheet1=[list("abc"), list("abc")], sheet2=[list("abc"), list("abc")]), dict(
+        sheet1=[list("abc"), list("acc"), list("xtz")], sheet2=[list("abc"), list("abc")]), rep_rate=50) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'], ['sheet1', 'equal', 0, 0, 'a', 'b', 'c'], ['sheet1', 'replace', 1, 1, 'a', 'b ---> DEL', 'ADD ---> c', 'c'], ['sheet1', 'insert', '-', 2, 'ADD ---> x', 'ADD ---> t', 'ADD ---> z'], ['sheet2', 'equal', 0, 0, 'a', 'b', 'c'], ['sheet2', 'equal', 1, 1, 'a', 'b', 'c']])
+    assert(compare(dict(sheet1=[list("abc"), list("abc")]), dict(sheet1=[list("abc"), list("acc"), list("xtz")], sheet2=[list("abc"), list("abc")]), rep_rate=50) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'], ['sheet1', 'equal', 0, 0, 'a', 'b', 'c'], [
+          'sheet1', 'replace', 1, 1, 'a', 'b ---> DEL', 'ADD ---> c', 'c'], ['sheet1', 'insert', '-', 2, 'ADD ---> x', 'ADD ---> t', 'ADD ---> z'], ['sheet2', 'insert', '-', 0, 'ADD ---> a', 'ADD ---> b', 'ADD ---> c'], ['sheet2', 'insert', '-', 1, 'ADD ---> a', 'ADD ---> b', 'ADD ---> c']])
+    assert(compare(dict(sheet1=[list("abc"), list("abc")]), dict(sheet1=[list("acc"), list("abc"), list("xtz")]), rep_rate=50) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'], [
+          'sheet1', 'replace', 0, 0, 'a', 'b ---> DEL', 'ADD ---> c', 'c'], ['sheet1', 'equal', 1, 1, 'a', 'b', 'c'], ['sheet1', 'insert', '-', 2, 'ADD ---> x', 'ADD ---> t', 'ADD ---> z']])
+    assert(compare(dict(sheet1=iter([list("abc"), list("abc")])), dict(sheet1=iter([list("abc"), list("acc"), list("xtz")])), rep_rate=50) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'], [
+          'sheet1', 'equal', 0, 0, 'a', 'b', 'c'], ['sheet1', 'replace', 1, 1, 'a', 'b ---> DEL', 'ADD ---> c', 'c'], ['sheet1', 'insert', '-', 2, 'ADD ---> x', 'ADD ---> t', 'ADD ---> z']])
+    assert(repr(compare(dict(sheet1=iter([])), dict(sheet1=iter([])), rep_rate=50)) == repr(
+        [['group', 'tag', 'index_a', 'index_b', 'data'], ['sheet1', 'equal', 0, 0, []]]))
+
+def test_comapare_3d_Nonetype():
+    assert(compare(dict(hoge=None), dict(hoge=None)) == [['group', 'tag', 'index_a', 'index_b'], ['hoge', 'equal', 0, 0, None]])
+    assert(repr(compare(dict(hoge=[]), dict(hoge=[]))) == repr([['group', 'tag', 'index_a', 'index_b', 'data'], ['hoge', 'equal', 0, 0, []]]))
+    assert(compare(dict(hoge=tuple()), dict(hoge=tuple())) == [['group', 'tag', 'index_a', 'index_b', 'data'], ['hoge', 'equal', 0, 0, ()]])
+    assert(compare(dict(hoge=tuple([1, 2])), dict(hoge=tuple([1, 2]))) == [
+          ['group', 'tag', 'index_a', 'index_b'], ['hoge', 'equal', 0, 0, 1], ['hoge', 'equal', 1, 1, 2]])
+    assert(compare(dict(hoge=""), dict(hoge="")) == [['group', 'tag', 'index_a', 'index_b'], ['hoge', 'equal', 0, 0, '']])
+    assert(compare(dict(hoge=[]), dict(hoge=None)) == [['group', 'tag', 'index_a', 'index_b', 'data'], ['hoge', 'delete', 0, '-', '[] ---> DEL']])
+    assert(compare(dict(hoge=""), dict(hoge=None)) == [['group', 'tag', 'index_a', 'index_b'], ['hoge', 'delete', 0, '-', ' ---> DEL']])
+    assert(compare(dict(hoge=None), dict(hoge=[])) == [['group', 'tag', 'index_a', 'index_b', 'data'], ['hoge', 'insert', '-', 0, 'ADD ---> []']])
+    assert(compare(dict(hoge=None), dict(hoge="")) == [['group', 'tag', 'index_a', 'index_b'], ['hoge', 'insert', '-', 0, 'ADD ---> ']])
+    # assert(compare(dict(hoge=tuple([])), dict(hoge=tuple([])))) #@todo korehadamedesho
+    # assert(compare(dict(hoge=[[]]), dict(hoge=None))) #@todo korehadamedesho
+    # assert(compare(dict(hoge=None), dict(hoge=[[]]))) #@todo korehadamedesho
+    assert(compare(dict(hoge=1), dict(hoge=1)) == [['group', 'tag', 'index_a', 'index_b'], ['hoge', 'equal', 0, 0, 1]])
+    assert(compare(dict(hoge=1), dict(hoge=2)) == [['group', 'tag', 'index_a', 'index_b'], [
+          'hoge', 'delete', 0, '-', '1 ---> DEL'], ['hoge', 'insert', '-', 0, 'ADD ---> 2']])
+
+
 def memusage():
     return process.memory_info()[0] / 1024
 
@@ -539,6 +594,42 @@ def test_compare_perf():
     print("\n### Perfomance & memory leak check compare func ###")
     runtimeit(func, smip)
 
+def test_perf_comapare_2d_3d():
+    runtimeit('compare(dict(hoge=None), dict(hoge=[list("abc"), list("def")]))')
+    runtimeit('compare(dict(hoge=[list("abc")]), dict(hoge=[list("abc")]))')
+    runtimeit('compare(dict(hoge=[list("abc")]), dict(hoge=[list("abZ")]))')
+    runtimeit('compare(dict(hoge=[list("abc")]), dict(hoge=[list("abCefg")]))')
+    runtimeit('compare(dict(hoge=[list("abc"), list("def")]), dict(hoge=[list("abc"), list("def")]))')
+    runtimeit('compare(dict(hoge=[list("abc"), list("def")]), dict(hoge=[list("abc"), list("DEF")]))')
+    runtimeit('compare(dict(hoge=[list("abc"), list("def")]), dict(hoge=[list("abc"), list("def"), list("ghi")]))')
+    runtimeit('compare(dict(hoge=[list("abc"), list("def"), list("GHI")]), dict(hoge=[list("abc"), list("def"), list("ghi")]))')
+    runtimeit('compare(dict(hoge="foo"), dict(hoge="foo"))')
+    runtimeit('compare(dict(hoge="abc"), dict(hoge="abZ"))')
+
+    runtimeit('compare(dict(hoge=[list("あいうえお"), list("あいうえお")]), dict(hoge=[list("あいうえお"), list("あいうあお")]))')
+    runtimeit('compare(dict(hoge=[list("あいうえお"), list("あいうえお")]), dict(hoge=[list("あいうえお"), list("あいうあお")]), rep_rate = -1)')
+    runtimeit(
+        'compare(dict(sheet1=[list("abc"), list("abc")], sheet2=[list("abc"), list("abc")]), dict(sheet1=[list("abc"), list("acc"), list("xtz")], sheet2=[list("abc"), list("abc")]), rep_rate=50)')
+    runtimeit(
+        'compare(dict(sheet1=[list("abc"), list("abc")]), dict(sheet1=[list("abc"), list("acc"), list("xtz")], sheet2=[list("abc"), list("abc")]), rep_rate=50)')
+    runtimeit('compare(dict(sheet1=[list("abc"), list("abc")]), dict(sheet1=[list("acc"), list("abc"), list("xtz")]), rep_rate=50)')
+    runtimeit('compare(dict(sheet1=iter([list("abc"), list("abc")])), dict(sheet1=iter([list("abc"), list("acc"), list("xtz")])), rep_rate=50)')
+    runtimeit('repr(compare(dict(sheet1=iter([])), dict(sheet1=iter([])), rep_rate=50))')
+
+    runtimeit('compare(dict(hoge=None), dict(hoge=None))')
+    runtimeit('repr(compare(dict(hoge=[]), dict(hoge=[])))')
+    runtimeit('compare(dict(hoge=tuple()), dict(hoge=tuple()))')
+    runtimeit('compare(dict(hoge=tuple([1, 2])), dict(hoge=tuple([1, 2])))')
+    runtimeit('compare(dict(hoge=""), dict(hoge=""))')
+    runtimeit('compare(dict(hoge=[]), dict(hoge=None))')
+    runtimeit('compare(dict(hoge=""), dict(hoge=None))')
+    runtimeit('compare(dict(hoge=None), dict(hoge=[]))')
+    runtimeit('compare(dict(hoge=None), dict(hoge=""))')
+    runtimeit('compare(dict(hoge=tuple([])), dict(hoge=tuple([])))')
+    runtimeit('compare(dict(hoge=[[]]), dict(hoge=None))')
+    runtimeit('compare(dict(hoge=None), dict(hoge=[[]]))')
+    runtimeit('compare(dict(hoge=1), dict(hoge=1))')
+    runtimeit('compare(dict(hoge=1), dict(hoge=2))')
 
 if __name__ == '__main__':
     import os
