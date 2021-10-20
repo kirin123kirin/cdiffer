@@ -1415,7 +1415,7 @@ class Compare {
         return cmp;
     }
 
-    PyObject* _2d(bool is_initialcall = true) {
+    PyObject* _2d() {
         Py_ssize_t len, i;
         PyObject* df = Diff(a, b).difference(diffonly, rep_rate);
 
@@ -1500,6 +1500,7 @@ class Compare {
 
         PyObject* la = PyDict_Keys(a);
         PyObject* lb = PyDict_Keys(b);
+
         if(la == NULL) {
             la = Py_None;
         }
@@ -1507,7 +1508,7 @@ class Compare {
             lb = Py_None;
         }
 
-        PyObject* dfs = Diff(la, lb).difference(diffonly, rep_rate);
+        PyObject* dfs = Diff(la, lb).difference(false, rep_rate);
         Py_XDECREF(la);
         Py_XDECREF(lb);
 
@@ -1557,6 +1558,8 @@ class Compare {
                 } else if(PyList_Check(da)) {
                     if(PyObject_Length(da) == 0)
                         need_decref_a = false;
+                    else
+                        Py_INCREF(da);
                 } else if(PyNumber_Check(da)) {
                     Py_INCREF(da);
                     need_decref_a = false;
@@ -1588,6 +1591,8 @@ class Compare {
                 } else if(PyList_Check(db)) {
                     if(PyObject_Length(db) == 0)
                         need_decref_b = false;
+                    else
+                        Py_INCREF(db);
                 } else if(PyNumber_Check(db)) {
                     Py_INCREF(db);
                     need_decref_b = false;

@@ -74,16 +74,13 @@ PyObject* compare_py(PyObject* self, PyObject* args, PyObject* kwargs) {
     if((a == Py_None || b == Py_None) ||
        ((PyUnicode_Check(a) || PyBool_Check(a) || PyNumber_Check(a) || PyBytes_Check(a) || PyByteArray_Check(a)) &&
         (PyUnicode_Check(b) || PyBool_Check(b) || PyNumber_Check(b) || PyBytes_Check(b) || PyByteArray_Check(b)))) {
-
         return gammy::Compare(args, kwargs)._1d();
 
     } else if(PyDict_Check(a) && PyDict_Check(b)) {
         return gammy::Compare(args, kwargs)._3d();
 
     } else {
-
         return gammy::Compare(args, kwargs)._2d();
-
     }
 }
 
@@ -195,26 +192,33 @@ PyObject* compare_py(PyObject* self, PyObject* args, PyObject* kwargs) {
     "['delete',  4, None,'e',None]\n"                                         \
     "\n"
 
-#define compare_DESC                                                                                        \
-    "This Function is compare and prety printing 2 sequence data.\n"                                        \
-    "\n"                                                                                                    \
-    "# Parameters :\n"                                                                                      \
-    "    a -> object : left comare target data.\n"                                                          \
-    "    b -> object : right comare target data.\n"                                                         \
-    "    diffonly -> bool: Ignore Equal data. If Equal then return empty list.\n"                           \
-    "    rep_rate -> int: Threshold to be considered as replacement.(-1 ~ 100). -1: allways replacement.\n" \
-    "    condition_value -> str : Conjunctions for comparison.\n"                                           \
-    "\n"                                                                                                    \
-    "# Return : Lists of List\n"                                                                            \
-    "    1st column -> matching rate (0 ~ 100).\n"                                                          \
-    "    2nd column -> matching tagname (unicode string).\n"                                                \
-    "    3rd over   -> compare data.\n"                                                                     \
-    "\n"                                                                                                    \
-    "# Example\n"                                                                                           \
-    "    >>> from cdiffer import compare\n"                                                                 \
-    "    ... compare('coffee', 'cafe')\n"                                                                   \
-    "    [[60, 'insert', 'c', 'a', 'f', 'e'],\n"                                                            \
-    "     [60, 'delete', 'c', 'o', 'f', 'f', 'e', 'e']]\n"                                                  \
+#define compare_DESC                                                                                           \
+    "This Function is compare and prety printing 2 sequence data.\n"                                           \
+    "\n"                                                                                                       \
+    "# Parameters :\n"                                                                                         \
+    "    a -> object : left comare target data.\n"                                                             \
+    "    b -> object : right comare target data.\n"                                                            \
+    "    keya -> callable one argument function : Using sort and compare with key about `a` object.\n"         \
+    "    keyb -> callable one argument function : Using sort and compare with key about `a` object.\n"         \
+    "    header -> bool : output data with header(True) or without header(False). <default True>\n"            \
+    "    diffonly -> bool : output data with equal data(False) or without equal data(True). <default False>\n" \
+    "    rep_rate -> int: Threshold to be considered as replacement.(-1 ~ 100). -1: allways replacement.\n"    \
+    "    startidx -> int: output record index starting number. <default `0`>\n"                                \
+    "    condition_value -> str : Conjunctions for comparison.\n"                                              \
+    "    na_value -> str: if not found data when filled value.\n"                                              \
+    "    delete_sign_value -> str: if deleted data when adding sign value.\n"                                  \
+    "    insert_sign_value ->  str: if insert data when adding sign value.\n"                                  \
+    "\n"                                                                                                       \
+    "# Return : Lists of List\n"                                                                               \
+    "    1st column -> matching rate (0 ~ 100).\n"                                                             \
+    "    2nd column -> matching tagname (unicode string).\n"                                                   \
+    "    3rd over   -> compare data.\n"                                                                        \
+    "\n"                                                                                                       \
+    "# Example\n"                                                                                              \
+    "    >>> from cdiffer import compare\n"                                                                    \
+    "    ... compare('coffee', 'cafe')\n"                                                                      \
+    "    [[60, 'insert', 'c', 'a', 'f', 'e'],\n"                                                               \
+    "     [60, 'delete', 'c', 'o', 'f', 'f', 'e', 'e']]\n"                                                     \
     "\n"
 
 /* }}} */
