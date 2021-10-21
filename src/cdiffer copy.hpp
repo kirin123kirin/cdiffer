@@ -1234,10 +1234,6 @@ class Compare {
     }
 
     ~Compare() {
-        if(keya)
-            Py_XDECREF(a);
-        if(keyb)
-            Py_XDECREF(b);
         if(idxa)
             PyMem_DEL(idxa);
         if(idxb)
@@ -1245,7 +1241,7 @@ class Compare {
         if(need_clean_cv)
             Py_XDECREF(condition_value);
         if(need_clean_nv)
-            Py_XDECREF(na_value);
+            Py_DECREF(na_value);
         if(delete_sign_value == NULL)
             Py_XDECREF(DEL_Flag);
         if(insert_sign_value == NULL)
@@ -1260,140 +1256,109 @@ class Compare {
         PyObject* keywords = PyDict_New();
         PyObject* keyString = PyUnicode_FromString("key");
         PyDict_SetItem(keywords, keyString, key);
+
         Py_ssize_t len = PyObject_Length(list);
         std::unordered_map<uint64_t, int> idict = {};
-        PyObject* newlist = PyList_New(len);
 
         for(Py_ssize_t i = 0; i < len; ++i) {
             PyObject* row = PySequence_ITEM(list, i);
 
             if(PyTuple_Check(row) || PyIter_Check(row) || PyGen_Check(row) || PyRange_Check(row)) {
-                PyObject* rerow = PySequence_Tuple(row);
-                PyList_SetItem(newlist, i, rerow);
+                PyObject* rerow = PySequence_List(row);
+                PySequence_SetItem(list, i, rerow);
                 idict[uint64_t(rerow)] = (int)i;
-                Py_DECREF(row);
+                Py_DECREF(rerow);
             } else {
-                PyList_SetItem(newlist, i, row);
                 idict[uint64_t(row)] = (int)i;
             }
+            Py_DECREF(row);
             if(PyErr_Occurred()) {
                 return PyErr_Format(PyExc_TypeError, "Can not append index data.");
             }
         }
 
-        PyObject* sortMethod = PyObject_GetAttrString(newlist, "sort");
+        PyObject* sortMethod = PyObject_GetAttrString(list, "sort");
 
         PyObject* result = PyObject_Call(sortMethod, argTuple, keywords);
         if(result == NULL) {
             return PyErr_Format(PyExc_TypeError, "Can not call sort method.");
         }
-
         Py_DECREF(result);
-        Py_DECREF(sortMethod);
 
         indexes = PyMem_New(int, len);
-        std::fill(indexes, indexes + len, 0);
 
         for(Py_ssize_t i = 0; i < len; ++i) {
-            PyObject* row = PySequence_ITEM(newlist, i);
+            PyObject* row = PySequence_ITEM(list, i);
             indexes[i] = idict[uint64_t(row)];
-            Py_DECREF(row);
         }
 
         Py_DECREF(keyString);
         Py_DECREF(keywords);
         Py_DECREF(argTuple);
 
-        return newlist;
+        return list;
     }
 
-    std::pair<std::size_t, PyObject*> intercomplist(PyObject*& row) {
+    PyObject* intercomplist(PyObject*& row) {
         Py_ssize_t rlen, j = 0;
         PyObject *id_a = NULL, *id_b = NULL, *it_a = NULL, *it_b = NULL, *cmp = NULL, *tag = NULL;
-        std::size_t DispOrder = error_n;
 
         it_a = PySequence_ITEM(row, 3);
         if(!it_a || PyUnicode_Check(it_a) || PyNumber_Check(it_a) || PyBytes_Check(it_a) || PyByteArray_Check(it_a)) {
             Py_CLEAR(it_a);
-            return {error_n, NULL};
+            return NULL;
         }
         it_b = PySequence_ITEM(row, 4);
         if(!it_b || PyUnicode_Check(it_b) || PyNumber_Check(it_b) || PyBytes_Check(it_b) || PyByteArray_Check(it_b)) {
             Py_DECREF(it_b);
-            return {error_n, NULL};
+            return NULL;
         }
 
         PyObject* list = PyList_New(3);
 
         tag = PySequence_ITEM(row, 0);
-        if(tag == NULL) {
-            PyErr_Format(PyExc_ValueError, "`Tag name` value Not Found.");
-            return {error_n, NULL};
-        }
+        if(tag == NULL)
+            return PyErr_Format(PyExc_ValueError, "`Tag name` value Not Found.");
 
         PyList_SetItem(list, 0, tag);
-        std::size_t subseq = 0;
 
         if((id_a = PySequence_ITEM(row, 1)) == Py_None) {
             Py_INCREF(na_value);
             PyList_SetItem(list, 1, na_value);
-            subseq = 2;
         } else if(keya && idxa) {
-            long ia = idxa[PyLong_AsSize_t(id_a)] + startidx;
-            PyList_SetItem(list, 1, PyLong_FromLong(ia));
+            PyList_SetItem(list, 1, PyLong_FromLong(idxa[PyLong_AsSize_t(id_a)] + startidx));
             Py_XDECREF(id_a);
-            DispOrder = DispOrder < (std::size_t)ia * 10 ? DispOrder : ia * 10;
         } else {
-            long ia = PyLong_AsLong(id_a) + startidx;
-            PyList_SetItem(list, 1, PyLong_FromLong(ia));
-            DispOrder = DispOrder < (std::size_t)ia * 10 ? DispOrder : ia * 10;
+            std::size_t ia = PyLong_AsSize_t(id_a) + startidx;
+            PyList_SetItem(list, 1, PyLong_FromSize_t(ia));
         }
 
         if((id_b = PySequence_ITEM(row, 2)) == Py_None) {
             Py_INCREF(na_value);
             PyList_SetItem(list, 2, na_value);
-            subseq = 1;
         } else if(keyb && idxb) {
-            long ib = idxb[PyLong_AsSize_t(id_b)] + startidx;
-            PyList_SetItem(list, 2, PyLong_FromLong(ib));
+            PyList_SetItem(list, 2, PyLong_FromLong(idxb[PyLong_AsSize_t(id_b)] + startidx));
             Py_XDECREF(id_b);
-            if (id_a == Py_None)
-                DispOrder = DispOrder < (std::size_t)ib * 10 ? DispOrder : ib * 10;
-            else
-                DispOrder = (DispOrder + (std::size_t)ib * 10) / 2;
-
         } else {
-            long ib = PyLong_AsLong(id_b) + startidx;
-            PyList_SetItem(list, 2, PyLong_FromLong(ib));
-            if (id_a == Py_None)
-                DispOrder = DispOrder < (std::size_t)ib * 10 ? DispOrder : ib * 10;
-            else
-                DispOrder = (DispOrder + (std::size_t)ib * 10) / 2;
+            std::size_t ib = PyLong_AsSize_t(id_b) + startidx;
+            PyList_SetItem(list, 2, PyLong_FromSize_t(ib));
         }
-
-        DispOrder += subseq;
 
         cmp = Diff(it_a, it_b).compare(false, rep_rate, startidx, condition_value, na_value, DEL_Flag, ADD_Flag);
         Py_DECREF(it_a);
         Py_DECREF(it_b);
 
-        if((rlen = PyObject_Length(cmp)) == -1) {
-            PyErr_Format(PyExc_ValueError, "Atribute(`a` or `b`) is not a two-dimensional array.");
-            return {error_n, NULL};
-        }
+        if((rlen = PyObject_Length(cmp)) == -1)
+            return PyErr_Format(PyExc_ValueError, "Atribute(`a` or `b`) is not a two-dimensional array.");
 
         for(; j < rlen; j++) {
             PyObject* cols = PySequence_ITEM(cmp, j);
-            if(cols == NULL) {
-                PyErr_Format(PyExc_ValueError, "Atribute(`a` or `b`) is not a two-dimensional array.");
-                return {error_n, NULL};
-            }
+            if(cols == NULL)
+                return PyErr_Format(PyExc_ValueError, "Atribute(`a` or `b`) is not a two-dimensional array.");
 
             PyObject* cell = PySequence_ITEM(cols, 3);
-            if(cell == NULL) {
-                PyErr_Format(PyExc_ValueError, "Atribute(`a` or `b`) is not a two-dimensional array.");
-                return {error_n, NULL};
-            }
+            if(cell == NULL)
+                return PyErr_Format(PyExc_ValueError, "Atribute(`a` or `b`) is not a two-dimensional array.");
 
             PyList_Append(list, cell);
             Py_DECREF(cell);
@@ -1405,14 +1370,11 @@ class Compare {
 
         Py_XDECREF(cmp);
 
-        return {DispOrder, list};
+        return list;
     }
 
    public:
     PyObject* _1d(bool is_initialcall = true) {
-        if(a == NULL || b == NULL)
-            return PyErr_Format(PyExc_RuntimeError, "Can not make data.\n Check your `a` or `b` data is stop iteration?");
-
         if(is_initialcall) {
             Py_INCREF(a);
             Py_INCREF(b);
@@ -1422,42 +1384,20 @@ class Compare {
 
         if(keya || keyb) {
             Py_ssize_t len = PyObject_Length(cmp);
-            std::vector<std::pair<int, PyObject*>> tmp;
+            std::vector<std::pair<std::size_t, PyObject*>> tmp;
             tmp.reserve((std::size_t)len);
 
             for(Py_ssize_t i = 0; i < len; i++) {
-
                 PyObject* row = PySequence_ITEM(cmp, i);
-                int DispOrder = INT_MAX, subseq = 0;
-
                 PyObject* id_a = PySequence_ITEM(row, 1);
-                if (id_a == na_value) {
-                    subseq = 2;
-                    PySequence_SetItem(row, 1, id_a);
-                } else {
-                    std::size_t ia = PyLong_AsSize_t(id_a);
-                    PySequence_SetItem(row, 1, PyLong_FromLong(idxa[ia] + startidx));
-                    DispOrder = 10 * (idxa[ia] < DispOrder ? idxa[ia] : DispOrder);
-                }
                 PyObject* id_b = PySequence_ITEM(row, 2);
-                if (id_b == na_value) {
-                    subseq = 1;
-                    PySequence_SetItem(row, 2, id_b);
-                } else {
-                    std::size_t ib = PyLong_AsSize_t(id_b);
-                    PySequence_SetItem(row, 2, PyLong_FromLong(idxb[ib] + startidx));
-                    if (subseq == 0) {
-                        DispOrder = (DispOrder + (10 * idxb[ib])) / 2;
-                    } else {
-                        DispOrder = (10 * idxb[ib]) < DispOrder ? 10 * idxb[ib] : DispOrder;
-                    }
-                }
-
-                DispOrder += subseq;
-                tmp.emplace_back(DispOrder, row);
+                std::size_t ia = id_a == na_value ? INT_MAX : PyLong_AsSize_t(id_a);
+                std::size_t ib = id_b == na_value ? INT_MAX : PyLong_AsSize_t(id_b);
+                PySequence_SetItem(row, 1, id_a == na_value ? id_a : PyLong_FromLong(idxa[ia] + startidx));
+                PySequence_SetItem(row, 2, id_b == na_value ? id_b : PyLong_FromLong(idxb[ib] + startidx));
+                tmp.emplace_back(std::min(ia, ib), row);
                 Py_XDECREF(id_a);
                 Py_XDECREF(id_b);
-
             }
             std::sort(tmp.begin(), tmp.end());
             for(std::size_t i = 0, count = tmp.size(); i < count; ++i) {
@@ -1476,12 +1416,7 @@ class Compare {
     }
 
     PyObject* _2d() {
-        if(a == NULL || b == NULL)
-            return PyErr_Format(PyExc_RuntimeError, "Can not make data.\n Check your `a` or `b` data is stop iteration?");
-
         Py_ssize_t len, i;
-        std::pair<std::size_t, PyObject*> intercompresult;
-        bool needsort = keya || keyb;
         PyObject* df = Diff(a, b).difference(diffonly, rep_rate);
 
         if(df == NULL) {
@@ -1493,10 +1428,6 @@ class Compare {
         }
 
         PyObject* ops = PyList_New(len + header);
-        std::vector<std::pair<std::size_t, PyObject*>> sortcontainer(0);
-
-        if(needsort)
-            sortcontainer.reserve((std::size_t)len + header);
 
         int need_ommit = 0;
         if(a == Py_None &&
@@ -1508,7 +1439,6 @@ class Compare {
 
         for(i = 0; i < len; i++) {
             PyObject* row = PySequence_ITEM(df, i);
-
             if(row == NULL) {
                 Py_XDECREF(ops);
                 Py_CLEAR(df);
@@ -1525,22 +1455,15 @@ class Compare {
                 }
                 Py_XDECREF(ctag);
             }
-
-            intercompresult = intercomplist(row);
-
-            if(intercompresult.first == error_n) {
+            PyObject* list = intercomplist(row);
+            if(list == NULL) {
                 Py_CLEAR(ops);
                 Py_CLEAR(df);
                 Py_CLEAR(row);
                 return this->_1d(false);
             }
 
-            if(needsort) {
-                sortcontainer.emplace_back(intercompresult);
-            } else {
-                PyObject* list = intercompresult.second;
-                PyList_SET_ITEM(ops, i + header, list);
-            }
+            PyList_SET_ITEM(ops, i + header, list);
 
             Py_XDECREF(row);
 
@@ -1549,15 +1472,6 @@ class Compare {
         }
 
         Py_CLEAR(df);
-
-        if(needsort) {
-            std::sort(sortcontainer.begin(), sortcontainer.end());
-            std::size_t j = header;
-            for(auto&& it : sortcontainer) {
-                PyList_SET_ITEM(ops, j, it.second);
-                ++j;
-            }
-        }
 
         if(header) {
             PyObject* head = PyList_New(3 + maxcol);
@@ -1582,8 +1496,6 @@ class Compare {
     }
 
     PyObject* _3d() {
-        if(a == NULL || b == NULL)
-            return PyErr_Format(PyExc_RuntimeError, "Can not make data.\n Check your `a` or `b` data is stop iteration?");
         Py_ssize_t len, i, j, slen;
 
         PyObject* la = PyDict_Keys(a);
