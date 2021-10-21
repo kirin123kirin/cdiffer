@@ -6,6 +6,7 @@
 #include <array>
 #include <string>
 #include <unordered_map>
+#include <vector>
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include "pyyou.hpp"
@@ -1357,7 +1358,7 @@ class Compare {
             long ib = idxb[PyLong_AsSize_t(id_b)] + startidx;
             PyList_SetItem(list, 2, PyLong_FromLong(ib));
             Py_XDECREF(id_b);
-            if (id_a == Py_None)
+            if(id_a == Py_None)
                 DispOrder = DispOrder < (std::size_t)ib * 10 ? DispOrder : ib * 10;
             else
                 DispOrder = (DispOrder + (std::size_t)ib * 10) / 2;
@@ -1365,7 +1366,7 @@ class Compare {
         } else {
             long ib = PyLong_AsLong(id_b) + startidx;
             PyList_SetItem(list, 2, PyLong_FromLong(ib));
-            if (id_a == Py_None)
+            if(id_a == Py_None)
                 DispOrder = DispOrder < (std::size_t)ib * 10 ? DispOrder : ib * 10;
             else
                 DispOrder = (DispOrder + (std::size_t)ib * 10) / 2;
@@ -1411,7 +1412,8 @@ class Compare {
    public:
     PyObject* _1d(bool is_initialcall = true) {
         if(a == NULL || b == NULL)
-            return PyErr_Format(PyExc_RuntimeError, "Can not make data.\n Check your `a` or `b` data is stop iteration?");
+            return PyErr_Format(PyExc_RuntimeError,
+                                "Can not make data.\n Check your `a` or `b` data is stop iteration?");
 
         if(is_initialcall) {
             Py_INCREF(a);
@@ -1426,12 +1428,11 @@ class Compare {
             tmp.reserve((std::size_t)len);
 
             for(Py_ssize_t i = 0; i < len; i++) {
-
                 PyObject* row = PySequence_ITEM(cmp, i);
                 int DispOrder = INT_MAX, subseq = 0;
 
                 PyObject* id_a = PySequence_ITEM(row, 1);
-                if (id_a == na_value) {
+                if(id_a == na_value) {
                     subseq = 2;
                     PySequence_SetItem(row, 1, id_a);
                 } else {
@@ -1440,13 +1441,13 @@ class Compare {
                     DispOrder = 10 * (idxa[ia] < DispOrder ? idxa[ia] : DispOrder);
                 }
                 PyObject* id_b = PySequence_ITEM(row, 2);
-                if (id_b == na_value) {
+                if(id_b == na_value) {
                     subseq = 1;
                     PySequence_SetItem(row, 2, id_b);
                 } else {
                     std::size_t ib = PyLong_AsSize_t(id_b);
                     PySequence_SetItem(row, 2, PyLong_FromLong(idxb[ib] + startidx));
-                    if (subseq == 0) {
+                    if(subseq == 0) {
                         DispOrder = (DispOrder + (10 * idxb[ib])) / 2;
                     } else {
                         DispOrder = (10 * idxb[ib]) < DispOrder ? 10 * idxb[ib] : DispOrder;
@@ -1457,7 +1458,6 @@ class Compare {
                 tmp.emplace_back(DispOrder, row);
                 Py_XDECREF(id_a);
                 Py_XDECREF(id_b);
-
             }
             std::sort(tmp.begin(), tmp.end());
             for(std::size_t i = 0, count = tmp.size(); i < count; ++i) {
@@ -1477,7 +1477,8 @@ class Compare {
 
     PyObject* _2d() {
         if(a == NULL || b == NULL)
-            return PyErr_Format(PyExc_RuntimeError, "Can not make data.\n Check your `a` or `b` data is stop iteration?");
+            return PyErr_Format(PyExc_RuntimeError,
+                                "Can not make data.\n Check your `a` or `b` data is stop iteration?");
 
         Py_ssize_t len, i;
         std::pair<std::size_t, PyObject*> intercompresult;
@@ -1569,7 +1570,7 @@ class Compare {
             } else {
                 for(int n = 0; n < maxcol; n++) {
                     char colname[7] = {'C', 'O', 'L', '_', n < 10 ? '0' : char(0x30 + (n / 10)), char(0x30 + (n % 10)),
-                                       NULL};
+                                       '\0'};
                     PyList_SET_ITEM(head, 3 + n, PyUnicode_FromString((const char*)colname));
                 }
             }
@@ -1583,7 +1584,8 @@ class Compare {
 
     PyObject* _3d() {
         if(a == NULL || b == NULL)
-            return PyErr_Format(PyExc_RuntimeError, "Can not make data.\n Check your `a` or `b` data is stop iteration?");
+            return PyErr_Format(PyExc_RuntimeError,
+                                "Can not make data.\n Check your `a` or `b` data is stop iteration?");
         Py_ssize_t len, i, j, slen;
 
         PyObject* la = PyDict_Keys(a);
@@ -1753,7 +1755,7 @@ class Compare {
             } else {
                 for(int n = 0; n < maxcol; n++) {
                     char colname[7] = {'C', 'O', 'L', '_', n < 10 ? '0' : char(0x30 + (n / 10)), char(0x30 + (n % 10)),
-                                       NULL};
+                                       '\0'};
                     PyList_SET_ITEM(head, 4 + n, PyUnicode_FromString((const char*)colname));
                 }
             }
