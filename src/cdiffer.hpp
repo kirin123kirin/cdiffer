@@ -1340,7 +1340,7 @@ class Compare {
             PyList_SetItem(list, 1, na_value);
             subseq = 2;
         } else if(keya && idxa) {
-            long ia = idxa[PyLong_AsSize_t(id_a)] + startidx;
+            long ia = idxa[(std::size_t)PyLong_AsLong(id_a)] + startidx;
             PyList_SetItem(list, 1, PyLong_FromLong(ia));
             Py_XDECREF(id_a);
             DispOrder = DispOrder < (std::size_t)ia * 10 ? DispOrder : ia * 10;
@@ -1355,7 +1355,7 @@ class Compare {
             PyList_SetItem(list, 2, na_value);
             subseq = 1;
         } else if(keyb && idxb) {
-            long ib = idxb[PyLong_AsSize_t(id_b)] + startidx;
+            long ib = idxb[(std::size_t)PyLong_AsLong(id_b)] + startidx;
             PyList_SetItem(list, 2, PyLong_FromLong(ib));
             Py_XDECREF(id_b);
             if(id_a == Py_None)
@@ -1436,7 +1436,7 @@ class Compare {
                     subseq = 2;
                     PySequence_SetItem(row, 1, id_a);
                 } else {
-                    std::size_t ia = PyLong_AsSize_t(id_a);
+                    std::size_t ia = (std::size_t)PyLong_AsLong(id_a);
                     PySequence_SetItem(row, 1, PyLong_FromLong(idxa[ia] + startidx));
                     DispOrder = 10 * (idxa[ia] < DispOrder ? idxa[ia] : DispOrder);
                 }
@@ -1445,7 +1445,7 @@ class Compare {
                     subseq = 1;
                     PySequence_SetItem(row, 2, id_b);
                 } else {
-                    std::size_t ib = PyLong_AsSize_t(id_b);
+                    std::size_t ib = (std::size_t)PyLong_AsLong(id_b);
                     PySequence_SetItem(row, 2, PyLong_FromLong(idxb[ib] + startidx));
                     if(subseq == 0) {
                         DispOrder = (DispOrder + (10 * idxb[ib])) / 2;
@@ -1627,8 +1627,8 @@ class Compare {
 
             bool need_decref_a = true;
             bool need_decref_b = true;
-            da = PyDict_GetItemWithError(a, sa);
-            db = PyDict_GetItemWithError(b, sb);
+            da = PyDict_GetItem(a, sa);
+            db = PyDict_GetItem(b, sb);
 
             if(da == NULL) {
                 da = Py_None;
