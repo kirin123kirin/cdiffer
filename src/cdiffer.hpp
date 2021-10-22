@@ -1147,6 +1147,8 @@ class Compare {
    private:
     int* idxa = NULL;
     int* idxb = NULL;
+    std::size_t len_idxa = NULL;
+    std::size_t len_idxb = NULL;
     Py_ssize_t maxcol = 0;
     bool need_clean_cv = false;
     bool need_clean_nv = false;
@@ -1169,6 +1171,8 @@ class Compare {
           insert_sign_value(NULL),
           idxa(NULL),
           idxb(NULL),
+          len_idxa(NULL),
+          len_idxb(NULL),
           maxcol(0),
           need_clean_cv(false),
           need_clean_nv(false),
@@ -1190,6 +1194,8 @@ class Compare {
           insert_sign_value(NULL),
           idxa(NULL),
           idxb(NULL),
+          len_idxa(NULL),
+          len_idxb(NULL),
           maxcol(0),
           need_clean_cv(false),
           need_clean_nv(false),
@@ -1243,6 +1249,8 @@ class Compare {
           insert_sign_value(_insert_sign_value),
           idxa(NULL),
           idxb(NULL),
+          len_idxa(NULL),
+          len_idxb(NULL),
           maxcol(0),
           need_clean_cv(false),
           need_clean_nv(false),
@@ -1253,9 +1261,9 @@ class Compare {
 
     void initialize() {
         if(keya)
-            a = sortWithKey(idxa, a, keya);
+            a = sortWithKey(len_idxa, idxa, a, keya);
         if(keyb)
-            b = sortWithKey(idxb, b, keyb);
+            b = sortWithKey(len_idxb, idxb, b, keyb);
 
         if(condition_value == NULL) {
             condition_value = PyUnicode_FromString(" ---> ");
@@ -1299,18 +1307,22 @@ class Compare {
    private:
     /* thank you for
      * https://stackoverflow.com/questions/51959095/how-to-sort-a-list-with-a-custom-key-using-the-python-c-api */
-    PyObject* sortWithKey(int*& indexes, PyObject*& list, PyObject* key) {
+    PyObject* sortWithKey(std::size_t& idxlen, int*& indexes, PyObject*& list, PyObject* key) {
         PyObject* argTuple = PyTuple_New(0);
         PyObject* keywords = PyDict_New();
         PyObject* keyString = PyUnicode_FromString("key");
         PyDict_SetItem(keywords, keyString, key);
         Py_ssize_t len = PyObject_Length(list);
+        if(len == -1)
+            return PyErr_Format(PyExc_MemoryError, "Failed get list size.");
+        idxlen = len;
+        
         std::unordered_map<uint64_t, int> idict = {};
-        PyObject* newlist = PyList_New(len);
+        PyObject* newlist = PyList_New(idxlen);
         if(newlist == NULL)
             return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
 
-        for(Py_ssize_t i = 0; i < len; ++i) {
+        for(Py_ssize_t i = 0; i < idxlen; ++i) {
             PyObject* row = PySequence_ITEM(list, i);
 
             if(PyTuple_Check(row) || PyIter_Check(row) || PyGen_Check(row) || PyRange_Check(row)) {
@@ -1337,10 +1349,10 @@ class Compare {
         Py_DECREF(result);
         Py_DECREF(sortMethod);
 
-        indexes = PyMem_New(int, len);
-        std::fill(indexes, indexes + len, 0);
+        indexes = PyMem_New(int, idxlen);
+        std::fill(indexes, indexes + idxlen, 0);
 
-        for(Py_ssize_t i = 0; i < len; ++i) {
+        for(Py_ssize_t i = 0; i < idxlen; ++i) {
             PyObject* row = PySequence_ITEM(newlist, i);
             indexes[i] = idict[uint64_t(row)];
             Py_DECREF(row);
@@ -1396,7 +1408,12 @@ class Compare {
             PyList_SetItem(list, 1, na_value);
             subseq = 2;
         } else if(keya && idxa) {
-            long ia = idxa[(std::size_t)PyLong_AsLong(id_a)] + startidx;
+            std::size_t plong_a = (std::size_t)PyLong_AsLong(id_a);
+            if(len_idxa <= plong_a) {
+                PyErr_Format(PyExc_RuntimeError, "Fail Find line index number.\nUnknown reason...");
+                return {error_n, NULL};
+            }
+            long ia = idxa[plong_a] + startidx;
             PyList_SetItem(list, 1, PyLong_FromLong(ia));
             DispOrder = DispOrder < (std::size_t)ia * 10 ? DispOrder : ia * 10;
             Py_XDECREF(id_a);
@@ -1404,7 +1421,9 @@ class Compare {
             long ia = PyLong_AsLong(id_a) + startidx;
             PyList_SetItem(list, 1, PyLong_FromLong(ia));
             DispOrder = DispOrder < (std::size_t)ia * 10 ? DispOrder : ia * 10;
+            Py_XDECREF(id_a);
         }
+
         id_b = PySequence_ITEM(row, 2);
         if(id_b == NULL) {
             Py_DECREF(id_a);
@@ -1419,7 +1438,12 @@ class Compare {
             PyList_SetItem(list, 2, na_value);
             subseq = 1;
         } else if(keyb && idxb) {
-            long ib = idxb[(std::size_t)PyLong_AsLong(id_b)] + startidx;
+            std::size_t plong_b = (std::size_t)PyLong_AsLong(id_b);
+            if(len_idxb <= plong_b) {
+                PyErr_Format(PyExc_RuntimeError, "Fail Find line index number.\nUnknown reason...");
+                return {error_n, NULL};
+            }
+            long ib = idxb[plong_b] + startidx;
             PyList_SetItem(list, 2, PyLong_FromLong(ib));
             if(id_a == Py_None)
                 DispOrder = DispOrder < (std::size_t)ib * 10 ? DispOrder : ib * 10;
@@ -1434,6 +1458,8 @@ class Compare {
                 DispOrder = DispOrder < (std::size_t)ib * 10 ? DispOrder : ib * 10;
             else
                 DispOrder = (DispOrder + (std::size_t)ib * 10) / 2;
+
+            Py_XDECREF(id_b);
         }
 
         DispOrder += subseq;
@@ -1513,6 +1539,8 @@ class Compare {
                     PySequence_SetItem(row, 1, id_a);
                 } else {
                     std::size_t ia = (std::size_t)PyLong_AsLong(id_a);
+                    if (len_idxa <= ia)
+                        return PyErr_Format(PyExc_RuntimeError, "Fail Find line index number.\nUnknown reason...");
                     PySequence_SetItem(row, 1, PyLong_FromLong(idxa[ia] + startidx));
                     DispOrder = 10 * (idxa[ia] < DispOrder ? idxa[ia] : DispOrder);
                     Py_DECREF(id_a);
@@ -1528,6 +1556,8 @@ class Compare {
                     PySequence_SetItem(row, 2, id_b);
                 } else {
                     std::size_t ib = (std::size_t)PyLong_AsLong(id_b);
+                    if (len_idxb <= ib)
+                        return PyErr_Format(PyExc_RuntimeError, "Fail Find line index number.\nUnknown reason...");
                     PySequence_SetItem(row, 2, PyLong_FromLong(idxb[ib] + startidx));
                     if(subseq == 0) {
                         DispOrder = (DispOrder + (10 * idxb[ib])) / 2;
@@ -1628,11 +1658,10 @@ class Compare {
             if(needsort) {
                 sortcontainer.emplace_back(intercompresult);
             } else {
-                PyObject* list = intercompresult.second;
-                PyList_SET_ITEM(ops, i + header, list);
+                PyList_SET_ITEM(ops, i + header, intercompresult.second);
             }
 
-            Py_DECREF(row);
+            Py_XDECREF(row);
 
             if(PyErr_Occurred() != NULL)
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() below");
@@ -1643,10 +1672,8 @@ class Compare {
         if(needsort) {
             std::sort(sortcontainer.begin(), sortcontainer.end());
             std::size_t j = header;
-            for(auto&& it : sortcontainer) {
-                PyList_SET_ITEM(ops, j, it.second);
-                ++j;
-            }
+            for(auto&& it : sortcontainer)
+                PyList_SET_ITEM(ops, j++, it.second);
         }
 
         if(header) {
@@ -1691,14 +1718,18 @@ class Compare {
         }
 
         PyObject* dfs = Diff(la, lb).difference(false, rep_rate);
-        Py_XDECREF(la);
-        Py_XDECREF(lb);
+        Py_DECREF(la);
+        Py_DECREF(lb);
 
         if(dfs == NULL) {
+            Py_DECREF(la);
+            Py_DECREF(lb);
             return PyErr_Format(PyExc_ValueError, "Faiotal Error `Diff.difference` result get.");
         }
 
         if((len = PyObject_Length(dfs)) == -1) {
+            Py_DECREF(la);
+            Py_DECREF(lb);
             Py_DECREF(dfs);
             return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() head");
         }
@@ -1726,15 +1757,13 @@ class Compare {
 
             if(da == NULL) {
                 da = Py_None;
-                Py_INCREF(da);
                 need_decref_a = false;
             } else if(PyAny_KIND(da) == 8) {
                 if(da == Py_None) {
-                    Py_INCREF(da);
                     need_decref_a = false;
                 } else if(PyIter_Check(da) || PyGen_Check(da) || PyRange_Check(da)) {
                     da = PySequence_Fast(
-                        da, "from `da` iterator");  //@note memory leak when PySequence_List or PySequence_Tuple
+                        da, "from `da` iterator");  //@note PySequence_Fast reason : memory leak when PySequence_List or PySequence_Tuple
                 } else if(PyTuple_Check(da)) {
                     if(PyObject_Length(da) == 0)
                         Py_INCREF(da);
@@ -1759,15 +1788,13 @@ class Compare {
 
             if(db == NULL) {
                 db = Py_None;
-                Py_INCREF(db);
                 need_decref_b = false;
             } else if(PyAny_KIND(db) == 8) {
                 if(db == Py_None) {
-                    Py_INCREF(db);
                     need_decref_b = false;
                 } else if(PyIter_Check(db) || PyGen_Check(db) || PyRange_Check(db)) {
                     db = PySequence_Fast(
-                        db, "from `da` iterator");  //@note memory leak when PySequence_List or PySequence_Tuple
+                        db, "from `db` iterator");  //@note PySequence_Fast reason : memory leak when PySequence_List or PySequence_Tuple
                 } else if(PyTuple_Check(db)) {
                     if(PyObject_Length(db) == 0)
                         Py_INCREF(db);
@@ -1825,7 +1852,7 @@ class Compare {
                     Py_DECREF(dfs);
                     return PyErr_Format(PyExc_ValueError, "Cannot get a Dictionary Inner array.");
                 }
-
+                Py_INCREF(content);
                 PyList_Insert(row, 0, content);
                 PyList_Append(ops, row);
 
