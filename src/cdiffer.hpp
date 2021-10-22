@@ -1423,6 +1423,8 @@ class Compare {
         }
 
         PyObject* cmp = Diff(a, b).compare(diffonly, rep_rate, startidx, condition_value, na_value, DEL_Flag, ADD_Flag);
+        if (cmp == NULL)
+            return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
 
         if(keya || keyb) {
             Py_ssize_t len = PyObject_Length(cmp);
@@ -1433,6 +1435,7 @@ class Compare {
                 PyObject* row = PySequence_ITEM(cmp, i);
                 if(row == NULL) {
                     Py_DECREF(cmp);
+                    Py_DECREF(row);
                     return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
                 }
 
@@ -1440,6 +1443,8 @@ class Compare {
 
                 PyObject* id_a = PySequence_ITEM(row, 1);
                 if(id_a == NULL) {
+                    Py_DECREF(cmp);
+                    Py_DECREF(row);
                     return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
                 } else if(id_a == na_value) {
                     subseq = 2;
@@ -1448,9 +1453,13 @@ class Compare {
                     std::size_t ia = (std::size_t)PyLong_AsLong(id_a);
                     PySequence_SetItem(row, 1, PyLong_FromLong(idxa[ia] + startidx));
                     DispOrder = 10 * (idxa[ia] < DispOrder ? idxa[ia] : DispOrder);
+                    Py_DECREF(id_a);
                 }
                 PyObject* id_b = PySequence_ITEM(row, 2);
                 if(id_b == NULL) {
+                    Py_DECREF(id_a);
+                    Py_DECREF(cmp);
+                    Py_DECREF(row);
                     return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
                 } else if(id_b == na_value) {
                     subseq = 1;
@@ -1463,15 +1472,16 @@ class Compare {
                     } else {
                         DispOrder = (10 * idxb[ib]) < DispOrder ? 10 * idxb[ib] : DispOrder;
                     }
+                    Py_DECREF(id_b);
                 }
 
                 DispOrder += subseq;
                 tmp.emplace_back(DispOrder, row);
-                Py_XDECREF(id_a);
-                Py_XDECREF(id_b);
+                // Py_XDECREF(id_a);
+                // Py_XDECREF(id_b);
             }
             std::sort(tmp.begin(), tmp.end());
-            for(std::size_t i = 0; i < len; ++i) {
+            for(std::size_t i = 0; i < std::size_t(len); ++i) {
                 PyObject* val = tmp[i].second;
                 PyList_SetItem(cmp, (Py_ssize_t)i, val);
             }
