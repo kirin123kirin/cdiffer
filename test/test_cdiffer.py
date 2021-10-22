@@ -4,6 +4,7 @@
 from timeit import timeit
 import os
 import sys
+os.environ['PYTHONIOENCODING'] = 'utf8'
 from psutil import virtual_memory, Process
 process = Process(os.getpid())
 print("\n\n", __file__, ":PID -> ", os.getpid(), "\n\n")
@@ -626,7 +627,7 @@ def test_perf_comapare_2d_3d_default_option():
     runtimeit('compare(dict(hoge="foo"), dict(hoge="foo"))')
     runtimeit('compare(dict(hoge="abc"), dict(hoge="abZ"))')
 
-    runtimeit('compare(dict(hoge=[list("あいうえお".encode()), list("あいうえお".encode())], dict(hoge=[list("あいうえお".encode()), list("あいうあお".encode())]))')
+    runtimeit('compare(dict(hoge=[list("あいうえお"), list("あいうえお")]), dict(hoge=[list("あいうえお"), list("あいうあお")]))')
     runtimeit('compare(dict(hoge=[list("あいうえお"), list("あいうえお")]), dict(hoge=[list("あいうえお"), list("あいうあお")]), rep_rate = -1)')
     runtimeit(
         'compare(dict(sheet1=[list("abc"), list("abc")], sheet2=[list("abc"), list("abc")]), dict(sheet1=[list("abc"), list("acc"), list("xtz")], sheet2=[list("abc"), list("abc")]), rep_rate=50)')
