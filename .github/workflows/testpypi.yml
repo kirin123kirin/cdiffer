@@ -11,6 +11,7 @@ on:
 jobs:
    build_python:
       runs-on: ${{ matrix.platform }}
+      continue-on-error: true
       strategy:
          max-parallel: 15
          matrix:
@@ -37,8 +38,7 @@ jobs:
       steps:
          -
             uses: actions/checkout@v2
-         -
-            continue-on-error: true
+         
          -
             name: Setup Python ${{ matrix.python-version }}
             uses: actions/setup-python@v2
@@ -93,7 +93,7 @@ jobs:
             python-version: [ 
                   # python27,
                   # python36,
-                  python37,
+                  # python37,
                   python38,
                   python39,
             ]
