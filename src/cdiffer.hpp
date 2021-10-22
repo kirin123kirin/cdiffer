@@ -1456,8 +1456,8 @@ class Compare {
 
                 DispOrder += subseq;
                 tmp.emplace_back(DispOrder, row);
-                Py_XDECREF(id_a);
-                Py_XDECREF(id_b);
+                //Py_XDECREF(id_a);
+                //Py_XDECREF(id_b);
             }
             std::sort(tmp.begin(), tmp.end());
             for(std::size_t i = 0, count = tmp.size(); i < count; ++i) {
