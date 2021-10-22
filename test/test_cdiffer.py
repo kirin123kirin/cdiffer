@@ -627,8 +627,8 @@ def test_perf_comapare_2d_3d_default_option():
     runtimeit('compare(dict(hoge="foo"), dict(hoge="foo"))')
     runtimeit('compare(dict(hoge="abc"), dict(hoge="abZ"))')
 
-    runtimeit('compare(dict(hoge=[list("あいうえお"), list("あいうえお")]), dict(hoge=[list("あいうえお"), list("あいうあお")]))')
-    runtimeit('compare(dict(hoge=[list("あいうえお"), list("あいうえお")]), dict(hoge=[list("あいうえお"), list("あいうあお")]), rep_rate = -1)')
+    # runtimeit('compare(dict(hoge=[list("あいうえお"), list("あいうえお")]), dict(hoge=[list("あいうえお"), list("あいうあお")]))')
+    # runtimeit('compare(dict(hoge=[list("あいうえお"), list("あいうえお")]), dict(hoge=[list("あいうえお"), list("あいうあお")]), rep_rate = -1)')
     runtimeit(
         'compare(dict(sheet1=[list("abc"), list("abc")], sheet2=[list("abc"), list("abc")]), dict(sheet1=[list("abc"), list("acc"), list("xtz")], sheet2=[list("abc"), list("abc")]), rep_rate=50)')
     runtimeit(
@@ -714,7 +714,7 @@ def test_compare_unicode_of_list_and_perf():
            'hoge', 'equal', 0, 0, 'あ', 'い', 'う', 'え', 'お'], ['hoge', 'replace', 1, 1, 'あ', 'い', 'う', 'え ---> DEL', 'ADD ---> あ', 'お']])
     assert(compare(aa, ab, header=False) == [['hoge', 'equal', 0, 0, 'あ', 'い', 'う', 'え', 'お'],
                                              ['hoge', 'replace', 1, 1, 'あ', 'い', 'う', 'え ---> DEL', 'ADD ---> あ', 'お']])
-    runtimeit('compare(aa, ab, header=False)', 'aa = dict(hoge=[list(r"あいうえお"), list(r"あいうえお")]);ab = dict(hoge=[list(r"あいうえお"), list(r"あいうあお")])')
+    # runtimeit('compare(aa, ab, header=False)', 'aa = dict(hoge=[list(r"あいうえお"), list(r"あいうえお")]);ab = dict(hoge=[list(r"あいうえお"), list(r"あいうあお")])')
     # diffonly
     assert(compare(aa, ab, diffonly=True) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01',
                                                'COL_02', 'COL_03', 'COL_04'], ['hoge', 'replace', 1, 1, 'あ', 'い', 'う', 'え ---> あ', 'お']])
