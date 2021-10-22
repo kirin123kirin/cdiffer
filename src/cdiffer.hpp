@@ -1429,6 +1429,11 @@ class Compare {
 
             for(Py_ssize_t i = 0; i < len; i++) {
                 PyObject* row = PySequence_ITEM(cmp, i);
+                if(row == NULL) {
+                    Py_DECREF(cmp);
+                    return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
+                }
+
                 int DispOrder = INT_MAX, subseq = 0;
 
                 PyObject* id_a = PySequence_ITEM(row, 1);
@@ -1456,12 +1461,13 @@ class Compare {
 
                 DispOrder += subseq;
                 tmp.emplace_back(DispOrder, row);
-                //Py_XDECREF(id_a);
-                //Py_XDECREF(id_b);
+                Py_XDECREF(id_a);
+                Py_XDECREF(id_b);
             }
             std::sort(tmp.begin(), tmp.end());
-            for(std::size_t i = 0, count = tmp.size(); i < count; ++i) {
-                PyList_SetItem(cmp, (Py_ssize_t)i, tmp[i].second);
+            for(std::size_t i = 0; i < len; ++i) {
+                PyObject* val = tmp[i].second;
+                PyList_SetItem(cmp, (Py_ssize_t)i, val);
             }
         }
 
