@@ -603,6 +603,8 @@ class Diff_t {
         uint64_t found = 0, adat = 0, trb = 0;
         const std::size_t BITS = std::min(std::size_t(64), (std::size_t)(sizeof(fp[0]) * 8));
         PyObject* ops = PyList_New(0);
+        if(ops == NULL)
+            return NULL;
 
         if(a == b) {
             if(!diffonly) {
@@ -1437,7 +1439,9 @@ class Compare {
                 int DispOrder = INT_MAX, subseq = 0;
 
                 PyObject* id_a = PySequence_ITEM(row, 1);
-                if(id_a == na_value) {
+                if(id_a == NULL) {
+                    return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
+                } else if(id_a == na_value) {
                     subseq = 2;
                     PySequence_SetItem(row, 1, id_a);
                 } else {
@@ -1446,7 +1450,9 @@ class Compare {
                     DispOrder = 10 * (idxa[ia] < DispOrder ? idxa[ia] : DispOrder);
                 }
                 PyObject* id_b = PySequence_ITEM(row, 2);
-                if(id_b == na_value) {
+                if(id_b == NULL) {
+                    return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
+                } else if(id_b == na_value) {
                     subseq = 1;
                     PySequence_SetItem(row, 2, id_b);
                 } else {
@@ -1518,16 +1524,16 @@ class Compare {
 
             if(row == NULL) {
                 Py_XDECREF(ops);
-                Py_CLEAR(df);
+                Py_DECREF(df);
                 return PyErr_Format(PyExc_ValueError, "Atribute(`a` or `b`) is not a two-dimensional array.");
             }
             if(need_ommit) {
                 PyObject* ctag = PySequence_ITEM(row, 0);
                 if(PyObject_RichCompareBool(ctag, DIFFTP[0][need_ommit], Py_NE)) {
-                    Py_CLEAR(ctag);
-                    Py_CLEAR(ops);
-                    Py_CLEAR(df);
-                    Py_CLEAR(row);
+                    Py_XDECREF(ctag);
+                    Py_XDECREF(ops);
+                    Py_DECREF(df);
+                    Py_XDECREF(row);
                     return this->_1d(false);
                 }
                 Py_XDECREF(ctag);
@@ -1536,9 +1542,9 @@ class Compare {
             intercompresult = intercomplist(row);
 
             if(intercompresult.first == error_n) {
-                Py_CLEAR(ops);
-                Py_CLEAR(df);
-                Py_CLEAR(row);
+                Py_XDECREF(ops);
+                Py_DECREF(df);
+                Py_XDECREF(row);
                 return this->_1d(false);
             }
 
