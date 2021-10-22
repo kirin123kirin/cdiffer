@@ -1322,7 +1322,7 @@ class Compare {
             return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
 
         for(Py_ssize_t i = 0; i < len; ++i) {
-            PyObject* row = PySequence_ITEM(list, i);
+            PyObject* row = PySequence_GetItem(list, i);
 
             if(PyTuple_Check(row) || PyIter_Check(row) || PyGen_Check(row) || PyRange_Check(row)) {
                 PyObject* rerow = PySequence_Tuple(row);
@@ -1353,7 +1353,7 @@ class Compare {
         std::fill(indexes, indexes + idxlen, 0);
 
         for(Py_ssize_t i = 0; i < len; ++i) {
-            PyObject* row = PySequence_ITEM(newlist, i);
+            PyObject* row = PySequence_GetItem(newlist, i);
             indexes[i] = idict[uint64_t(row)];
             Py_DECREF(row);
         }
@@ -1370,12 +1370,12 @@ class Compare {
         PyObject *id_a = NULL, *id_b = NULL, *it_a = NULL, *it_b = NULL, *cmp = NULL, *tag = NULL;
         std::size_t DispOrder = error_n;
 
-        it_a = PySequence_ITEM(row, 3);
+        it_a = PySequence_GetItem(row, 3);
         if(!it_a || PyUnicode_Check(it_a) || PyNumber_Check(it_a) || PyBytes_Check(it_a) || PyByteArray_Check(it_a)) {
             Py_CLEAR(it_a);
             return {error_n, NULL};
         }
-        it_b = PySequence_ITEM(row, 4);
+        it_b = PySequence_GetItem(row, 4);
         if(!it_b || PyUnicode_Check(it_b) || PyNumber_Check(it_b) || PyBytes_Check(it_b) || PyByteArray_Check(it_b)) {
             Py_DECREF(it_b);
             return {error_n, NULL};
@@ -1387,7 +1387,7 @@ class Compare {
             return {error_n, NULL};
         }
 
-        tag = PySequence_ITEM(row, 0);
+        tag = PySequence_GetItem(row, 0);
         if(tag == NULL) {
             PyErr_Format(PyExc_ValueError, "`Tag name` value Not Found.");
             return {error_n, NULL};
@@ -1395,7 +1395,7 @@ class Compare {
 
         PyList_SetItem(list, 0, tag);
         std::size_t subseq = 0;
-        id_a = PySequence_ITEM(row, 1);
+        id_a = PySequence_GetItem(row, 1);
         if(id_a == NULL) {
             Py_DECREF(it_a);
             Py_DECREF(it_b);
@@ -1424,7 +1424,7 @@ class Compare {
             Py_XDECREF(id_a);
         }
 
-        id_b = PySequence_ITEM(row, 2);
+        id_b = PySequence_GetItem(row, 2);
         if(id_b == NULL) {
             Py_DECREF(id_a);
             Py_DECREF(it_a);
@@ -1474,13 +1474,13 @@ class Compare {
         }
 
         for(; j < rlen; j++) {
-            PyObject* cols = PySequence_ITEM(cmp, j);
+            PyObject* cols = PySequence_GetItem(cmp, j);
             if(cols == NULL) {
                 PyErr_Format(PyExc_ValueError, "Atribute(`a` or `b`) is not a two-dimensional array.");
                 return {error_n, NULL};
             }
 
-            PyObject* cell = PySequence_ITEM(cols, 3);
+            PyObject* cell = PySequence_GetItem(cols, 3);
             if(cell == NULL) {
                 PyErr_Format(PyExc_ValueError, "Atribute(`a` or `b`) is not a two-dimensional array.");
                 return {error_n, NULL};
@@ -1520,19 +1520,19 @@ class Compare {
 
         if(len > 0 && (keya || keyb)) {
             std::vector<std::pair<int, PyObject*>> tmp;
-            tmp.reserve((std::size_t)len);
+            tmp.reserve((std::size_t)len + 10);
 
             for(Py_ssize_t i = 0; i < len; i++) {
-                PyObject* row = PySequence_ITEM(cmp, i);
+                PyObject* row = PySequence_GetItem(cmp, i);
                 if(row == NULL) {
                     Py_DECREF(cmp);
                     Py_DECREF(row);
                     return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
                 }
 
-                int DispOrder = 10000, subseq = 0; //@todo for segmentation fault test
+                int DispOrder = -1, subseq = 0; //@todo for segmentation fault test
 
-                PyObject* id_a = PySequence_ITEM(row, 1);
+                PyObject* id_a = PySequence_GetItem(row, 1);
                 if(id_a == NULL) {
                     Py_DECREF(cmp);
                     Py_DECREF(row);
@@ -1545,10 +1545,12 @@ class Compare {
                     if (len_idxa <= ia)
                         return PyErr_Format(PyExc_RuntimeError, "Fail Find line index number.\nUnknown reason...");
                     PySequence_SetItem(row, 1, PyLong_FromLong(idxa[ia] + startidx));
+                    if (DispOrder == -1)
+                        DispOrder = 10 * idxa[ia];
                     DispOrder = 10 * (idxa[ia] < DispOrder ? idxa[ia] : DispOrder);
                     Py_DECREF(id_a);
                 }
-                PyObject* id_b = PySequence_ITEM(row, 2);
+                PyObject* id_b = PySequence_GetItem(row, 2);
                 if(id_b == NULL) {
                     Py_DECREF(id_a);
                     Py_DECREF(cmp);
@@ -1562,11 +1564,12 @@ class Compare {
                     if (len_idxb <= ib)
                         return PyErr_Format(PyExc_RuntimeError, "Fail Find line index number.\nUnknown reason...");
                     PySequence_SetItem(row, 2, PyLong_FromLong(idxb[ib] + startidx));
-                    if(subseq == 0) {
+                    if (DispOrder == -1)
+                        DispOrder = 10 * idxb[ib];
+                    if(subseq == 0) 
                         DispOrder = (DispOrder + (10 * idxb[ib])) / 2;
-                    } else {
+                    else
                         DispOrder = (10 * idxb[ib]) < DispOrder ? 10 * idxb[ib] : DispOrder;
-                    }
                     Py_DECREF(id_b);
                 }
 
@@ -1630,7 +1633,7 @@ class Compare {
             need_ommit = ED_DELETE;
 
         for(i = 0; i < len; i++) {
-            PyObject* row = PySequence_ITEM(df, i);
+            PyObject* row = PySequence_GetItem(df, i);
 
             if(row == NULL) {
                 Py_XDECREF(ops);
@@ -1638,7 +1641,7 @@ class Compare {
                 return PyErr_Format(PyExc_ValueError, "Atribute(`a` or `b`) is not a two-dimensional array.");
             }
             if(need_ommit) {
-                PyObject* ctag = PySequence_ITEM(row, 0);
+                PyObject* ctag = PySequence_GetItem(row, 0);
                 if(ctag == NULL)
                     return PyErr_Format(PyExc_IndexError, "Failed get tag value.");
                 if(PyObject_RichCompareBool(ctag, DIFFTP[0][need_ommit], Py_NE)) {
@@ -1663,7 +1666,7 @@ class Compare {
             if(needsort) {
                 sortcontainer.emplace_back(intercompresult);
             } else {
-                PyList_SET_ITEM(ops, i + header, intercompresult.second);
+                PyList_SetItem(ops, i + header, intercompresult.second);
             }
 
             Py_XDECREF(row);
@@ -1678,7 +1681,7 @@ class Compare {
             std::sort(sortcontainer.begin(), sortcontainer.end());
             std::size_t j = header;
             for(auto&& it : sortcontainer)
-                PyList_SET_ITEM(ops, j++, it.second);
+                PyList_SetItem(ops, j++, it.second);
         }
 
         if(header) {
@@ -1686,16 +1689,16 @@ class Compare {
             if(head == NULL)
                 return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
 
-            PyList_SET_ITEM(head, 0, PyUnicode_FromString("tag"));
-            PyList_SET_ITEM(head, 1, PyUnicode_FromString("index_a"));
-            PyList_SET_ITEM(head, 2, PyUnicode_FromString("index_b"));
+            PyList_SetItem(head, 0, PyUnicode_FromString("tag"));
+            PyList_SetItem(head, 1, PyUnicode_FromString("index_a"));
+            PyList_SetItem(head, 2, PyUnicode_FromString("index_b"));
             if(maxcol == 1) {
-                PyList_SET_ITEM(head, 3, PyUnicode_FromString("data"));
+                PyList_SetItem(head, 3, PyUnicode_FromString("data"));
             } else {
                 for(int n = 0; n < maxcol; n++) {
                     char colname[7] = {'C', 'O', 'L', '_', n < 10 ? '0' : char(0x30 + (n / 10)), char(0x30 + (n % 10)),
                                        '\0'};
-                    PyList_SET_ITEM(head, 3 + n, PyUnicode_FromString((const char*)colname));
+                    PyList_SetItem(head, 3 + n, PyUnicode_FromString((const char*)colname));
                 }
             }
 
@@ -1745,15 +1748,15 @@ class Compare {
 
         for(i = 0; i < len; ++i) {
             PyObject *tag, *sa, *sb, *da, *db, *arr, *df, *concat, *content, *row;
-            if((arr = PySequence_ITEM(dfs, i)) == NULL) {
+            if((arr = PySequence_GetItem(dfs, i)) == NULL) {
                 Py_XDECREF(ops);
                 Py_XDECREF(dfs);
                 return PyErr_Format(PyExc_ValueError, "Cannot get a Dictionary Inner array.");
             }
 
-            tag = PySequence_ITEM(arr, 0);
-            sa = PySequence_ITEM(arr, 3);
-            sb = PySequence_ITEM(arr, 4);
+            tag = PySequence_GetItem(arr, 0);
+            sa = PySequence_GetItem(arr, 3);
+            sb = PySequence_GetItem(arr, 4);
 
             bool need_decref_a = true;
             bool need_decref_b = true;
@@ -1850,7 +1853,7 @@ class Compare {
             Py_XDECREF(sb);
 
             for(j = 0, slen = PyObject_Length(df); j < slen; ++j) {
-                if((row = PySequence_ITEM(df, j)) == NULL) {
+                if((row = PySequence_GetItem(df, j)) == NULL) {
                     Py_DECREF(ops);
                     Py_DECREF(arr);
                     Py_XDECREF(df);
@@ -1875,17 +1878,17 @@ class Compare {
             if(head == NULL)
                 return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
 
-            PyList_SET_ITEM(head, 0, PyUnicode_FromString("group"));
-            PyList_SET_ITEM(head, 1, PyUnicode_FromString("tag"));
-            PyList_SET_ITEM(head, 2, PyUnicode_FromString("index_a"));
-            PyList_SET_ITEM(head, 3, PyUnicode_FromString("index_b"));
+            PyList_SetItem(head, 0, PyUnicode_FromString("group"));
+            PyList_SetItem(head, 1, PyUnicode_FromString("tag"));
+            PyList_SetItem(head, 2, PyUnicode_FromString("index_a"));
+            PyList_SetItem(head, 3, PyUnicode_FromString("index_b"));
             if(maxcol == 1) {
-                PyList_SET_ITEM(head, 4, PyUnicode_FromString("data"));
+                PyList_SetItem(head, 4, PyUnicode_FromString("data"));
             } else {
                 for(int n = 0; n < maxcol; n++) {
                     char colname[7] = {'C', 'O', 'L', '_', n < 10 ? '0' : char(0x30 + (n / 10)), char(0x30 + (n % 10)),
                                        '\0'};
-                    PyList_SET_ITEM(head, 4 + n, PyUnicode_FromString((const char*)colname));
+                    PyList_SetItem(head, 4 + n, PyUnicode_FromString((const char*)colname));
                 }
             }
             if((PyList_SetItem(ops, 0, head)) == -1)
