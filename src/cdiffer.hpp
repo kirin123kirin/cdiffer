@@ -1514,8 +1514,11 @@ class Compare {
         if(cmp == NULL)
             return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
 
-        if(keya || keyb) {
-            Py_ssize_t len = PyObject_Length(cmp);
+        Py_ssize_t len = PyObject_Length(cmp);
+        if(len == -1)
+            return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
+
+        if(len > 0 && (keya || keyb)) {
             std::vector<std::pair<int, PyObject*>> tmp;
             tmp.reserve((std::size_t)len);
 
@@ -1527,7 +1530,7 @@ class Compare {
                     return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
                 }
 
-                int DispOrder = INT_MAX, subseq = 0;
+                int DispOrder = 10000, subseq = 0; //@todo for segmentation fault test
 
                 PyObject* id_a = PySequence_ITEM(row, 1);
                 if(id_a == NULL) {
@@ -1569,8 +1572,6 @@ class Compare {
 
                 DispOrder += subseq;
                 tmp.emplace_back(DispOrder, row);
-                // Py_XDECREF(id_a);
-                // Py_XDECREF(id_b);
             }
             std::sort(tmp.begin(), tmp.end());
             for(std::size_t i = 0; i < std::size_t(len); ++i) {
@@ -1580,6 +1581,10 @@ class Compare {
         }
 
         if(header) {
+            if(len == 0) {
+                Py_DECREF(cmp);
+                return Py_BuildValue("[[ssss]]", "tag", "index_a", "index_b", "data");
+            }
             PyObject* head = Py_BuildValue("[ssss]", "tag", "index_a", "index_b", "data");
             if((PyList_Insert(cmp, 0, head)) == -1)
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _1d() near");
