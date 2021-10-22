@@ -91,7 +91,7 @@ jobs:
          max-parallel: 5
          matrix:
             python-version: [ 
-                  python27,
+                  # python27,
                   python36,
                   python37,
                   python38,
