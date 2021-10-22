@@ -626,7 +626,7 @@ def test_perf_comapare_2d_3d_default_option():
     runtimeit('compare(dict(hoge="foo"), dict(hoge="foo"))')
     runtimeit('compare(dict(hoge="abc"), dict(hoge="abZ"))')
 
-    runtimeit(r'compare(dict(hoge=[list("あいうえお"), list("あいうえお")]), dict(hoge=[list("あいうえお"), list("あいうあお")]))')
+    runtimeit('compare(dict(hoge=[list(r"あいうえお"), list(r"あいうえお")]), dict(hoge=[list(r"あいうえお"), list(r"あいうあお")]))')
     runtimeit('compare(dict(hoge=[list("あいうえお"), list("あいうえお")]), dict(hoge=[list("あいうえお"), list("あいうあお")]), rep_rate = -1)')
     runtimeit(
         'compare(dict(sheet1=[list("abc"), list("abc")], sheet2=[list("abc"), list("abc")]), dict(sheet1=[list("abc"), list("acc"), list("xtz")], sheet2=[list("abc"), list("abc")]), rep_rate=50)')
