@@ -93,6 +93,8 @@ PyObject* makelist(int dtype, std::size_t x, std::size_t y, PyObject*& a, PyObje
     std::size_t len2 = PyAny_Length(b);
 
     PyObject* list = PyList_New(5);
+    if (list == NULL)
+        PyErr_Format(PyExc_MemoryError, "Failed making list array.");
     Py_INCREF(DIFFTP[swapflag][dtype]);
     PyList_SetItem(list, 0, DIFFTP[swapflag][dtype]);
 
@@ -170,6 +172,9 @@ void complist(PyObject*& ops,
     int result = -1;
 
     PyObject* list = PyList_New(4);
+    if (list == NULL)
+        PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
     Py_INCREF(DIFFTP[0][dtype]);
     PyList_SetItem(list, 0, DIFFTP[0][dtype]);
 
@@ -337,6 +342,9 @@ class Diff_t {
 
         if((a.canonical || b.canonical) && (A + B <= 1 || (A == 1 && B == 1))) {
             PyObject* ops = PyList_New(0);
+            if (ops == NULL)
+                PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
             if(rep_rate < 1) {
                 makelist(ops, ED_REPLACE, 0, 0, a.py, b.py, swapflag);
             } else {
@@ -405,6 +413,8 @@ class Diff_t {
 
         if((a.canonical || b.canonical) && (A + B <= 1 || (A == 1 && B == 1))) {
             PyObject* ops = PyList_New(0);
+            if (ops == NULL)
+                PyErr_Format(PyExc_MemoryError, "Failed making list array.");
 
             if(rep_rate < 1) {
                 complist(ops, ED_REPLACE, 0, 0, a.py, b.py, swapflag, _startidx, _condition_value, _na_value, _DEL_Flag,
@@ -452,6 +462,9 @@ class Diff_t {
     template <typename T>
     void makelist_pyn(PyObject*& ops, T& pyn, int dtype, std::size_t x, std::size_t y) {
         PyObject* list = PyList_New(5);
+        if (list == NULL)
+            PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
         Py_INCREF(DIFFTP[swapflag][dtype]);
         PyList_SetItem(list, 0, DIFFTP[swapflag][dtype]);
 
@@ -493,6 +506,8 @@ class Diff_t {
         uint64_t found = 0, adat = 0, trb = 0;
         const std::size_t BITS = std::min(std::size_t(64), (std::size_t)(sizeof(fp[0]) * 8));
         PyObject* ops = PyList_New(0);
+        if (ops == NULL)
+            PyErr_Format(PyExc_MemoryError, "Failed making list array.");
 
         if(a == b) {
             if(!diffonly)
@@ -603,8 +618,9 @@ class Diff_t {
         uint64_t found = 0, adat = 0, trb = 0;
         const std::size_t BITS = std::min(std::size_t(64), (std::size_t)(sizeof(fp[0]) * 8));
         PyObject* ops = PyList_New(0);
-        if(ops == NULL)
-            return NULL;
+        if (ops == NULL)
+            PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
 
         if(a == b) {
             if(!diffonly) {
@@ -930,6 +946,9 @@ class Diff {
         if(PyObject_RichCompareBool(a, b, Py_EQ)) {
             std::size_t len1 = error_n, i;
             PyObject* ops = PyList_New(0);
+            if (ops == NULL)
+                PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
             if(_diffonly)
                 return ops;
             if(PyMapping_Check(a))
@@ -947,6 +966,9 @@ class Diff {
             std::size_t len2 = PyAny_Length(b);
             if(len2 != error_n) {
                 PyObject* ops = PyList_New(0);
+                if (ops == NULL)
+                    PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
                 if(len2 > 0) {
                     for(std::size_t i = 0; i < len2; i++)
                         makelist(ops, ED_INSERT, 0, i, a, b);
@@ -960,6 +982,8 @@ class Diff {
             std::size_t len1 = PyAny_Length(a);
             if(len1 != error_n) {
                 PyObject* ops = PyList_New(0);
+                if (ops == NULL)
+                    PyErr_Format(PyExc_MemoryError, "Failed making list array.");
                 if(len1 > 0) {
                     for(std::size_t i = 0; i < len1; i++)
                         makelist(ops, ED_DELETE, i, 0, a, b);
@@ -982,6 +1006,9 @@ class Diff {
 
             if(len1 + len2 == 0 || (len1 == 1 && len2 == 1)) {
                 PyObject* ops = PyList_New(0);
+                if (ops == NULL)
+                    PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
                 if(_rep_rate < 1)
                     makelist(ops, ED_REPLACE, 0, 0, a, b);
                 else {
@@ -1013,6 +1040,9 @@ class Diff {
         if(PyObject_RichCompareBool(a, b, Py_EQ)) {
             std::size_t len1 = error_n, i = 0;
             PyObject* ops = PyList_New(0);
+            if (ops == NULL)
+                PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
             if(_diffonly)
                 return ops;
 
@@ -1039,6 +1069,9 @@ class Diff {
         } else if(a == Py_None) {
             std::size_t len2 = PyAny_Length(b);
             PyObject* ops = PyList_New(0);
+            if (ops == NULL)
+                PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
             for(std::size_t i = 0, end = len2 ? len2 : 1; i < end; i++)
                 complist(ops, ED_INSERT, 0, i, a, b, false, _startidx, _condition_value, _na_value, _DEL_Flag,
                          _ADD_Flag);
@@ -1046,6 +1079,9 @@ class Diff {
         } else if(b == Py_None) {
             std::size_t len1 = PyAny_Length(a);
             PyObject* ops = PyList_New(0);
+            if (ops == NULL)
+                PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
             for(std::size_t i = 0, end = len1 ? len1 : 1; i < end; i++)
                 complist(ops, ED_DELETE, i, 0, a, b, false, _startidx, _condition_value, _na_value, _DEL_Flag,
                          _ADD_Flag);
@@ -1059,6 +1095,9 @@ class Diff {
 
             if(len1 + len2 == 0 || (len1 == 1 && len2 == 1)) {
                 PyObject* ops = PyList_New(0);
+                if (ops == NULL)
+                    PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
 
                 if(_rep_rate < 1) {
                     complist(ops, ED_REPLACE, 0, 0, a, b, false, _startidx, _condition_value, _na_value, _DEL_Flag,
@@ -1266,6 +1305,9 @@ class Compare {
         Py_ssize_t len = PyObject_Length(list);
         std::unordered_map<uint64_t, int> idict = {};
         PyObject* newlist = PyList_New(len);
+        if (newlist == NULL)
+            PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
 
         for(Py_ssize_t i = 0; i < len; ++i) {
             PyObject* row = PySequence_ITEM(list, i);
@@ -1327,6 +1369,9 @@ class Compare {
         }
 
         PyObject* list = PyList_New(3);
+        if (list == NULL)
+            PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
 
         tag = PySequence_ITEM(row, 0);
         if(tag == NULL) {
@@ -1516,6 +1561,9 @@ class Compare {
         }
 
         PyObject* ops = PyList_New(len + header);
+        if (ops == NULL)
+            PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
         std::vector<std::pair<std::size_t, PyObject*>> sortcontainer(0);
 
         if(needsort)
@@ -1584,6 +1632,9 @@ class Compare {
 
         if(header) {
             PyObject* head = PyList_New(3 + maxcol);
+            if (head == NULL)
+                PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
             PyList_SET_ITEM(head, 0, PyUnicode_FromString("tag"));
             PyList_SET_ITEM(head, 1, PyUnicode_FromString("index_a"));
             PyList_SET_ITEM(head, 2, PyUnicode_FromString("index_b"));
@@ -1634,6 +1685,9 @@ class Compare {
         }
 
         PyObject* ops = PyList_New(header == true);
+        if (ops == NULL)
+            PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
 
         for(i = 0; i < len; ++i) {
             PyObject *tag, *sa, *sb, *da, *db, *arr, *df, *concat, *content, *row;
@@ -1768,6 +1822,9 @@ class Compare {
 
         if(header) {
             PyObject* head = PyList_New(4 + maxcol);
+            if (head == NULL)
+                PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+
             PyList_SET_ITEM(head, 0, PyUnicode_FromString("group"));
             PyList_SET_ITEM(head, 1, PyUnicode_FromString("tag"));
             PyList_SET_ITEM(head, 2, PyUnicode_FromString("index_a"));
