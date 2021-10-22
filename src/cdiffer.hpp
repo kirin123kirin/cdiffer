@@ -1315,14 +1315,13 @@ class Compare {
         Py_ssize_t len = PyObject_Length(list);
         if(len == -1)
             return PyErr_Format(PyExc_MemoryError, "Failed get list size.");
-        idxlen = len;
-        
+
         std::unordered_map<uint64_t, int> idict = {};
-        PyObject* newlist = PyList_New(idxlen);
+        PyObject* newlist = PyList_New(len);
         if(newlist == NULL)
             return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
 
-        for(Py_ssize_t i = 0; i < idxlen; ++i) {
+        for(Py_ssize_t i = 0; i < len; ++i) {
             PyObject* row = PySequence_ITEM(list, i);
 
             if(PyTuple_Check(row) || PyIter_Check(row) || PyGen_Check(row) || PyRange_Check(row)) {
@@ -1349,10 +1348,11 @@ class Compare {
         Py_DECREF(result);
         Py_DECREF(sortMethod);
 
+        idxlen = (std::size_t)len;
         indexes = PyMem_New(int, idxlen);
         std::fill(indexes, indexes + idxlen, 0);
 
-        for(Py_ssize_t i = 0; i < idxlen; ++i) {
+        for(Py_ssize_t i = 0; i < len; ++i) {
             PyObject* row = PySequence_ITEM(newlist, i);
             indexes[i] = idict[uint64_t(row)];
             Py_DECREF(row);
