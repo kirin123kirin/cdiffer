@@ -1031,23 +1031,7 @@ data_b = """24,2372,15,toyota corona mark ii
 lb = [x.split(",") for x in data_b]
 
 def test_compare_key_1d_keysort_and_perf():
-    data_a = """24,2372,15,toyota corona mark ii
-18,2774,15.5,amc hornet
-21,2587,16,ford maverick
-25,"2489",15,honda civic
-24,あ2430,14.5,audi 100 ls
-26,1835,20.5,volkswagen 1131 deluxe sedan
-""".splitlines()
-
-    data_b = """24,2372,15,toyota corona mark ii
-22,2833,15.5,plymouth duster
-18,2774,15.5,amc hornet
-21,2587,16,ford maverick
-27,2130,14.5,datsun pl510
-25,"2489?",15,honda civic
-""".splitlines()
-
-    assert(compare(data_a, data_b, keya=lambda x: x, keyb=lambda x: x) == [['tag', 'index_a', 'index_b', 'data'], ['equal', 0, 0, '24,2372,15,toyota corona mark ii'], ['insert', '-', 1, 'ADD ---> 22,2833,15.5,plymouth duster'], ['equal', 1, 2, '18,2774,15.5,amc hornet'], [
+    assert(compare(data_a, data_b, keya=None, keyb=None) == [['tag', 'index_a', 'index_b', 'data'], ['equal', 0, 0, '24,2372,15,toyota corona mark ii'], ['insert', '-', 1, 'ADD ---> 22,2833,15.5,plymouth duster'], ['equal', 1, 2, '18,2774,15.5,amc hornet'], [
            'equal', 2, 3, '21,2587,16,ford maverick'], ['delete', 3, '-', '25,"2489",15,honda civic ---> DEL'], ['delete', 4, '-', '24,あ2430,14.5,audi 100 ls ---> DEL'], ['insert', '-', 4, 'ADD ---> 27,2130,14.5,datsun pl510'], ['insert', '-', 5, 'ADD ---> 25,"2489?",15,honda civic']])
     runtimeit('compare(data_a, data_b, keya=lambda x: x, keyb=lambda x: x)', 'data_a={};data_b={}'.format(data_a, data_b))
 
