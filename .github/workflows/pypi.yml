@@ -89,6 +89,7 @@ jobs:
 
    build_arm64_python:
       runs-on: ubuntu-20.04
+      continue-on-error: true
       name:    Build on ubuntu-20.04 aarch64
       strategy:
          max-parallel: 5
