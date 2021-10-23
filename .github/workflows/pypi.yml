@@ -25,7 +25,7 @@ jobs:
                   macos-latest
             ]
             python-version: [
-                  2.7,
+                  # 2.7,
                   3.6,
                   3.7,
                   3.8,
@@ -93,7 +93,8 @@ jobs:
       strategy:
          max-parallel: 5
          matrix:
-            python-version: [ python27,
+            python-version: [ 
+                              # python27,
                               python36,
                               python37,
                               python38,
