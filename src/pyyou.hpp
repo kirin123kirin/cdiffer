@@ -208,6 +208,11 @@ class pyview_t {
                 data_[i] = (CharT)PyObject_Hash(item);
             } else {
                 PyObject* tmp = PySequence_Tuple(item);
+                if (tmp == NULL){
+                    data_[i] = NULL;
+                    Py_DECREF(item);
+                    continue;
+                }
                 data_[i] = (CharT)PyObject_Hash(tmp);
                 if((PySequence_SetItem(py, (Py_ssize_t)i, tmp)) == -1) {
                     PyErr_Format(PyExc_ReferenceError, "Unknown panic, pyyou.hpp pyview_t class.");
@@ -444,6 +449,12 @@ class pyview {
                 data_64[i] = (uint64_t)PyObject_Hash(item);
             } else {
                 PyObject* tmp = PySequence_Tuple(item);
+                if (tmp == NULL){
+                    data_64[i] = NULL;
+                    Py_DECREF(item);
+                    continue;
+                }
+
                 data_64[i] = (uint64_t)PyObject_Hash(tmp);
                 if((PySequence_SetItem(py, (Py_ssize_t)i, tmp)) == -1) {
                     PyErr_Format(PyExc_ReferenceError, "Unknown panic, pyyou.hpp pyview_t class.");

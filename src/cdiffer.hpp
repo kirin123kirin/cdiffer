@@ -1545,7 +1545,7 @@ class Compare {
                     return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
                 }
 
-                int DispOrder = -1, subseq = 0; //@todo for segmentation fault test
+                int DispOrder = -1, subseq = 0;
 
                 PyObject* id_a = PySequence_GetItem(row, 1);
                 if(id_a == NULL) {
