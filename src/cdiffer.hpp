@@ -1291,9 +1291,9 @@ class Compare {
         if(keyb)
             Py_XDECREF(b);
         if(idxa)
-            PyMem_DEL(idxa);
+            PyMem_Free(idxa);
         if(idxb)
-            PyMem_DEL(idxb);
+            PyMem_Free(idxb);
         if(need_clean_cv)
             Py_XDECREF(condition_value);
         if(need_clean_nv)
@@ -1311,6 +1311,9 @@ class Compare {
         PyObject* argTuple = PyTuple_New(0);
         PyObject* keywords = PyDict_New();
         PyObject* keyString = PyUnicode_FromString("key");
+        if(argTuple == NULL || keywords == NULL || keyString == NULL)
+            return PyErr_Format(PyExc_MemoryError, "Failed setting key function object.");
+
         PyDict_SetItem(keywords, keyString, key);
         Py_ssize_t len = PyObject_Length(list);
         if(len == -1)
@@ -1339,9 +1342,19 @@ class Compare {
         }
 
         PyObject* sortMethod = PyObject_GetAttrString(newlist, "sort");
+        if(sortMethod == NULL) {
+            Py_DECREF(keyString);
+            Py_DECREF(keywords);
+            Py_DECREF(argTuple);
+            return PyErr_Format(PyExc_TypeError, "Can not call sort method.");
+        }
 
         PyObject* result = PyObject_Call(sortMethod, argTuple, keywords);
         if(result == NULL) {
+            Py_DECREF(sortMethod);
+            Py_DECREF(keyString);
+            Py_DECREF(keywords);
+            Py_DECREF(argTuple);
             return PyErr_Format(PyExc_TypeError, "Can not call sort method.");
         }
 
@@ -1349,11 +1362,13 @@ class Compare {
         Py_DECREF(sortMethod);
 
         idxlen = (std::size_t)len;
-        indexes = PyMem_New(int, idxlen);
+        indexes = (int*)PyMem_Malloc(idxlen * sizeof(int));
         std::fill(indexes, indexes + idxlen, 0);
 
         for(Py_ssize_t i = 0; i < len; ++i) {
             PyObject* row = PySequence_GetItem(newlist, i);
+            if(row == NULL)
+                return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
             indexes[i] = idict[uint64_t(row)];
             Py_DECREF(row);
         }
@@ -1679,7 +1694,7 @@ class Compare {
 
         if(needsort) {
             std::sort(sortcontainer.begin(), sortcontainer.end());
-            std::size_t j = header;
+            Py_ssize_t j = header;
             for(auto&& it : sortcontainer)
                 PyList_SetItem(ops, j++, it.second);
         }
