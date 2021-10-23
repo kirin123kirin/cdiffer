@@ -1031,19 +1031,19 @@ data_b = """24,2372,15,toyota corona mark ii
 lb = [x.split(",") for x in data_b]
 
 def test_compare_key_1d_keysort_and_perf():
-    if os.name == "nt":  # # @todo Reason Unknown Error(Segmentation Fault error in (macos, linux) of python3.8)
-        print(compare(data_a, data_b, keya=lambda x: x, keyb=lambda x: x) == [['tag', 'index_a', 'index_b', 'data'], ['equal', 0, 0, '24,2372,15,toyota corona mark ii'], ['insert', '-', 1, 'ADD ---> 22,2833,15.5,plymouth duster'], ['equal', 1, 2, '18,2774,15.5,amc hornet'], ['equal', 2, 3, '21,2587,16,ford maverick'], ['delete', 3, '-', '25,"2489",15,honda civic ---> DEL'], ['delete', 4, '-', '24,あ2430,14.5,audi 100 ls ---> DEL'], ['insert', '-', 4, 'ADD ---> 27,2130,14.5,datsun pl510'], ['insert', '-', 5, 'ADD ---> 25,"2489?",15,honda civic']])
+    # if os.name == "nt":  # # @todo Reason Unknown Error(Segmentation Fault error in (macos, linux) of python3.8)
+    assert(compare(data_a, data_b, keya=lambda x: x, keyb=lambda x: x) == [['tag', 'index_a', 'index_b', 'data'], ['equal', 0, 0, '24,2372,15,toyota corona mark ii'], ['insert', '-', 1, 'ADD ---> 22,2833,15.5,plymouth duster'], ['equal', 1, 2, '18,2774,15.5,amc hornet'], ['equal', 2, 3, '21,2587,16,ford maverick'], ['delete', 3, '-', '25,"2489",15,honda civic ---> DEL'], ['delete', 4, '-', '24,あ2430,14.5,audi 100 ls ---> DEL'], ['insert', '-', 4, 'ADD ---> 27,2130,14.5,datsun pl510'], ['insert', '-', 5, 'ADD ---> 25,"2489?",15,honda civic']])
     runtimeit('compare(data_a, data_b, keya=lambda x: x, keyb=lambda x: x)', 'data_a={};data_b={}'.format(data_a, data_b))
 
 def test_compare_key_list_of_list_and_perf():
-    print(compare(la, lb, keya=lambda x: x[-1], keyb=lambda x: x[-1]) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'], ['equal', 0, 0, '24', '2372', '15', 'toyota corona mark ii'], ['insert', '-', 1, 'ADD ---> 22', 'ADD ---> 2833', 'ADD ---> 15.5', 'ADD ---> plymouth duster'], ['equal', 1, 2, '18', '2774', '15.5', 'amc hornet'], ['equal', 2, 3, '21', '2587', '16', 'ford maverick'], ['replace', 3, 5, '25', '"2489" ---> "2489?"', '15', 'honda civic'], ['delete', 4, '-', '24 ---> DEL', 'あ2430 ---> DEL', '14.5 ---> DEL', 'audi 100 ls ---> DEL'], ['insert', '-', 4, 'ADD ---> 27', 'ADD ---> 2130', 'ADD ---> 14.5', 'ADD ---> datsun pl510']])
-    print(compare(la, lb, keya=lambda x: x[-1], keyb=lambda x: x[-1]) == compare(la, lb, keya=lambda x: x[-1], keyb=lambda x: x[-1]))
+    assert(compare(la, lb, keya=lambda x: x[-1], keyb=lambda x: x[-1]) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'], ['equal', 0, 0, '24', '2372', '15', 'toyota corona mark ii'], ['insert', '-', 1, 'ADD ---> 22', 'ADD ---> 2833', 'ADD ---> 15.5', 'ADD ---> plymouth duster'], ['equal', 1, 2, '18', '2774', '15.5', 'amc hornet'], ['equal', 2, 3, '21', '2587', '16', 'ford maverick'], ['replace', 3, 5, '25', '"2489" ---> "2489?"', '15', 'honda civic'], ['delete', 4, '-', '24 ---> DEL', 'あ2430 ---> DEL', '14.5 ---> DEL', 'audi 100 ls ---> DEL'], ['insert', '-', 4, 'ADD ---> 27', 'ADD ---> 2130', 'ADD ---> 14.5', 'ADD ---> datsun pl510']])
+    assert(compare(la, lb, keya=lambda x: x[-1], keyb=lambda x: x[-1]) == compare(la, lb, keya=lambda x: x[-1], keyb=lambda x: x[-1]))
     runtimeit('compare(la, lb, keya=lambda x: x[-1], keyb=lambda x: x[-1])', 'la={};lb={}'.format(la, lb))
 
 def test_compare_key_iter_of_list_and_perf():
     a = list(map(iter, la))
     b = list(map(iter, lb))
-    print(compare(a, b, keya=lambda x: x[-1], keyb=lambda x: x[-1]) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'], ['equal', 0, 0, '24', '2372', '15', 'toyota corona mark ii'], ['insert', '-', 1, 'ADD ---> 22', 'ADD ---> 2833', 'ADD ---> 15.5', 'ADD ---> plymouth duster'], ['equal', 1, 2, '18', '2774', '15.5', 'amc hornet'], ['equal', 2, 3, '21', '2587', '16', 'ford maverick'], ['replace', 3, 5, '25', '"2489" ---> "2489?"', '15', 'honda civic'], ['delete', 4, '-', '24 ---> DEL', 'あ2430 ---> DEL', '14.5 ---> DEL', 'audi 100 ls ---> DEL'], ['insert', '-', 4, 'ADD ---> 27', 'ADD ---> 2130', 'ADD ---> 14.5', 'ADD ---> datsun pl510']])
+    assert(compare(a, b, keya=lambda x: x[-1], keyb=lambda x: x[-1]) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'], ['equal', 0, 0, '24', '2372', '15', 'toyota corona mark ii'], ['insert', '-', 1, 'ADD ---> 22', 'ADD ---> 2833', 'ADD ---> 15.5', 'ADD ---> plymouth duster'], ['equal', 1, 2, '18', '2774', '15.5', 'amc hornet'], ['equal', 2, 3, '21', '2587', '16', 'ford maverick'], ['replace', 3, 5, '25', '"2489" ---> "2489?"', '15', 'honda civic'], ['delete', 4, '-', '24 ---> DEL', 'あ2430 ---> DEL', '14.5 ---> DEL', 'audi 100 ls ---> DEL'], ['insert', '-', 4, 'ADD ---> 27', 'ADD ---> 2130', 'ADD ---> 14.5', 'ADD ---> datsun pl510']])
     try:
         compare(a, b, keya=lambda x: x[-1], keyb=lambda x: x[-1])
     except RuntimeError:

@@ -1179,50 +1179,6 @@ class Compare {
           DEL_Flag(NULL),
           ADD_Flag(NULL) {}
 
-    Compare(PyObject* args, PyObject* kwargs)
-        : a(),
-          b(),
-          keya(NULL),
-          keyb(NULL),
-          header(true),
-          diffonly(false),
-          rep_rate(REPLACEMENT_RATE),
-          startidx(0),
-          condition_value(NULL),
-          na_value(NULL),
-          delete_sign_value(NULL),
-          insert_sign_value(NULL),
-          idxa(NULL),
-          idxb(NULL),
-          len_idxa(NULL),
-          len_idxb(NULL),
-          maxcol(0),
-          need_clean_cv(false),
-          need_clean_nv(false),
-          DEL_Flag(NULL),
-          ADD_Flag(NULL) {
-        const char* kwlist[13] = {"a",
-                                  "b",
-                                  "keya",
-                                  "keyb",
-                                  "header",
-                                  "diffonly",
-                                  "rep_rate",
-                                  "startidx",
-                                  "condition_value",
-                                  "na_value",
-                                  "delete_sign_value",
-                                  "insert_sign_value",
-                                  NULL};
-
-        if(!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|OOiiiiOOOO", (char**)kwlist, &a, &b, &keya, &keyb, &header,
-                                        &diffonly, &rep_rate, &startidx, &condition_value, &na_value,
-                                        &delete_sign_value, &insert_sign_value))
-            return;
-
-        initialize();
-    }
-
     Compare(PyObject* _a,
             PyObject* _b,
             PyObject* _keya,
@@ -1235,8 +1191,8 @@ class Compare {
             PyObject* _na_value,
             PyObject* _delete_sign_value,
             PyObject* _insert_sign_value)
-        : a(_a),
-          b(_b),
+        : a(),
+          b(),
           keya(_keya),
           keyb(_keyb),
           header(_header),
@@ -1256,14 +1212,8 @@ class Compare {
           need_clean_nv(false),
           DEL_Flag(NULL),
           ADD_Flag(NULL) {
-        initialize();
-    }
-
-    void initialize() {
-        if(keya)
-            a = sortWithKey(len_idxa, idxa, a, keya);
-        if(keyb)
-            b = sortWithKey(len_idxb, idxb, b, keyb);
+        a = keya ? sortWithKey(len_idxa, idxa, _a, keya) : _a;
+        b = keyb ? sortWithKey(len_idxb, idxb, _b, keyb) : _b;
 
         if(condition_value == NULL) {
             condition_value = PyUnicode_FromString(" ---> ");
@@ -1337,7 +1287,7 @@ class Compare {
                 idict[uint64_t(row)] = (int)i;
             }
             if(PyErr_Occurred()) {
-                return PyErr_Format(PyExc_TypeError, "Can not append index data.");
+                return NULL;
             }
         }
 
@@ -1355,7 +1305,7 @@ class Compare {
             Py_DECREF(keyString);
             Py_DECREF(keywords);
             Py_DECREF(argTuple);
-            return PyErr_Format(PyExc_TypeError, "Can not call sort method.");
+            return NULL;
         }
 
         Py_DECREF(result);
@@ -1517,8 +1467,7 @@ class Compare {
    public:
     PyObject* _1d(bool is_initialcall = true) {
         if(a == NULL || b == NULL)
-            return PyErr_Format(PyExc_RuntimeError,
-                                "Can not make data.\n Check your `a` or `b` data is stop iteration?");
+            return NULL;
 
         if(is_initialcall) {
             Py_INCREF(a);
@@ -1557,10 +1506,10 @@ class Compare {
                     PySequence_SetItem(row, 1, id_a);
                 } else {
                     std::size_t ia = (std::size_t)PyLong_AsLong(id_a);
-                    if (len_idxa <= ia)
+                    if(len_idxa <= ia)
                         return PyErr_Format(PyExc_RuntimeError, "Fail Find line index number.\nUnknown reason...");
                     PySequence_SetItem(row, 1, PyLong_FromLong(idxa[ia] + startidx));
-                    if (DispOrder == -1)
+                    if(DispOrder == -1)
                         DispOrder = 10 * idxa[ia];
                     DispOrder = 10 * (idxa[ia] < DispOrder ? idxa[ia] : DispOrder);
                     Py_DECREF(id_a);
@@ -1576,12 +1525,12 @@ class Compare {
                     PySequence_SetItem(row, 2, id_b);
                 } else {
                     std::size_t ib = (std::size_t)PyLong_AsLong(id_b);
-                    if (len_idxb <= ib)
+                    if(len_idxb <= ib)
                         return PyErr_Format(PyExc_RuntimeError, "Fail Find line index number.\nUnknown reason...");
                     PySequence_SetItem(row, 2, PyLong_FromLong(idxb[ib] + startidx));
-                    if (DispOrder == -1)
+                    if(DispOrder == -1)
                         DispOrder = 10 * idxb[ib];
-                    if(subseq == 0) 
+                    if(subseq == 0)
                         DispOrder = (DispOrder + (10 * idxb[ib])) / 2;
                     else
                         DispOrder = (10 * idxb[ib]) < DispOrder ? 10 * idxb[ib] : DispOrder;
@@ -1614,8 +1563,7 @@ class Compare {
 
     PyObject* _2d() {
         if(a == NULL || b == NULL)
-            return PyErr_Format(PyExc_RuntimeError,
-                                "Can not make data.\n Check your `a` or `b` data is stop iteration?");
+            return NULL;
 
         Py_ssize_t len, i;
         std::pair<std::size_t, PyObject*> intercompresult;
@@ -1660,11 +1608,11 @@ class Compare {
                 if(ctag == NULL)
                     return PyErr_Format(PyExc_IndexError, "Failed get tag value.");
                 if(PyObject_RichCompareBool(ctag, DIFFTP[0][need_ommit], Py_NE)) {
-                        Py_DECREF(ctag);
-                        Py_DECREF(ops);
-                        Py_DECREF(df);
-                        Py_DECREF(row);
-                        return this->_1d(false);
+                    Py_DECREF(ctag);
+                    Py_DECREF(ops);
+                    Py_DECREF(df);
+                    Py_DECREF(row);
+                    return this->_1d(false);
                 }
                 Py_DECREF(ctag);
             }
@@ -1726,8 +1674,8 @@ class Compare {
 
     PyObject* _3d() {
         if(a == NULL || b == NULL)
-            return PyErr_Format(PyExc_RuntimeError,
-                                "Can not make data.\n Check your `a` or `b` data is stop iteration?");
+            return NULL;
+
         Py_ssize_t len, i, j, slen;
 
         PyObject* la = PyDict_Keys(a);
@@ -1785,8 +1733,8 @@ class Compare {
                 if(da == Py_None) {
                     need_decref_a = false;
                 } else if(PyIter_Check(da) || PyGen_Check(da) || PyRange_Check(da)) {
-                    da = PySequence_Fast(
-                        da, "from `da` iterator");  //@note PySequence_Fast reason : memory leak when PySequence_List or PySequence_Tuple
+                    da = PySequence_Fast(da, "from `da` iterator");  //@note PySequence_Fast reason : memory leak when
+                                                                     //PySequence_List or PySequence_Tuple
                 } else if(PyTuple_Check(da)) {
                     if(PyObject_Length(da) == 0)
                         Py_INCREF(da);
@@ -1816,8 +1764,8 @@ class Compare {
                 if(db == Py_None) {
                     need_decref_b = false;
                 } else if(PyIter_Check(db) || PyGen_Check(db) || PyRange_Check(db)) {
-                    db = PySequence_Fast(
-                        db, "from `db` iterator");  //@note PySequence_Fast reason : memory leak when PySequence_List or PySequence_Tuple
+                    db = PySequence_Fast(db, "from `db` iterator");  //@note PySequence_Fast reason : memory leak when
+                                                                     //PySequence_List or PySequence_Tuple
                 } else if(PyTuple_Check(db)) {
                     if(PyObject_Length(db) == 0)
                         Py_INCREF(db);
