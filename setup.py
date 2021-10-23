@@ -59,7 +59,6 @@ CF = """
 Development Status :: 5 - Production/Stable
 License :: OSI Approved :: MIT License
 Programming Language :: C
-Programming Language :: Python :: 2.7
 Programming Language :: Python :: 3.6
 Programming Language :: Python :: 3.7
 Programming Language :: Python :: 3.8
@@ -70,6 +69,7 @@ Operating System :: Microsoft :: Windows
 Operating System :: MacOS
 Operating System :: POSIX
 """
+# Programming Language :: Python :: 2.7
 
 # Readme read or edit
 readme = pjoin(dirname(__file__), "README.md")

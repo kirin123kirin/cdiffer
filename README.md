@@ -12,7 +12,7 @@ pip install cdiffer
 
 # Requirement
 * python3.6 or later
-* python2.7
+<!-- * python2.7 -->
 
 # cdiffer.dist
 Compute absolute Levenshtein distance of two strings.
