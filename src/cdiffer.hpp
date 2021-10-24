@@ -326,8 +326,6 @@ class Diff_t {
         this->diffonly = _diffonly;
         this->rep_rate = _rep_rate;
 
-        std::cout << "d-1" << std::endl; //@todo
-
         if(b.kind == 1) {
             /* for ASCII */
             if(B < 8) {
@@ -345,7 +343,6 @@ class Diff_t {
             }
         }
 
-        std::cout << "d-2" << std::endl; //@todo
         if((a.canonical || b.canonical) && (A + B <= 1 || (A == 1 && B == 1))) {
             PyObject* ops = PyList_New(0);
             if(ops == NULL)
@@ -361,26 +358,21 @@ class Diff_t {
         }
 
         else if(B < 64) {
-            std::cout << "d-3" << std::endl; //@todo
             if(B < 8) {
-                std::cout << "d-4" << std::endl; //@todo
                 MappingBlock<uint8_t> fp = {};
                 fp.pair =
                     std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
                 return core_difference(fp);
             } else if(B < 16) {
-                std::cout << "d-5" << std::endl; //@todo
                 MappingBlock<uint16_t> fp = {};
                 fp.pair =
                     std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
                 return core_difference(fp);
             } else if(B < 32) {
-                std::cout << "d-6" << std::endl; //@todo
                 MappingBlock<uint32_t, 257> fp = {};
                 fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
                 return core_difference(fp);
             } else {
-                std::cout << "d-7" << std::endl; //@todo
                 MappingBlock<uint64_t, 521> fp = {};
                 fp.pair = std::array<std::array<uint64_t, 521>, 2>{
                     {{ZERO_256, ZERO_256, ZERO_8, ZERO_1}, {ZERO_256, ZERO_256, ZERO_8, ZERO_1}}};
@@ -521,25 +513,30 @@ class Diff_t {
 
         std::cout << "c-1" << std::endl; //@todo
         PyObject* ops = PyList_New(0);
+        std::cout << "c-2" << std::endl; //@todo
         if(ops == NULL)
             return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
 
+        std::cout << "c-3" << std::endl; //@todo
         if(a == b) {
             if(!diffonly)
                 for(x = 0; x < A; x++)
                     makelist(ops, ED_EQUAL, x, x, a.py, b.py, false);
             return ops;
         }
+        std::cout << "c-4" << std::endl; //@todo
         if(B == 0) {
             for(x = 0; x < A; x++)
                 makelist(ops, ED_DELETE, x, 0, a.py, b.py, swapflag);
             return ops;
         }
+        std::cout << "c-5" << std::endl; //@todo
         if(A == 0) {
             for(y = 0; y < B; y++)
                 makelist(ops, ED_INSERT, 0, y, a.py, b.py, swapflag);
             return ops;
         }
+        std::cout << "c-6" << std::endl; //@todo
         if(A == 1 && B == 1) {
             if(rep_rate > 0 && ((a.canonical && b.canonical) ||
                                 Diff_t<pyview>(a.getitem(0), b.getitem(0), true).similar(rep_rate) * 100 < rep_rate)) {
@@ -551,20 +548,26 @@ class Diff_t {
             return ops;
         }
 
+        std::cout << "c-6" << std::endl; //@todo
         PyObject** pyn = new PyObject*[B];
+        std::cout << "c-7" << std::endl; //@todo
         if(pyn == NULL) {
             return PyErr_NoMemory();
         }
+        std::cout << "c-8" << std::endl; //@todo
         for(std::size_t n = 0; n < B; n++) {
             fp[b[n]] |= uint64_t(1) << n % BITS;
             pyn[n] = PyLong_FromSize_t(n);
         }
+        std::cout << "c-9" << std::endl; //@todo
 
         for(y = 0, len = BITS < B ? BITS : B; y < len; ++y)
             fp[b[y]] |= 1ULL << (y % BITS);
 
+        std::cout << "c-10" << std::endl; //@todo
         x = 0;
 
+        std::cout << "c-11" << std::endl; //@todo
         while(i < A && j < B) {
             auto ai = a[i];
 
@@ -614,11 +617,14 @@ class Diff_t {
             x = i < A - 1 ? i : A - 1;
         }
 
+        std::cout << "c-12" << std::endl; //@todo
         for(; j < B; ++j)
             makelist_pyn(ops, pyn, ED_INSERT, x, j);
         // for(std::size_t n = 0; n < B; n++)
         //     Py_DECREF(pyn[n]);
+        std::cout << "c-13" << std::endl; //@todo
         delete[] pyn;
+        std::cout << "c-14" << std::endl; //@todo
         return ops;
     }
     template <typename Storage>
