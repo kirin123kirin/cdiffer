@@ -588,7 +588,7 @@ class Diff_t {
                     std::cout << "c10_" << i << std::endl; //@todo
                     if(rep_rate > 0 &&
                        ((a.canonical && b.canonical) ||
-                        Diff_t<pyview>(a.getitem(x), b.getitem(j), true).similar(rep_rate) * 100 < rep_rate)) {
+                        Diff_t<pyview>(a.getitem(x), b.getitem(j)).similar(rep_rate) * 100 < rep_rate)) {
                         std::cout << "c11_" << i << std::endl; //@todo
                         makelist_pyn(ops, pyn, ED_DELETE, x, j);
                         std::cout << "c12_" << i << std::endl; //@todo
@@ -599,14 +599,15 @@ class Diff_t {
                         makelist_pyn(ops, pyn, ED_REPLACE, x, j);
                         std::cout << "c15_" << i << std::endl; //@todo
                     }
+                    std::cout << "c16_" << i << std::endl; //@todo
 
                 } else {
-                    std::cout << "c16_" << i << std::endl; //@todo
+                    std::cout << "c17_" << i << std::endl; //@todo
                     makelist_pyn(ops, pyn, ED_INSERT, x, j);
                 }
             }
 
-            std::cout << "c17_" << i << std::endl; //@todo
+            std::cout << "c18_" << i << std::endl; //@todo
             do {
                 mj = sj % BITS;
                 fp[b[sj]] &= ~(1ULL << mj);
@@ -618,11 +619,11 @@ class Diff_t {
                 }
             } while(++sj < j);
 
-            std::cout << "c18_" << i << std::endl; //@todo
+            std::cout << "c19_" << i << std::endl; //@todo
             i += 1;
             j += 1;
             x = i < A - 1 ? i : A - 1;
-            std::cout << "c19_" << i << std::endl; //@todo
+            std::cout << "c20_" << i << std::endl; //@todo
         }
 
         for(; j < B; ++j)
