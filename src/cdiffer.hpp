@@ -913,10 +913,15 @@ class Diff {
     Diff() : a(NULL), b(NULL), kind1(0), kind2(0) {}
 
     Diff(PyObject* _a, PyObject* _b) : a(_a), b(_b) {
+        std::cout << "differ_1" << std::endl; //@todo
         kind1 = (int)PyAny_KIND(a);
+        std::cout << "differ_2" << std::endl; //@todo
         kind2 = (int)PyAny_KIND(b);
+        std::cout << "differ_3" << std::endl; //@todo
         if(kind1 != kind2)
             kind1 = -kind1;
+        std::cout << "differ_4" << std::endl; //@todo
+
     }
 
     std::size_t distance(std::size_t max = error_n, bool weight = true) {
@@ -946,6 +951,8 @@ class Diff {
     }
 
     PyObject* difference(bool _diffonly = false, int _rep_rate = REPLACEMENT_RATE) {
+        std::cout << "d-1" << std::endl; //@todo
+
         if(PyObject_RichCompareBool(a, b, Py_EQ)) {
             std::size_t len1 = error_n, i;
             PyObject* ops = PyList_New(0);
@@ -965,6 +972,7 @@ class Diff {
             return ops;
         }
 
+        std::cout << "d-2" << std::endl; //@todo
         if(a == Py_None && b != Py_None) {
             std::size_t len2 = PyAny_Length(b);
             if(len2 != error_n) {
@@ -981,6 +989,7 @@ class Diff {
                 return ops;
             }
         }
+        std::cout << "d-3" << std::endl; //@todo
         if(b == Py_None && a != Py_None) {
             std::size_t len1 = PyAny_Length(a);
             if(len1 != error_n) {
@@ -1002,8 +1011,10 @@ class Diff {
         else if(kind1 == 2)
             return Diff_t<pyview_t<uint16_t>>(a, b).difference(_diffonly, _rep_rate);
         else if(kind1 == 8) {
+            std::cout << "d-4" << std::endl; //@todo
             return Diff_t<pyview_t<uint64_t>>(a, b).difference(_diffonly, _rep_rate);
         } else if(kind1 < 0) {
+            std::cout << "d-5" << std::endl; //@todo
             std::size_t len1 = PyAny_Length(a);
             std::size_t len2 = PyAny_Length(b);
 
@@ -1030,6 +1041,7 @@ class Diff {
             }
         } else if(kind1 == 4)
             return Diff_t<pyview_t<uint32_t>>(a, b).difference(_diffonly, _rep_rate);
+        std::cout << "d-99" << std::endl; //@todo
         return PyErr_Format(PyExc_ValueError, "Unknown data..");
     }
 
@@ -1201,7 +1213,6 @@ class Compare {
           need_clean_nv(false),
           DEL_Flag(NULL),
           ADD_Flag(NULL) {
-        std::cout << "compare_1" << std::endl; //@todo
         const char* kwlist[13] = {"a",
                                   "b",
                                   "keya",
@@ -1216,15 +1227,12 @@ class Compare {
                                   "insert_sign_value",
                                   NULL};
 
-        std::cout << "compare_2" << std::endl; //@todo
         if(!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|OOiiiiOOOO", (char**)kwlist, &a, &b, &keya, &keyb, &header,
                                         &diffonly, &rep_rate, &startidx, &condition_value, &na_value,
                                         &delete_sign_value, &insert_sign_value))
             return;
 
-        std::cout << "compare_3" << std::endl; //@todo
         initialize();
-        std::cout << "compare_4" << std::endl; //@todo
     }
 
     Compare(PyObject* _a,
@@ -1264,14 +1272,11 @@ class Compare {
     }
 
     void initialize() {
-        std::cout << "init_1" << std::endl; //@todo
 
         if(keya)
             a = sortWithKey(len_idxa, idxa, a, keya);
-        std::cout << "init_2" << std::endl; //@todo
         if(keyb)
             b = sortWithKey(len_idxb, idxb, b, keyb);
-        std::cout << "init_3" << std::endl; //@todo
 
         if(condition_value == NULL) {
             condition_value = PyUnicode_FromString(" ---> ");
@@ -1280,7 +1285,6 @@ class Compare {
             PyErr_Format(PyExc_AttributeError, "`condition_value` should be unicode string.");
             return;
         }
-        std::cout << "init_4" << std::endl; //@todo
 
         if(na_value == NULL) {
             na_value = PyUnicode_FromString("-");
@@ -1289,12 +1293,9 @@ class Compare {
             PyErr_Format(PyExc_AttributeError, "`na_value` should be unicode string.");
             return;
         }
-        std::cout << "init_5" << std::endl; //@todo
 
         DEL_Flag = delete_sign_value ? delete_sign_value : PyUnicode_FromString("DEL");
-        std::cout << "init_6" << std::endl; //@todo
         ADD_Flag = insert_sign_value ? insert_sign_value : PyUnicode_FromString("ADD");
-        std::cout << "init_7" << std::endl; //@todo
     }
 
     ~Compare() {
@@ -1535,21 +1536,17 @@ class Compare {
         if(a == NULL || b == NULL)
             return PyErr_Format(PyExc_RuntimeError,
                                 "Can not make data.\n Check your `a` or `b` data is stop iteration?");
-        std::cout << "1" << std::endl; //@todo
 
         if(is_initialcall) {
             Py_INCREF(a);
             Py_INCREF(b);
         }
 
-        std::cout << "2" << std::endl; //@todo
 
         PyObject* cmp = Diff(a, b).compare(diffonly, rep_rate, startidx, condition_value, na_value, DEL_Flag, ADD_Flag);
-        std::cout << "3" << std::endl; //@todo
         if(cmp == NULL || PyErr_Occurred())
             return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
 
-        std::cout << "4" << std::endl; //@todo
 
         Py_ssize_t len = PyObject_Length(cmp);
         if(len == -1) {
@@ -1557,7 +1554,6 @@ class Compare {
             return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
         }
 
-        std::cout << "5" << std::endl; //@todo
 
         if(len > 0 && (keya || keyb)) {
             std::vector<std::pair<int, PyObject*>> tmp;
@@ -1571,153 +1567,121 @@ class Compare {
                     return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.\nUnknown Reason.");
                 }
 
-                std::cout << "6-" << i << std::endl; //@todo
 
                 int DispOrder = -1, subseq = 0;
                 PyObject* ptag = PySequence_GetItem(row, 0);
                 const char c_tag = _PyUnicode_AsString(ptag)[0];
 
-                std::cout << "7-" << i << std::endl; //@todo
 
                 PyObject* id_a = PySequence_GetItem(row, 1);
-                std::cout << "8-" << i << std::endl; //@todo
                 if(id_a == NULL) {
                     Py_DECREF(cmp);
                     Py_DECREF(row);
                     tmp.clear();
-                    std::cout << "8e-" << i << std::endl; //@todo
                     return PyErr_Format(PyExc_ValueError, "Fail get comapre data. Not Found arg1 index number");
                 } else if(c_tag == 'i') {
                 // } else if(id_a == na_value) {
                     subseq = 2;
                     PySequence_SetItem(row, 1, id_a);
-                    std::cout << "9-" << i << std::endl; //@todo
                 } else {
-                    std::cout << "10-" << i << std::endl; //@todo
                     std::size_t ia = (std::size_t)PyLong_AsLong(id_a);
                     if(len_idxa <= ia) {
                         Py_DECREF(id_a);
                         Py_DECREF(cmp);
                         Py_DECREF(row);
                         tmp.clear();
-                        std::cout << "10e-" << i << std::endl; //@todo
                         return PyErr_Format(PyExc_IndexError, "Fail arg1 data index number is Stack OverRun.\nUnknown reason...");
                     }
                     PySequence_SetItem(row, 1, PyLong_FromLong(idxa[ia] + startidx));
-                    std::cout << "11-" << i << std::endl; //@todo
                     if (DispOrder == -1)
                         DispOrder = 10 * idxa[ia];
                     DispOrder = 10 * (idxa[ia] < DispOrder ? idxa[ia] : DispOrder);
                     Py_DECREF(id_a);
                 }
                 PyObject* id_b = PySequence_GetItem(row, 2);
-                std::cout << "12-" << i << std::endl; //@todo
                 if(id_b == NULL) {
                     Py_DECREF(id_a);
                     Py_DECREF(cmp);
                     Py_DECREF(row);
                     tmp.clear();
-                    std::cout << "12e-" << i << std::endl; //@todo
                     return PyErr_Format(PyExc_ValueError, "Fail get comapre data. Not Found arg2 index number");
                 } else if(c_tag == 'd') {
                 // } else if(id_b == na_value) {
                     subseq = 1;
                     PySequence_SetItem(row, 2, id_b);
-                    std::cout << "13-" << i << std::endl; //@todo
                 } else {
                     std::size_t ib = (std::size_t)PyLong_AsLong(id_b);
-                    std::cout << "14-" << i << std::endl; //@todo
                     if(len_idxb <= ib) {
                         Py_DECREF(id_a);
                         Py_DECREF(id_b);
                         Py_DECREF(cmp);
                         Py_DECREF(row);
                         tmp.clear();
-                        std::cout << "14e-" << i << std::endl; //@todo
                         return PyErr_Format(PyExc_IndexError, "Fail arg2 data index number is Stack OverRun.\nUnknown reason...");
                     }
                     PySequence_SetItem(row, 2, PyLong_FromLong(idxb[ib] + startidx));
-                    std::cout << "15-" << i << std::endl; //@todo
                     if (DispOrder == -1)
                         DispOrder = 10 * idxb[ib];
                     if(subseq == 0) 
                         DispOrder = (DispOrder + (10 * idxb[ib])) / 2;
                     else
                         DispOrder = (10 * idxb[ib]) < DispOrder ? 10 * idxb[ib] : DispOrder;
-                    std::cout << "16-" << i << std::endl; //@todo
                     Py_DECREF(id_b);
                 }
-                std::cout << "17" << std::endl; //@todo
                 DispOrder += subseq;
                 tmp.emplace_back(DispOrder, row);
-                std::cout << "18" << std::endl; //@todo
             }
-            std::cout << "19" << std::endl; //@todo
             std::sort(tmp.begin(), tmp.end());
-            std::cout << "19" << std::endl; //@todo
             for(std::size_t i = 0; i < std::size_t(len); ++i) {
-                std::cout << "20-" << i << std::endl; //@todo
                 PyObject* val = tmp[i].second;
                 PyList_SetItem(cmp, (Py_ssize_t)i, val);
             }
-            std::cout << "21" << std::endl; //@todo
         }
 
-        std::cout << "22" << std::endl; //@todo
         if(header) {
             if(len == 0) {
                 Py_DECREF(cmp);
                 return Py_BuildValue("[[ssss]]", "tag", "index_a", "index_b", "data");
             }
-            std::cout << "23" << std::endl; //@todo
             PyObject* head = Py_BuildValue("[ssss]", "tag", "index_a", "index_b", "data");
             if((PyList_Insert(cmp, 0, head)) == -1) {
                 Py_XDECREF(head);
                 Py_XDECREF(cmp);
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _1d() near");
             }
-            std::cout << "24" << std::endl; //@todo
             Py_DECREF(head);
         }
 
-        std::cout << "25" << std::endl; //@todo
         return cmp;
     }
 
     PyObject* _2d() {
-        std::cout << "pre2d_1" << std::endl; //@todo
         if(a == NULL || b == NULL)
             return PyErr_Format(PyExc_RuntimeError,
                                 "Can not make data.\n Check your `a` or `b` data is stop iteration?");
 
-        std::cout << "pre2d_2" << std::endl; //@todo
         Py_ssize_t len, i;
         bool needsort = keya || keyb;
+        //@todo segmentation fault bug reason target
         PyObject* df = Diff(a, b).difference(diffonly, rep_rate);
 
-        std::cout << "pre2d_3" << std::endl; //@todo
         if(df == NULL) {
             return PyErr_Format(PyExc_ValueError, NULL);
         }
 
-        std::cout << "pre2d_4" << std::endl; //@todo
         if((len = PyObject_Length(df)) == -1) {
             return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() head");
         }
 
-        std::cout << "pre2d_5" << std::endl; //@todo
         PyObject* ops = PyList_New(len + header);
         if(ops == NULL)
             return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
 
-        std::cout << "pre2d_6" << std::endl; //@todo
         std::vector<std::pair<std::size_t, PyObject*>> sortcontainer(0);
 
-        std::cout << "pre2d_7" << std::endl; //@todo
         if(needsort)
             sortcontainer.reserve((std::size_t)len + header);
 
-        std::cout << "pre2d_8" << std::endl; //@todo
         int need_ommit = 0;
         if(a == Py_None &&
            !(PyList_Check(b) || PyTuple_Check(b) || PyIter_Check(b) || PyGen_Check(b) || PyRange_Check(b)))
@@ -1726,23 +1690,17 @@ class Compare {
                 b == Py_None)
             need_ommit = ED_DELETE;
 
-        std::cout << "2d_1" << std::endl; //@todo
-
         for(i = 0; i < len; i++) {
             PyObject* row = PySequence_GetItem(df, i);
-
-            std::cout << "2d_1-" << i << std::endl; //@todo
 
             if(row == NULL) {
                 Py_XDECREF(ops);
                 Py_DECREF(df);
                 return PyErr_Format(PyExc_ValueError, "Atribute(`a` or `b`) is not a two-dimensional array.");
             }
-            std::cout << "2d_2-" << i << std::endl; //@todo
 
             if(need_ommit) {
                 PyObject* ctag = PySequence_GetItem(row, 0);
-                std::cout << "2d_3-" << i << std::endl; //@todo
                 if(ctag == NULL)
                     return PyErr_Format(PyExc_IndexError, "Failed get tag value.");
                 if(PyObject_RichCompareBool(ctag, DIFFTP[0][need_ommit], Py_NE)) {
@@ -1757,7 +1715,6 @@ class Compare {
                 Py_DECREF(ctag);
             }
 
-            std::cout << "2d_4-" << i << std::endl; //@todo
             std::pair<std::size_t, PyObject*> intercompresult = intercomplist(row);
 
             if(intercompresult.first == error_n) {
@@ -1768,19 +1725,15 @@ class Compare {
                 return this->_1d(false);
             }
 
-            std::cout << "2d_5-" << i << std::endl; //@todo
-
             if(needsort) {
                 sortcontainer.emplace_back(intercompresult);
             } else {
                 PyList_SetItem(ops, i + header, intercompresult.second);
             }
 
-            std::cout << "2d_6-" << i << std::endl; //@todo
             Py_XDECREF(row);
 
             if(PyErr_Occurred() != NULL) {
-                std::cout << "2d_6e-" << i << std::endl; //@todo
                 Py_XDECREF(intercompresult.second);
                 sortcontainer.clear();
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() below");
@@ -1789,7 +1742,6 @@ class Compare {
 
         Py_CLEAR(df);
 
-        std::cout << "2d_7" << std::endl; //@todo
         if(needsort) {
             std::sort(sortcontainer.begin(), sortcontainer.end());
             Py_ssize_t j = header;
@@ -1797,9 +1749,7 @@ class Compare {
                 PyList_SetItem(ops, j++, it.second);
         }
 
-        std::cout << "2d_8" << std::endl; //@todo
         if(header) {
-            std::cout << "2d_9" << std::endl; //@todo
             PyObject* head = PyList_New(3 + maxcol);
             if(head == NULL) {
                 Py_DECREF(ops);
@@ -1807,7 +1757,6 @@ class Compare {
                 return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
             }
 
-            std::cout << "2d_10" << std::endl; //@todo
             PyList_SetItem(head, 0, PyUnicode_FromString("tag"));
             PyList_SetItem(head, 1, PyUnicode_FromString("index_a"));
             PyList_SetItem(head, 2, PyUnicode_FromString("index_b"));
@@ -1820,7 +1769,6 @@ class Compare {
                     PyList_SetItem(head, 3 + n, PyUnicode_FromString((const char*)colname));
                 }
             }
-            std::cout << "2d_11" << std::endl; //@todo
 
             if((PyList_SetItem(ops, 0, head)) == -1) {
                 Py_DECREF(head);
@@ -1828,10 +1776,8 @@ class Compare {
                 sortcontainer.clear();
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() header");
             }
-            std::cout << "2d_12" << std::endl; //@todo
         }
 
-        std::cout << "2d_13" << std::endl; //@todo
         return ops;
     }
 
