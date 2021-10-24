@@ -325,7 +325,7 @@ class Diff_t {
         this->diffonly = _diffonly;
         this->rep_rate = _rep_rate;
 
-        if(b.kind == 1) {
+        if(a.kind == 1 && b.kind == 1) {
             /* for ASCII */
             if(B < 8) {
                 std::array<uint8_t, 128> fp = {ZERO_128};
@@ -396,7 +396,7 @@ class Diff_t {
         this->diffonly = _diffonly;
         this->rep_rate = _rep_rate;
 
-        if(b.kind == 1) {
+        if(a.kind == 1 && b.kind == 1) {
             /* for ASCII */
             if(B < 8) {
                 std::array<uint8_t, 128> fp = {ZERO_128};
