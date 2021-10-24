@@ -1201,6 +1201,7 @@ class Compare {
           need_clean_nv(false),
           DEL_Flag(NULL),
           ADD_Flag(NULL) {
+        std::cout << "compare_1" << std::endl; //@todo
         const char* kwlist[13] = {"a",
                                   "b",
                                   "keya",
@@ -1215,12 +1216,15 @@ class Compare {
                                   "insert_sign_value",
                                   NULL};
 
+        std::cout << "compare_2" << std::endl; //@todo
         if(!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|OOiiiiOOOO", (char**)kwlist, &a, &b, &keya, &keyb, &header,
                                         &diffonly, &rep_rate, &startidx, &condition_value, &na_value,
                                         &delete_sign_value, &insert_sign_value))
             return;
 
+        std::cout << "compare_3" << std::endl; //@todo
         initialize();
+        std::cout << "compare_4" << std::endl; //@todo
     }
 
     Compare(PyObject* _a,
