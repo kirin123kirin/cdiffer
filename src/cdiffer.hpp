@@ -880,6 +880,9 @@ class Diff_t {
             auto ai = a[i];
             std::cout << "cd_6_" << i << std::endl;   //@todo
             std::cout << "ai = " << ai << std::endl;  //@todo
+            std::cout << "j = " << j << std::endl;  //@todo
+            std::cout << "b.size() = " << b.size() << std::endl;  //@todo
+            std::cout << "b[j] = " << b[j] << std::endl;  //@todo
 
             if(ai == b[j]) {
                 std::cout << "cd_7_" << i << std::endl;  //@todo
