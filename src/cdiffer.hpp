@@ -558,7 +558,7 @@ class Diff_t {
         while(i < A && j < B) {
             auto ai = a[i];
 
-            if(ai == b[j]) {
+            if(ai == b[j]) { //@todo tamani assertion error..... Unknow  Reason.
                 if(!diffonly)
                     makelist_pyn(ops, pyn, ED_EQUAL, x, j);
             } else {
@@ -1812,6 +1812,8 @@ class Compare {
             }
 
             tag = PySequence_GetItem(arr, 0);
+            const char c_tag = _PyUnicode_AsString(tag)[0];
+            Py_XDECREF(tag);
             sa = PySequence_GetItem(arr, 3);
             sb = PySequence_GetItem(arr, 4);
 
@@ -1830,8 +1832,8 @@ class Compare {
                     da = PySequence_Fast(da, "from `da` iterator");  //@note PySequence_Fast reason : memory leak when
                                                                      // PySequence_List or PySequence_Tuple
                 } else if(PyTuple_Check(da)) {
-                    if(PyObject_Length(da) == 0)
-                        Py_INCREF(da);
+                    // if(PyObject_Length(da) == 0)
+                    //     Py_INCREF(da);
                     need_decref_a = false;
                 } else if(PyList_Check(da)) {
                     if(PyObject_Length(da) == 0)
@@ -1839,12 +1841,12 @@ class Compare {
                     else
                         Py_INCREF(da);
                 } else if(PyNumber_Check(da)) {
-                    Py_INCREF(da);
+                    // Py_INCREF(da);
                     need_decref_a = false;
                 }
             } else {
                 if(PyObject_Length(da) == 0) {
-                    Py_INCREF(da);
+                    // Py_INCREF(da);
                     need_decref_a = false;
                 } else {
                     da = Py_BuildValue("[O]", da);
@@ -1870,12 +1872,12 @@ class Compare {
                     else
                         Py_INCREF(db);
                 } else if(PyNumber_Check(db)) {
-                    Py_INCREF(db);
+                    // Py_INCREF(db);
                     need_decref_b = false;
                 }
             } else {
                 if(PyObject_Length(db) == 0) {
-                    Py_INCREF(db);
+                    // Py_INCREF(db);
                     need_decref_b = false;
                 } else {
                     db = Py_BuildValue("[O]", db);
@@ -1888,24 +1890,23 @@ class Compare {
             df = cmp._2d();
 
             if(need_decref_a)
-                Py_DECREF(da);
+                Py_XDECREF(da);
             if(need_decref_b)
-                Py_DECREF(db);
+                Py_XDECREF(db);
 
             if(maxcol < cmp.maxcol)
                 maxcol = cmp.maxcol;
 
-            if(tag == DIFFTP[0][ED_REPLACE]) {
+            if(c_tag == 'r') {
                 concat = PyUnicode_Concat(sa, condition_value);
                 content = PyUnicode_Concat(concat, sb);
                 Py_XDECREF(concat);
-            } else if(tag == DIFFTP[0][ED_INSERT]) {
+            } else if(c_tag == 'i') {
                 content = sb;
             } else {
                 content = sa;
             }
 
-            Py_XDECREF(tag);
             Py_XDECREF(sa);
             Py_XDECREF(sb);
 
