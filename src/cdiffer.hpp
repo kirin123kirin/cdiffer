@@ -1738,7 +1738,7 @@ class Compare {
             }
 
             std::cout << "2d_4-" << i << std::endl; //@todo
-
+            std::pair<std::size_t, PyObject*> intercompresult = intercomplist(row);
 
             if(intercompresult.first == error_n) {
                 Py_DECREF(ops);
