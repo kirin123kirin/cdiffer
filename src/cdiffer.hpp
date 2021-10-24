@@ -1287,9 +1287,9 @@ class Compare {
 
     ~Compare() {
         if(keya)
-            Py_XDECREF(a);
+            Py_CLEAR(a);
         if(keyb)
-            Py_XDECREF(b);
+            Py_CLEAR(b);
         if(idxa && len_idxa) {
             PyMem_Free(idxa);
             len_idxa = 0;
@@ -1299,13 +1299,13 @@ class Compare {
             len_idxb = 0;
         }
         if(need_clean_cv)
-            Py_XDECREF(condition_value);
+            Py_CLEAR(condition_value);
         if(need_clean_nv)
-            Py_XDECREF(na_value);
+            Py_CLEAR(na_value);
         if(delete_sign_value == NULL)
-            Py_XDECREF(DEL_Flag);
+            Py_CLEAR(DEL_Flag);
         if(insert_sign_value == NULL)
-            Py_XDECREF(ADD_Flag);
+            Py_CLEAR(ADD_Flag);
     }
 
    private:
@@ -1817,8 +1817,8 @@ class Compare {
         }
 
         PyObject* dfs = Diff(la, lb).difference(false, rep_rate);
-        Py_DECREF(la);
-        Py_DECREF(lb);
+        Py_CLEAR(la);
+        Py_CLEAR(lb);
 
         if(dfs == NULL) {
             return PyErr_Format(PyExc_ValueError, "Faiotal Error `Diff.difference` result get.");
@@ -1970,7 +1970,7 @@ class Compare {
             Py_XDECREF(df);
         }
 
-        Py_DECREF(dfs);
+        Py_CLEAR(dfs);
 
         if(header) {
             PyObject* head = PyList_New(4 + maxcol);
