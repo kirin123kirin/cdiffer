@@ -10,6 +10,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include "pyyou.hpp"
+#include "iostream" //@todo
 
 namespace gammy {
 
@@ -1522,21 +1523,29 @@ class Compare {
         if(a == NULL || b == NULL)
             return PyErr_Format(PyExc_RuntimeError,
                                 "Can not make data.\n Check your `a` or `b` data is stop iteration?");
+        std::cout << "1" << std::endl; //@todo
 
         if(is_initialcall) {
             Py_INCREF(a);
             Py_INCREF(b);
         }
 
+        std::cout << "2" << std::endl; //@todo
+
         PyObject* cmp = Diff(a, b).compare(diffonly, rep_rate, startidx, condition_value, na_value, DEL_Flag, ADD_Flag);
+        std::cout << "3" << std::endl; //@todo
         if(cmp == NULL || PyErr_Occurred())
             return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
+
+        std::cout << "4" << std::endl; //@todo
 
         Py_ssize_t len = PyObject_Length(cmp);
         if(len == -1) {
             Py_DECREF(cmp);
             return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
         }
+
+        std::cout << "5" << std::endl; //@todo
 
         if(len > 0 && (keya || keyb)) {
             std::vector<std::pair<int, PyObject*>> tmp;
@@ -1550,90 +1559,116 @@ class Compare {
                     return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.\nUnknown Reason.");
                 }
 
+                std::cout << "6-" << i << std::endl; //@todo
+
                 int DispOrder = -1, subseq = 0;
                 PyObject* ptag = PySequence_GetItem(row, 0);
                 const char c_tag = _PyUnicode_AsString(ptag)[0];
 
+                std::cout << "7-" << i << std::endl; //@todo
+
                 PyObject* id_a = PySequence_GetItem(row, 1);
+                std::cout << "8-" << i << std::endl; //@todo
                 if(id_a == NULL) {
                     Py_DECREF(cmp);
                     Py_DECREF(row);
                     tmp.clear();
+                    std::cout << "8e-" << i << std::endl; //@todo
                     return PyErr_Format(PyExc_ValueError, "Fail get comapre data. Not Found arg1 index number");
                 } else if(c_tag == 'i') {
                 // } else if(id_a == na_value) {
                     subseq = 2;
                     PySequence_SetItem(row, 1, id_a);
+                    std::cout << "9-" << i << std::endl; //@todo
                 } else {
+                    std::cout << "10-" << i << std::endl; //@todo
                     std::size_t ia = (std::size_t)PyLong_AsLong(id_a);
                     if(len_idxa <= ia) {
                         Py_DECREF(id_a);
                         Py_DECREF(cmp);
                         Py_DECREF(row);
                         tmp.clear();
+                        std::cout << "10e-" << i << std::endl; //@todo
                         return PyErr_Format(PyExc_IndexError, "Fail arg1 data index number is Stack OverRun.\nUnknown reason...");
                     }
                     PySequence_SetItem(row, 1, PyLong_FromLong(idxa[ia] + startidx));
+                    std::cout << "11-" << i << std::endl; //@todo
                     if (DispOrder == -1)
                         DispOrder = 10 * idxa[ia];
                     DispOrder = 10 * (idxa[ia] < DispOrder ? idxa[ia] : DispOrder);
                     Py_DECREF(id_a);
                 }
                 PyObject* id_b = PySequence_GetItem(row, 2);
+                std::cout << "12-" << i << std::endl; //@todo
                 if(id_b == NULL) {
                     Py_DECREF(id_a);
                     Py_DECREF(cmp);
                     Py_DECREF(row);
                     tmp.clear();
+                    std::cout << "12e-" << i << std::endl; //@todo
                     return PyErr_Format(PyExc_ValueError, "Fail get comapre data. Not Found arg2 index number");
                 } else if(c_tag == 'd') {
                 // } else if(id_b == na_value) {
                     subseq = 1;
                     PySequence_SetItem(row, 2, id_b);
+                    std::cout << "13-" << i << std::endl; //@todo
                 } else {
                     std::size_t ib = (std::size_t)PyLong_AsLong(id_b);
+                    std::cout << "14-" << i << std::endl; //@todo
                     if(len_idxb <= ib) {
                         Py_DECREF(id_a);
                         Py_DECREF(id_b);
                         Py_DECREF(cmp);
                         Py_DECREF(row);
                         tmp.clear();
+                        std::cout << "14e-" << i << std::endl; //@todo
                         return PyErr_Format(PyExc_IndexError, "Fail arg2 data index number is Stack OverRun.\nUnknown reason...");
                     }
                     PySequence_SetItem(row, 2, PyLong_FromLong(idxb[ib] + startidx));
+                    std::cout << "15-" << i << std::endl; //@todo
                     if (DispOrder == -1)
                         DispOrder = 10 * idxb[ib];
                     if(subseq == 0) 
                         DispOrder = (DispOrder + (10 * idxb[ib])) / 2;
                     else
                         DispOrder = (10 * idxb[ib]) < DispOrder ? 10 * idxb[ib] : DispOrder;
+                    std::cout << "16-" << i << std::endl; //@todo
                     Py_DECREF(id_b);
                 }
-
+                std::cout << "17" << std::endl; //@todo
                 DispOrder += subseq;
                 tmp.emplace_back(DispOrder, row);
+                std::cout << "18" << std::endl; //@todo
             }
+            std::cout << "19" << std::endl; //@todo
             std::sort(tmp.begin(), tmp.end());
+            std::cout << "19" << std::endl; //@todo
             for(std::size_t i = 0; i < std::size_t(len); ++i) {
+                std::cout << "20-" << i << std::endl; //@todo
                 PyObject* val = tmp[i].second;
                 PyList_SetItem(cmp, (Py_ssize_t)i, val);
             }
+            std::cout << "21" << std::endl; //@todo
         }
 
+        std::cout << "22" << std::endl; //@todo
         if(header) {
             if(len == 0) {
                 Py_DECREF(cmp);
                 return Py_BuildValue("[[ssss]]", "tag", "index_a", "index_b", "data");
             }
+            std::cout << "23" << std::endl; //@todo
             PyObject* head = Py_BuildValue("[ssss]", "tag", "index_a", "index_b", "data");
             if((PyList_Insert(cmp, 0, head)) == -1) {
                 Py_XDECREF(head);
                 Py_XDECREF(cmp);
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _1d() near");
             }
+            std::cout << "24" << std::endl; //@todo
             Py_DECREF(head);
         }
 
+        std::cout << "25" << std::endl; //@todo
         return cmp;
     }
 
