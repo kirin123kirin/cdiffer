@@ -73,7 +73,7 @@ struct MappingBlock {
         value_type vx = (value_type)x;
         while(pair[0][hash] && pair[1][hash] != vx)
             hash = (hash + size_type(1)) % fraction_size;
-        // pair[1][hash] = x;
+        pair[1][hash] = vx;//@todo tamani assertion error..... Unknow  Reason.
         return pair[0][hash];
     }
 
@@ -606,8 +606,7 @@ class Diff_t {
 
         for(; j < B; ++j)
             makelist_pyn(ops, pyn, ED_INSERT, x, j);
-        // for(std::size_t n = 0; n < B; n++)
-        //     Py_DECREF(pyn[n]);
+
         delete[] pyn;
         return ops;
     }
