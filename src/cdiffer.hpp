@@ -73,7 +73,7 @@ struct MappingBlock {
         value_type vx = (value_type)x;
         while(pair[0][hash] && pair[1][hash] != vx)
             hash = (hash + size_type(1)) % fraction_size;
-        pair[1][hash] = vx;//@todo tamani assertion error..... Unknow  Reason.
+        pair[1][hash] = vx;  //@todo tamani assertion error..... Unknow  Reason.
         return pair[0][hash];
     }
 
@@ -562,7 +562,7 @@ class Diff_t {
                 if(!diffonly)
                     makelist_pyn(ops, pyn, ED_EQUAL, x, j);
             } else {
-                adat = fp[ai]; //@todo tamani assertion error..... Unknow  Reason.
+                adat = fp[ai];  //@todo tamani assertion error..... Unknow  Reason.
                 mj = j % BITS;
                 trb = (adat << (BITS - mj + 1)) | (adat >> mj);
                 if(x > 0 && (found = trb & (~trb + 1)) != 0) {
@@ -1292,11 +1292,11 @@ class Compare {
             Py_XDECREF(b);
         if(idxa && len_idxa) {
             PyMem_Free(idxa);
-            len_idxa = NULL;
+            len_idxa = 0;
         }
         if(idxb && len_idxb) {
             PyMem_Free(idxb);
-            len_idxb = NULL;
+            len_idxb = 0;
         }
         if(need_clean_cv)
             Py_XDECREF(condition_value);
@@ -1320,33 +1320,47 @@ class Compare {
 
         PyDict_SetItem(keywords, keyString, key);
         Py_ssize_t len = PyObject_Length(list);
-        if(len == -1)
+        if(len == -1) {
+            Py_DECREF(keyString);
+            Py_DECREF(keywords);
+            Py_DECREF(argTuple);
             return PyErr_Format(PyExc_MemoryError, "Failed get list size.");
+        }
 
         std::unordered_map<uint64_t, int> idict = {};
         PyObject* newlist = PyList_New(len);
-        if(newlist == NULL)
+        if(newlist == NULL) {
+            Py_DECREF(keyString);
+            Py_DECREF(keywords);
+            Py_DECREF(argTuple);
             return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+        }
 
         for(Py_ssize_t i = 0; i < len; ++i) {
             PyObject* row = PySequence_GetItem(list, i);
 
             if(PyTuple_Check(row) || PyIter_Check(row) || PyGen_Check(row) || PyRange_Check(row)) {
                 PyObject* rerow = PySequence_Tuple(row);
-                PyList_SetItem(newlist, i, rerow);
                 idict[uint64_t(rerow)] = (int)i;
+                PyList_SetItem(newlist, i, rerow);
                 Py_DECREF(row);
             } else {
-                PyList_SetItem(newlist, i, row);
                 idict[uint64_t(row)] = (int)i;
+                PyList_SetItem(newlist, i, row);
             }
             if(PyErr_Occurred()) {
+                Py_DECREF(keyString);
+                Py_DECREF(keywords);
+                Py_DECREF(argTuple);
+                Py_DECREF(newlist);
+                Py_XDECREF(row);
                 return PyErr_Format(PyExc_TypeError, "Can not append index data.");
             }
         }
 
         PyObject* sortMethod = PyObject_GetAttrString(newlist, "sort");
         if(sortMethod == NULL) {
+            Py_DECREF(newlist);
             Py_DECREF(keyString);
             Py_DECREF(keywords);
             Py_DECREF(argTuple);
@@ -1356,6 +1370,7 @@ class Compare {
         PyObject* result = PyObject_Call(sortMethod, argTuple, keywords);
         if(result == NULL) {
             Py_DECREF(sortMethod);
+            Py_DECREF(newlist);
             Py_DECREF(keyString);
             Py_DECREF(keywords);
             Py_DECREF(argTuple);
@@ -1367,12 +1382,25 @@ class Compare {
 
         idxlen = (std::size_t)len;
         indexes = (int*)PyMem_Malloc(idxlen * sizeof(int));
+        if(indexes == NULL) {
+            Py_DECREF(newlist);
+            Py_DECREF(keyString);
+            Py_DECREF(keywords);
+            Py_DECREF(argTuple);
+            return PyErr_Format(PyExc_TypeError, "Can not call sort method.");
+        }
         std::fill(indexes, indexes + idxlen, 0);
 
         for(Py_ssize_t i = 0; i < len; ++i) {
             PyObject* row = PySequence_GetItem(newlist, i);
-            if(row == NULL)
+            if(row == NULL) {
+                Py_DECREF(row);
+                Py_DECREF(newlist);
+                Py_DECREF(keyString);
+                Py_DECREF(keywords);
+                Py_DECREF(argTuple);
                 return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+            }
             indexes[i] = idict[uint64_t(row)];
             Py_DECREF(row);
         }
@@ -1646,7 +1674,7 @@ class Compare {
 
         Py_ssize_t len, i;
         bool needsort = keya || keyb;
-        
+
         PyObject* df = Diff(a, b).difference(diffonly, rep_rate);
 
         if(df == NULL) {
@@ -1786,21 +1814,19 @@ class Compare {
         Py_DECREF(lb);
 
         if(dfs == NULL) {
-            Py_DECREF(la);
-            Py_DECREF(lb);
             return PyErr_Format(PyExc_ValueError, "Faiotal Error `Diff.difference` result get.");
         }
 
         if((len = PyObject_Length(dfs)) == -1) {
-            Py_DECREF(la);
-            Py_DECREF(lb);
             Py_DECREF(dfs);
             return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() head");
         }
 
         PyObject* ops = PyList_New(header == true);
-        if(ops == NULL)
+        if(ops == NULL) {
+            Py_DECREF(dfs);
             return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+        }
 
         for(i = 0; i < len; ++i) {
             PyObject *tag, *sa, *sb, *da, *db, *arr, *df, *concat, *content, *row;
@@ -1915,6 +1941,7 @@ class Compare {
                     Py_DECREF(arr);
                     Py_XDECREF(df);
                     Py_DECREF(dfs);
+                    Py_XDECREF(content);
                     return PyErr_Format(PyExc_ValueError, "Cannot get a Dictionary Inner array.");
                 }
                 // Py_INCREF(content);
