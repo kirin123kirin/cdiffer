@@ -785,10 +785,9 @@ class Diff_t {
         }
     }
     double similar(double min = -1.0) {
-        std::cout << "s1_" << i << std::endl; //@todo
+        std::cout << "s1_" << std::endl; //@todo
 
          return (double)similar_p((std::size_t)min * 100) / 100.0;
-        std::cout << "s2_" << i << std::endl; //@todo
          }
 
    protected:
@@ -898,13 +897,17 @@ class Diff_t {
 
    public:
     std::size_t similar_p(std::size_t min = error_n) {
+        std::cout << "sp1_" << std::endl; //@todo
+
         std::size_t L;
         if((L = A + B) > 0) {
+            std::cout << "sp2_" << std::endl; //@todo
             if(min == error_n)
                 return 100 - (100 * distance() / L);
             else
                 return 100 - (100 * distance(L - (L * min) / 100) / L);
         }
+        std::cout << "sp3_" << std::endl; //@todo
         return 0;
     }
 };
