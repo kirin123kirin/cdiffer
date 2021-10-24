@@ -326,6 +326,8 @@ class Diff_t {
         this->diffonly = _diffonly;
         this->rep_rate = _rep_rate;
 
+        std::cout << "d-1" << std::endl; //@todo
+
         if(b.kind == 1) {
             /* for ASCII */
             if(B < 8) {
@@ -343,6 +345,7 @@ class Diff_t {
             }
         }
 
+        std::cout << "d-2" << std::endl; //@todo
         if((a.canonical || b.canonical) && (A + B <= 1 || (A == 1 && B == 1))) {
             PyObject* ops = PyList_New(0);
             if(ops == NULL)
@@ -358,21 +361,26 @@ class Diff_t {
         }
 
         else if(B < 64) {
+            std::cout << "d-3" << std::endl; //@todo
             if(B < 8) {
+                std::cout << "d-4" << std::endl; //@todo
                 MappingBlock<uint8_t> fp = {};
                 fp.pair =
                     std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
                 return core_difference(fp);
             } else if(B < 16) {
+                std::cout << "d-5" << std::endl; //@todo
                 MappingBlock<uint16_t> fp = {};
                 fp.pair =
                     std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
                 return core_difference(fp);
             } else if(B < 32) {
+                std::cout << "d-6" << std::endl; //@todo
                 MappingBlock<uint32_t, 257> fp = {};
                 fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
                 return core_difference(fp);
             } else {
+                std::cout << "d-7" << std::endl; //@todo
                 MappingBlock<uint64_t, 521> fp = {};
                 fp.pair = std::array<std::array<uint64_t, 521>, 2>{
                     {{ZERO_256, ZERO_256, ZERO_8, ZERO_1}, {ZERO_256, ZERO_256, ZERO_8, ZERO_1}}};
@@ -510,6 +518,8 @@ class Diff_t {
         std::size_t i = 0, j = 0, x = 0, y = 0, len = 0, sj = 0, mj = 0;
         uint64_t found = 0, adat = 0, trb = 0;
         const std::size_t BITS = std::min(std::size_t(64), (std::size_t)(sizeof(fp[0]) * 8));
+
+        std::cout << "c-1" << std::endl; //@todo
         PyObject* ops = PyList_New(0);
         if(ops == NULL)
             return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
@@ -913,15 +923,10 @@ class Diff {
     Diff() : a(NULL), b(NULL), kind1(0), kind2(0) {}
 
     Diff(PyObject* _a, PyObject* _b) : a(_a), b(_b) {
-        std::cout << "differ_1" << std::endl; //@todo
         kind1 = (int)PyAny_KIND(a);
-        std::cout << "differ_2" << std::endl; //@todo
         kind2 = (int)PyAny_KIND(b);
-        std::cout << "differ_3" << std::endl; //@todo
         if(kind1 != kind2)
             kind1 = -kind1;
-        std::cout << "differ_4" << std::endl; //@todo
-
     }
 
     std::size_t distance(std::size_t max = error_n, bool weight = true) {
@@ -951,8 +956,6 @@ class Diff {
     }
 
     PyObject* difference(bool _diffonly = false, int _rep_rate = REPLACEMENT_RATE) {
-        std::cout << "d-1" << std::endl; //@todo
-
         if(PyObject_RichCompareBool(a, b, Py_EQ)) {
             std::size_t len1 = error_n, i;
             PyObject* ops = PyList_New(0);
@@ -972,7 +975,6 @@ class Diff {
             return ops;
         }
 
-        std::cout << "d-2" << std::endl; //@todo
         if(a == Py_None && b != Py_None) {
             std::size_t len2 = PyAny_Length(b);
             if(len2 != error_n) {
@@ -989,7 +991,6 @@ class Diff {
                 return ops;
             }
         }
-        std::cout << "d-3" << std::endl; //@todo
         if(b == Py_None && a != Py_None) {
             std::size_t len1 = PyAny_Length(a);
             if(len1 != error_n) {
@@ -1011,10 +1012,8 @@ class Diff {
         else if(kind1 == 2)
             return Diff_t<pyview_t<uint16_t>>(a, b).difference(_diffonly, _rep_rate);
         else if(kind1 == 8) {
-            std::cout << "d-4" << std::endl; //@todo
             return Diff_t<pyview_t<uint64_t>>(a, b).difference(_diffonly, _rep_rate);
         } else if(kind1 < 0) {
-            std::cout << "d-5" << std::endl; //@todo
             std::size_t len1 = PyAny_Length(a);
             std::size_t len2 = PyAny_Length(b);
 
@@ -1041,7 +1040,6 @@ class Diff {
             }
         } else if(kind1 == 4)
             return Diff_t<pyview_t<uint32_t>>(a, b).difference(_diffonly, _rep_rate);
-        std::cout << "d-99" << std::endl; //@todo
         return PyErr_Format(PyExc_ValueError, "Unknown data..");
     }
 
