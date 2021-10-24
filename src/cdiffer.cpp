@@ -69,10 +69,8 @@ PyObject* differ_py(PyObject* self, PyObject* args, PyObject* kwargs) {
 PyObject* compare_py(PyObject* self, PyObject* args, PyObject* kwargs) {
     PyObject *a, *b;
 
-    std::cout << "hoge-1" << std::endl; //@todo
     if(!PyArg_UnpackTuple(args, (char*)("compare"), 2, 2, &a, &b))
         return NULL;
-    std::cout << "hoge-2" << std::endl; //@todo
 
     if((a == Py_None || b == Py_None) ||
        ((PyUnicode_Check(a) || PyBool_Check(a) || PyNumber_Check(a) || PyBytes_Check(a) || PyByteArray_Check(a)) &&
@@ -83,11 +81,8 @@ PyObject* compare_py(PyObject* self, PyObject* args, PyObject* kwargs) {
         return gammy::Compare(args, kwargs)._3d();
 
     } else {
-        std::cout << "hoge-2" << std::endl; //@todo
         return gammy::Compare(args, kwargs)._2d();
-        std::cout << "hoge-3" << std::endl; //@todo
     }
-    std::cout << "hoge-4" << std::endl; //@todo
 }
 
 #define MODULE_NAME cdiffer

@@ -1706,16 +1706,23 @@ class Compare {
                 b == Py_None)
             need_ommit = ED_DELETE;
 
+        std::cout << "2d_1" << std::endl; //@todo
+
         for(i = 0; i < len; i++) {
             PyObject* row = PySequence_GetItem(df, i);
+
+            std::cout << "2d_1-" << i << std::endl; //@todo
 
             if(row == NULL) {
                 Py_XDECREF(ops);
                 Py_DECREF(df);
                 return PyErr_Format(PyExc_ValueError, "Atribute(`a` or `b`) is not a two-dimensional array.");
             }
+            std::cout << "2d_2-" << i << std::endl; //@todo
+
             if(need_ommit) {
                 PyObject* ctag = PySequence_GetItem(row, 0);
+                std::cout << "2d_3-" << i << std::endl; //@todo
                 if(ctag == NULL)
                     return PyErr_Format(PyExc_IndexError, "Failed get tag value.");
                 if(PyObject_RichCompareBool(ctag, DIFFTP[0][need_ommit], Py_NE)) {
@@ -1730,7 +1737,8 @@ class Compare {
                 Py_DECREF(ctag);
             }
 
-            std::pair<std::size_t, PyObject*> intercompresult = intercomplist(row);
+            std::cout << "2d_4-" << i << std::endl; //@todo
+
 
             if(intercompresult.first == error_n) {
                 Py_DECREF(ops);
@@ -1740,15 +1748,19 @@ class Compare {
                 return this->_1d(false);
             }
 
+            std::cout << "2d_5-" << i << std::endl; //@todo
+
             if(needsort) {
                 sortcontainer.emplace_back(intercompresult);
             } else {
                 PyList_SetItem(ops, i + header, intercompresult.second);
             }
 
+            std::cout << "2d_6-" << i << std::endl; //@todo
             Py_XDECREF(row);
 
             if(PyErr_Occurred() != NULL) {
+                std::cout << "2d_6e-" << i << std::endl; //@todo
                 Py_XDECREF(intercompresult.second);
                 sortcontainer.clear();
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() below");
@@ -1757,6 +1769,7 @@ class Compare {
 
         Py_CLEAR(df);
 
+        std::cout << "2d_7" << std::endl; //@todo
         if(needsort) {
             std::sort(sortcontainer.begin(), sortcontainer.end());
             Py_ssize_t j = header;
@@ -1764,7 +1777,9 @@ class Compare {
                 PyList_SetItem(ops, j++, it.second);
         }
 
+        std::cout << "2d_8" << std::endl; //@todo
         if(header) {
+            std::cout << "2d_9" << std::endl; //@todo
             PyObject* head = PyList_New(3 + maxcol);
             if(head == NULL) {
                 Py_DECREF(ops);
@@ -1772,6 +1787,7 @@ class Compare {
                 return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
             }
 
+            std::cout << "2d_10" << std::endl; //@todo
             PyList_SetItem(head, 0, PyUnicode_FromString("tag"));
             PyList_SetItem(head, 1, PyUnicode_FromString("index_a"));
             PyList_SetItem(head, 2, PyUnicode_FromString("index_b"));
@@ -1784,6 +1800,7 @@ class Compare {
                     PyList_SetItem(head, 3 + n, PyUnicode_FromString((const char*)colname));
                 }
             }
+            std::cout << "2d_11" << std::endl; //@todo
 
             if((PyList_SetItem(ops, 0, head)) == -1) {
                 Py_DECREF(head);
@@ -1791,8 +1808,10 @@ class Compare {
                 sortcontainer.clear();
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() header");
             }
+            std::cout << "2d_12" << std::endl; //@todo
         }
 
+        std::cout << "2d_13" << std::endl; //@todo
         return ops;
     }
 
