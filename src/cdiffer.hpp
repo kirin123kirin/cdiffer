@@ -724,7 +724,6 @@ class Diff_t {
    public:
     std::size_t distance(std::size_t max = error_n, bool weight = true) {
 
-        std::cout << "d1_" << std::endl;  //@todo
 
         if(a == b)
             return 0;
@@ -738,31 +737,33 @@ class Diff_t {
         if(A == 1 && B == 1)
             return 1ULL + weight;
 
-        std::cout << "d2_" << std::endl;  //@todo
         if(b.kind == 1) {
             /* for ASCII */
             if(B < 8) {
+            std::cout << "d1_" << std::endl;  //@todo
                 std::array<uint8_t, 128> fp = {ZERO_128};
                 return core_distance_bp_simple(fp, max, weight);
             } else if(B < 16) {
+                std::cout << "d2_" << std::endl;  //@todo
                 std::array<uint16_t, 128> fp = {ZERO_128};
                 return core_distance_bp_simple(fp, max, weight);
             } else if(B < 32) {
+                std::cout << "d3_" << std::endl;  //@todo
                 std::array<uint32_t, 128> fp = {ZERO_128};
                 return core_distance_bp_simple(fp, max, weight);
             } else if(B < 64) {
+                std::cout << "d4_" << std::endl;  //@todo
                 std::array<uint64_t, 128> fp = {ZERO_128};
                 return core_distance_bp_simple(fp, max, weight);
             } else {
+                std::cout << "d5_" << std::endl;  //@todo
                 std::array<uint64_t, 128> fp = {ZERO_128};
                 return core_distance_bp(fp, max, weight);
             }
         }
 
         else if(B < 64) {
-            std::cout << "d3_" << std::endl;  //@todo
             if(B < 8) {
-                std::cout << "d4_" << std::endl;  //@todo
                 MappingBlock<uint8_t> fp = {};
                 fp.pair =
                     std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
@@ -785,7 +786,6 @@ class Diff_t {
         }
 
         else {
-            std::cout << "d5_" << std::endl;  //@todo
             /* for Big Size ANY data. */
             std::unordered_map<uint64_t, uint64_t, through_pass_hash<uint64_t>> fp = {};
             return core_distance_bp(fp, max, weight);
