@@ -1289,13 +1289,13 @@ class Compare {
             Py_XDECREF(a);
         if(keyb)
             Py_XDECREF(b);
-        if(idxa && *idxa) {
-            *idxa = NULL;
+        if(idxa && len_idxa) {
             PyMem_Free(idxa);
+            len_idxa = NULL;
         }
-        if(idxb && *idxb) {
-            *idxb = NULL;
+        if(idxb && len_idxb) {
             PyMem_Free(idxb);
+            len_idxb = NULL;
         }
         if(need_clean_cv)
             Py_XDECREF(condition_value);
@@ -1533,8 +1533,10 @@ class Compare {
             return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
 
         Py_ssize_t len = PyObject_Length(cmp);
-        if(len == -1)
+        if(len == -1) {
+            Py_DECREF(cmp);
             return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
+        }
 
         if(len > 0 && (keya || keyb)) {
             std::vector<std::pair<int, PyObject*>> tmp;
@@ -1545,6 +1547,7 @@ class Compare {
                 if(row == NULL) {
                     Py_DECREF(cmp);
                     Py_DECREF(row);
+                    tmp.clear();
                     return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
                 }
 
@@ -1554,14 +1557,20 @@ class Compare {
                 if(id_a == NULL) {
                     Py_DECREF(cmp);
                     Py_DECREF(row);
+                    tmp.clear();
                     return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
                 } else if(id_a == na_value) {
                     subseq = 2;
                     PySequence_SetItem(row, 1, id_a);
                 } else {
                     std::size_t ia = (std::size_t)PyLong_AsLong(id_a);
-                    if (len_idxa <= ia)
+                    if(len_idxa <= ia) {
+                        Py_DECREF(id_a);
+                        Py_DECREF(cmp);
+                        Py_DECREF(row);
+                        tmp.clear();
                         return PyErr_Format(PyExc_RuntimeError, "Fail Find line index number.\nUnknown reason...");
+                    }
                     PySequence_SetItem(row, 1, PyLong_FromLong(idxa[ia] + startidx));
                     if (DispOrder == -1)
                         DispOrder = 10 * idxa[ia];
@@ -1573,14 +1582,21 @@ class Compare {
                     Py_DECREF(id_a);
                     Py_DECREF(cmp);
                     Py_DECREF(row);
+                    tmp.clear();
                     return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
                 } else if(id_b == na_value) {
                     subseq = 1;
                     PySequence_SetItem(row, 2, id_b);
                 } else {
                     std::size_t ib = (std::size_t)PyLong_AsLong(id_b);
-                    if (len_idxb <= ib)
+                    if(len_idxb <= ib) {
+                        Py_DECREF(id_a);
+                        Py_DECREF(id_b);
+                        Py_DECREF(cmp);
+                        Py_DECREF(row);
+                        tmp.clear();
                         return PyErr_Format(PyExc_RuntimeError, "Fail Find line index number.\nUnknown reason...");
+                    }
                     PySequence_SetItem(row, 2, PyLong_FromLong(idxb[ib] + startidx));
                     if (DispOrder == -1)
                         DispOrder = 10 * idxb[ib];
@@ -1683,7 +1699,6 @@ class Compare {
                 Py_DECREF(df);
                 Py_DECREF(row);
                 sortcontainer.clear();
-                sortcontainer.~vector();
                 return this->_1d(false);
             }
 
@@ -1698,7 +1713,6 @@ class Compare {
             if(PyErr_Occurred() != NULL) {
                 Py_XDECREF(intercompresult.second);
                 sortcontainer.clear();
-                sortcontainer.~vector();
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() below");
             }
         }
@@ -1717,7 +1731,6 @@ class Compare {
             if(head == NULL) {
                 Py_DECREF(ops);
                 sortcontainer.clear();
-                sortcontainer.~vector();
                 return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
             }
 
@@ -1738,7 +1751,6 @@ class Compare {
                 Py_DECREF(head);
                 Py_DECREF(ops);
                 sortcontainer.clear();
-                sortcontainer.~vector();
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() header");
             }
         }
