@@ -1572,7 +1572,7 @@ class Compare {
             tmp.reserve((std::size_t)len + 10);
 
             for(Py_ssize_t i = 0; i < len; i++) {
-                PyObject* row = PySequence_GetItem(cmp, i);
+                PyObject* row = PySequence_GetItem(cmp, i), *ptag;
                 if(row == NULL) {
                     Py_DECREF(cmp);
                     tmp.clear();
@@ -1580,12 +1580,17 @@ class Compare {
                 }
 
                 int DispOrder = -1, subseq = 0;
-                PyObject* ptag = PySequence_GetItem(row, 0);
+                if((ptag = PySequence_GetItem(row, 0)) == NULL) {
+                    Py_DECREF(cmp);
+                    tmp.clear();
+                    return PyErr_Format(PyExc_ValueError, "Cannot get a Dictionary Inner array.");
+                }
 #if PY_MAJOR_VERSION >= 3
                 const char c_tag = PyUnicode_AsUTF8(ptag)[0];
 #else
                 const char c_tag = (const char)PyUnicode_AsUnicode(ptag)[0];
 #endif
+
                 PyObject* id_a = PySequence_GetItem(row, 1);
                 if(id_a == NULL) {
                     Py_DECREF(cmp);
@@ -1838,13 +1843,17 @@ class Compare {
                 return PyErr_Format(PyExc_ValueError, "Cannot get a Dictionary Inner array.");
             }
 
-            tag = PySequence_GetItem(arr, 0);
+            ;
+            if((tag = PySequence_GetItem(arr, 0)) == NULL) {
+                Py_XDECREF(ops);
+                Py_XDECREF(dfs);
+                return PyErr_Format(PyExc_ValueError, "Cannot get a Dictionary Inner array.");
+            }
 #if PY_MAJOR_VERSION >= 3
-                const char c_tag = PyUnicode_AsUTF8(tag)[0];
+            const char c_tag = PyUnicode_AsUTF8(tag)[0];
 #else
-                const char c_tag = (const char)PyUnicode_AsUnicode(tag)[0];
+            const char c_tag = (const char)PyUnicode_AsUnicode(tag)[0];
 #endif
-            Py_XDECREF(tag);
             sa = PySequence_GetItem(arr, 3);
             sb = PySequence_GetItem(arr, 4);
 
