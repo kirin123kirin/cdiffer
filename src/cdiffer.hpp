@@ -883,6 +883,9 @@ class Diff_t {
             std::cout << "j = " << j << std::endl;  //@todo
             std::cout << "b.size() = " << b.size() << std::endl;  //@todo
             std::cout << "b[j] = " << b[j] << std::endl;  //@todo
+            std::cout << "ai == b[j] : " << ai == b[j] << std::endl;  //@todo
+            std::cout << "i > 0 && (trb = (_Vty)(fp[ai] >> j) : " << i > 0 && (trb = (_Vty)(fp[ai] >> j) << std::endl;  //@todo
+            std::cout << "!weight : " << !weight << std::endl;  //@todo
 
             if(ai == b[j]) {
                 std::cout << "cd_7_" << i << std::endl;  //@todo
