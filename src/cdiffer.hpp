@@ -759,8 +759,8 @@ class Diff_t {
             }
         }
 
-        std::cout << "d3_" << std::endl;  //@todo
         else if(B < 64) {
+            std::cout << "d3_" << std::endl;  //@todo
             if(B < 8) {
                 std::cout << "d4_" << std::endl;  //@todo
                 MappingBlock<uint8_t> fp = {};
