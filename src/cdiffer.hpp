@@ -735,7 +735,7 @@ class Diff_t {
         if(A == 1 && B == 1)
             return 1ULL + weight;
 
-        if(b.kind == 1) {
+        if(a.kind == 1 && b.kind == 1) {
             /* for ASCII */
             if(B < 8) {
                 std::array<uint8_t, 128> fp = {ZERO_128};
@@ -861,55 +861,34 @@ class Diff_t {
         /* under 64 charactors
          */
 
-        std::cout << "cd_1" << std::endl;  //@todo
-
         std::size_t dist = A + B, i = 0, j = 0;
         using _Vty = typename std::remove_reference<decltype(fp[0])>::type;
         _Vty found = _Vty(0), trb = _Vty(0);
 
-        std::cout << "cd_2" << std::endl;  //@todo
         for(std::size_t y = 0; y < B; ++y)
             fp[b[y]] |= 1ULL << y;
 
-        std::cout << "cd_3" << std::endl;  //@todo
         while(i < A && j < B) {
-            std::cout << "cd_4_" << i << std::endl;  //@todo
             if(max < dist - (A - i) * 2)
                 return error_n - max;
-            std::cout << "cd_5_" << i << std::endl;  //@todo
             auto ai = a[i];
-            std::cout << "cd_6_" << i << std::endl;   //@todo
-            std::cout << "ai = " << ai << std::endl;  //@todo
-            std::cout << "j = " << j << std::endl;  //@todo
-            std::cout << "b.size() = " << b.size() << std::endl;  //@todo
-            std::cout << "b[j] = " << b[j] << std::endl;  //@todo
-            std::cout << "ai == b[j] : " << (ai == b[j]) << std::endl;  //@todo
-            std::cout << "i > 0 && (trb = (_Vty)(fp[ai] >> j) : " << (i > 0 && (trb = (_Vty)(fp[ai] >> j))) << std::endl;  //@todo
-            std::cout << "!weight : " << !weight << std::endl;  //@todo
+            // std::cout << "fp[ai] = " << fp[ai] << std::endl;  //@todo segmentation fault bug reason target
 
             if(ai == b[j]) {
-                std::cout << "cd_7_" << i << std::endl;  //@todo
                 dist -= 2;
             } else if(i > 0 && (trb = (_Vty)(fp[ai] >> j)) != 0) {
-                std::cout << "cd_8_" << i << std::endl;  //@todo
                 dist -= 2;
                 found = (_Vty)(trb & (~trb + 1));
-                std::cout << "cd_9_" << i << std::endl;  //@todo
                 while(found > 1 && j < B) {
                     ++j;
                     found >>= 1;
                 }
-                std::cout << "cd_10_" << i << std::endl;  //@todo
 
             } else if(!weight)
                 dist -= 1;
-            std::cout << "cd_11_" << i << std::endl;  //@todo
 
             ++i, ++j;
         }
-        std::cout << "cd_12_" << i << std::endl;      //@todo
-        std::cout << "dist = " << dist << std::endl;  //@todo
-
         return dist;
     }
 
@@ -918,10 +897,8 @@ class Diff_t {
         std::size_t L;
         if((L = A + B) > 0) {
             if(min == error_n) {
-                std::cout << "sp1_" << std::endl;  //@todo
                 return 100 - (100 * distance() / L);
             } else {
-                std::cout << "sp2_" << std::endl;  //@todo
                 return 100 - (100 * distance(L - (L * min) / 100) / L);
             }
         }
@@ -1672,7 +1649,7 @@ class Compare {
 
         Py_ssize_t len, i;
         bool needsort = keya || keyb;
-        //@todo segmentation fault bug reason target
+        
         PyObject* df = Diff(a, b).difference(diffonly, rep_rate);
 
         if(df == NULL) {
