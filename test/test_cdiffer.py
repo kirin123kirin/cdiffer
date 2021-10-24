@@ -234,7 +234,7 @@ def test_dist_Notype():
 def test_dist_complex_Nottype():
     assert(dist([None], None) == 2)
     assert(dist([None], "") == 1)
-    assert(dist([None], []) in [0,1])  # @todo tamani 0 ninaru genin fumei
+    assert(dist([None], []) == 1)  # @todo tamani 0 ninaru genin fumei
 
 def test_similar_Notype():
     assert(similar(None, None) == 1.0)
@@ -247,7 +247,7 @@ def test_similar_Notype():
 def test_similar_complex_Nottype():
     assert(similar([None], None) == 0.0)
     assert(similar([None], "") == 0.0)
-    assert(similar([None], []) in [0.0,1.0])  # @todo tamani 0 ninaru genin fumei
+    assert(similar([None], []) == 0.0)  # @todo tamani 0 ninaru genin fumei
 
 def test_differ_Notype():
     assert(differ(None, None) == [['equal', 0, 0, None, None]])
