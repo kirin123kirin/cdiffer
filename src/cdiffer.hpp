@@ -1721,7 +1721,6 @@ class Compare {
                     Py_DECREF(df);
                     Py_DECREF(row);
                     sortcontainer.clear();
-                    sortcontainer.~vector();
                     return this->_1d(false);
                 }
                 Py_DECREF(ctag);
