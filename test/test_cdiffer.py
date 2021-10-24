@@ -420,14 +420,14 @@ def test_compare_2d_array():
 
 def test_compare_Nonetype_complex():
     assert(compare(None, None) == [['tag', 'index_a', 'index_b', 'data'], ['equal', 0, 0, None]])
-    # assert(repr(compare([], [])) == repr([['tag', 'index_a', 'index_b', 'data'], ['equal', 0, 0, []]]))
-    # assert(compare("", "") == [['tag', 'index_a', 'index_b', 'data'], ['equal', 0, 0, '']])
-    # assert(compare(None, "") == [['tag', 'index_a', 'index_b', 'data'], ['insert', '-', 0, 'ADD ---> ']])
-    # assert(compare("", None) == [['tag', 'index_a', 'index_b', 'data'], ['delete', 0, '-', ' ---> DEL']])
-    # assert(compare(None, []) ==[['tag', 'index_a', 'index_b', 'data'], ['insert', '-', 0, 'ADD ---> []']])
-    # assert(compare([], None) == [['tag', 'index_a', 'index_b', 'data'], ['delete', 0, '-', '[] ---> DEL']])
-    # assert(compare("", []) == [['tag', 'index_a', 'index_b', 'data'], ['delete', 0, '-', ' ---> DEL'], ['insert', '-', 0, 'ADD ---> []']])
-    # assert(compare([], "") == [['tag', 'index_a', 'index_b', 'data'], ['delete', 0, '-', '[] ---> DEL'], ['insert', '-', 0, 'ADD ---> ']])
+    assert(repr(compare([], [])) == repr([['tag', 'index_a', 'index_b', 'data'], ['equal', 0, 0, []]]))
+    assert(compare("", "") == [['tag', 'index_a', 'index_b', 'data'], ['equal', 0, 0, '']])
+    assert(compare(None, "") == [['tag', 'index_a', 'index_b', 'data'], ['insert', '-', 0, 'ADD ---> ']])
+    assert(compare("", None) == [['tag', 'index_a', 'index_b', 'data'], ['delete', 0, '-', ' ---> DEL']])
+    assert(compare(None, []) ==[['tag', 'index_a', 'index_b', 'data'], ['insert', '-', 0, 'ADD ---> []']])
+    assert(compare([], None) == [['tag', 'index_a', 'index_b', 'data'], ['delete', 0, '-', '[] ---> DEL']])
+    assert(compare("", []) == [['tag', 'index_a', 'index_b', 'data'], ['delete', 0, '-', ' ---> DEL'], ['insert', '-', 0, 'ADD ---> []']])
+    assert(compare([], "") == [['tag', 'index_a', 'index_b', 'data'], ['delete', 0, '-', '[] ---> DEL'], ['insert', '-', 0, 'ADD ---> ']])
 
 def test_compare_rep_rate():
     assert(compare([list('coffee')], [list('cafe')], rep_rate=70) == [['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03', 'COL_04', 'COL_05'], [
@@ -707,8 +707,8 @@ def test_compare_list_and_perf():
     runtimeit('compare(aa, ab, header=False, insert_sign_value = "@@")', 'aa = {aa};ab = {ab}'.format(aa=aa, ab=ab))
 
 def test_compare_unicode_of_list_and_perf():
-    aa = dict(hoge=[list("あいうえお"), list("あいうえお")])
-    ab = dict(hoge=[list("あいうえお"), list("あいうあお")])
+    aa = dict(hoge=[list(u"あいうえお"), list(u"あいうえお")])
+    ab = dict(hoge=[list(u"あいうえお"), list(u"あいうあお")])
     # header
     assert(compare(aa, ab, header=True) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03', 'COL_04', 'COL_05'], [
            'hoge', 'equal', 0, 0, 'あ', 'い', 'う', 'え', 'お'], ['hoge', 'replace', 1, 1, 'あ', 'い', 'う', 'え ---> DEL', 'ADD ---> あ', 'お']])
