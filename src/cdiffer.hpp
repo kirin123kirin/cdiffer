@@ -558,11 +558,11 @@ class Diff_t {
         while(i < A && j < B) {
             auto ai = a[i];
 
-            if(ai == b[j]) { //@todo tamani assertion error..... Unknow  Reason.
+            if(ai == b[j]) {
                 if(!diffonly)
                     makelist_pyn(ops, pyn, ED_EQUAL, x, j);
             } else {
-                adat = fp[ai];
+                adat = fp[ai]; //@todo tamani assertion error..... Unknow  Reason.
                 mj = j % BITS;
                 trb = (adat << (BITS - mj + 1)) | (adat >> mj);
                 if(x > 0 && (found = trb & (~trb + 1)) != 0) {
