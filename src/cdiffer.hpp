@@ -1673,31 +1673,39 @@ class Compare {
     }
 
     PyObject* _2d() {
+        std::cout << "pre2d_1" << std::endl; //@todo
         if(a == NULL || b == NULL)
             return PyErr_Format(PyExc_RuntimeError,
                                 "Can not make data.\n Check your `a` or `b` data is stop iteration?");
 
+        std::cout << "pre2d_2" << std::endl; //@todo
         Py_ssize_t len, i;
         bool needsort = keya || keyb;
         PyObject* df = Diff(a, b).difference(diffonly, rep_rate);
 
+        std::cout << "pre2d_3" << std::endl; //@todo
         if(df == NULL) {
             return PyErr_Format(PyExc_ValueError, NULL);
         }
 
+        std::cout << "pre2d_4" << std::endl; //@todo
         if((len = PyObject_Length(df)) == -1) {
             return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() head");
         }
 
+        std::cout << "pre2d_5" << std::endl; //@todo
         PyObject* ops = PyList_New(len + header);
         if(ops == NULL)
             return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
 
+        std::cout << "pre2d_6" << std::endl; //@todo
         std::vector<std::pair<std::size_t, PyObject*>> sortcontainer(0);
 
+        std::cout << "pre2d_7" << std::endl; //@todo
         if(needsort)
             sortcontainer.reserve((std::size_t)len + header);
 
+        std::cout << "pre2d_8" << std::endl; //@todo
         int need_ommit = 0;
         if(a == Py_None &&
            !(PyList_Check(b) || PyTuple_Check(b) || PyIter_Check(b) || PyGen_Check(b) || PyRange_Check(b)))
