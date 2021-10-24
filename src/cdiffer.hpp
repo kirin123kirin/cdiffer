@@ -1546,20 +1546,22 @@ class Compare {
                 PyObject* row = PySequence_GetItem(cmp, i);
                 if(row == NULL) {
                     Py_DECREF(cmp);
-                    Py_DECREF(row);
                     tmp.clear();
-                    return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
+                    return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.\nUnknown Reason.");
                 }
 
                 int DispOrder = -1, subseq = 0;
+                PyObject* ptag = PySequence_GetItem(row, 0);
+                const char c_tag = _PyUnicode_AsString(ptag)[0];
 
                 PyObject* id_a = PySequence_GetItem(row, 1);
                 if(id_a == NULL) {
                     Py_DECREF(cmp);
                     Py_DECREF(row);
                     tmp.clear();
-                    return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
-                } else if(PyObject_RichCompareBool(id_a, na_value, Py_EQ)) {
+                    return PyErr_Format(PyExc_ValueError, "Fail get comapre data. Not Found arg1 index number");
+                } else if(c_tag == 'i') {
+                // } else if(id_a == na_value) {
                     subseq = 2;
                     PySequence_SetItem(row, 1, id_a);
                 } else {
@@ -1569,7 +1571,7 @@ class Compare {
                         Py_DECREF(cmp);
                         Py_DECREF(row);
                         tmp.clear();
-                        return PyErr_Format(PyExc_RuntimeError, "Fail Find line index number.\nUnknown reason...");
+                        return PyErr_Format(PyExc_IndexError, "Fail arg1 data index number is Stack OverRun.\nUnknown reason...");
                     }
                     PySequence_SetItem(row, 1, PyLong_FromLong(idxa[ia] + startidx));
                     if (DispOrder == -1)
@@ -1583,8 +1585,9 @@ class Compare {
                     Py_DECREF(cmp);
                     Py_DECREF(row);
                     tmp.clear();
-                    return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
-                } else if(PyObject_RichCompareBool(id_b, na_value, Py_EQ)) {
+                    return PyErr_Format(PyExc_ValueError, "Fail get comapre data. Not Found arg2 index number");
+                } else if(c_tag == 'd') {
+                // } else if(id_b == na_value) {
                     subseq = 1;
                     PySequence_SetItem(row, 2, id_b);
                 } else {
@@ -1595,7 +1598,7 @@ class Compare {
                         Py_DECREF(cmp);
                         Py_DECREF(row);
                         tmp.clear();
-                        return PyErr_Format(PyExc_RuntimeError, "Fail Find line index number.\nUnknown reason...");
+                        return PyErr_Format(PyExc_IndexError, "Fail arg2 data index number is Stack OverRun.\nUnknown reason...");
                     }
                     PySequence_SetItem(row, 2, PyLong_FromLong(idxb[ib] + startidx));
                     if (DispOrder == -1)
