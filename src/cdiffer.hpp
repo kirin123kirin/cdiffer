@@ -1529,7 +1529,7 @@ class Compare {
         }
 
         PyObject* cmp = Diff(a, b).compare(diffonly, rep_rate, startidx, condition_value, na_value, DEL_Flag, ADD_Flag);
-        if(cmp == NULL)
+        if(cmp == NULL || PyErr_Occurred())
             return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
 
         Py_ssize_t len = PyObject_Length(cmp);
@@ -1559,7 +1559,7 @@ class Compare {
                     Py_DECREF(row);
                     tmp.clear();
                     return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
-                } else if(id_a == na_value) {
+                } else if(PyObject_RichCompareBool(id_a, na_value, Py_EQ)) {
                     subseq = 2;
                     PySequence_SetItem(row, 1, id_a);
                 } else {
@@ -1584,7 +1584,7 @@ class Compare {
                     Py_DECREF(row);
                     tmp.clear();
                     return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
-                } else if(id_b == na_value) {
+                } else if(PyObject_RichCompareBool(id_b, na_value, Py_EQ)) {
                     subseq = 1;
                     PySequence_SetItem(row, 2, id_b);
                 } else {
