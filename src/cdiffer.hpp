@@ -723,8 +723,6 @@ class Diff_t {
 
    public:
     std::size_t distance(std::size_t max = error_n, bool weight = true) {
-
-
         if(a == b)
             return 0;
 
@@ -880,13 +878,13 @@ class Diff_t {
                 return error_n - max;
             std::cout << "cd_5_" << i << std::endl;  //@todo
             auto ai = a[i];
-            std::cout << "cd_6_" << i << std::endl;  //@todo
+            std::cout << "cd_6_" << i << std::endl;   //@todo
             std::cout << "ai = " << ai << std::endl;  //@todo
 
-            if(ai == b[j])
+            if(ai == b[j]) {
                 std::cout << "cd_7_" << i << std::endl;  //@todo
                 dist -= 2;
-            else if(i > 0 && (trb = (_Vty)(fp[ai] >> j)) != 0) {
+            } else if(i > 0 && (trb = (_Vty)(fp[ai] >> j)) != 0) {
                 std::cout << "cd_8_" << i << std::endl;  //@todo
                 dist -= 2;
                 found = (_Vty)(trb & (~trb + 1));
@@ -899,11 +897,11 @@ class Diff_t {
 
             } else if(!weight)
                 dist -= 1;
-                std::cout << "cd_11_" << i << std::endl;  //@todo
+            std::cout << "cd_11_" << i << std::endl;  //@todo
 
             ++i, ++j;
         }
-        std::cout << "cd_12_" << i << std::endl;  //@todo
+        std::cout << "cd_12_" << i << std::endl;      //@todo
         std::cout << "dist = " << dist << std::endl;  //@todo
 
         return dist;
