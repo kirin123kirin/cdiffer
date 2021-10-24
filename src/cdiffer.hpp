@@ -1581,8 +1581,11 @@ class Compare {
 
                 int DispOrder = -1, subseq = 0;
                 PyObject* ptag = PySequence_GetItem(row, 0);
-                const char c_tag = _PyUnicode_AsString(ptag)[0];
-
+#if PY_MAJOR_VERSION >= 3
+                const char c_tag = PyUnicode_AsUTF8(ptag)[0];
+#else
+                const char c_tag = (const char)PyUnicode_AsUnicode(ptag)[0];
+#endif
                 PyObject* id_a = PySequence_GetItem(row, 1);
                 if(id_a == NULL) {
                     Py_DECREF(cmp);
@@ -1836,7 +1839,11 @@ class Compare {
             }
 
             tag = PySequence_GetItem(arr, 0);
-            const char c_tag = _PyUnicode_AsString(tag)[0];
+#if PY_MAJOR_VERSION >= 3
+                const char c_tag = PyUnicode_AsUTF8(tag)[0];
+#else
+                const char c_tag = (const char)PyUnicode_AsUnicode(tag)[0];
+#endif
             Py_XDECREF(tag);
             sa = PySequence_GetItem(arr, 3);
             sb = PySequence_GetItem(arr, 4);
