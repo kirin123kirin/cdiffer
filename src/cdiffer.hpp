@@ -1260,10 +1260,14 @@ class Compare {
     }
 
     void initialize() {
+        std::cout << "init_1" << std::endl; //@todo
+
         if(keya)
             a = sortWithKey(len_idxa, idxa, a, keya);
+        std::cout << "init_2" << std::endl; //@todo
         if(keyb)
             b = sortWithKey(len_idxb, idxb, b, keyb);
+        std::cout << "init_3" << std::endl; //@todo
 
         if(condition_value == NULL) {
             condition_value = PyUnicode_FromString(" ---> ");
@@ -1272,6 +1276,7 @@ class Compare {
             PyErr_Format(PyExc_AttributeError, "`condition_value` should be unicode string.");
             return;
         }
+        std::cout << "init_4" << std::endl; //@todo
 
         if(na_value == NULL) {
             na_value = PyUnicode_FromString("-");
@@ -1280,9 +1285,12 @@ class Compare {
             PyErr_Format(PyExc_AttributeError, "`na_value` should be unicode string.");
             return;
         }
+        std::cout << "init_5" << std::endl; //@todo
 
         DEL_Flag = delete_sign_value ? delete_sign_value : PyUnicode_FromString("DEL");
+        std::cout << "init_6" << std::endl; //@todo
         ADD_Flag = insert_sign_value ? insert_sign_value : PyUnicode_FromString("ADD");
+        std::cout << "init_7" << std::endl; //@todo
     }
 
     ~Compare() {
