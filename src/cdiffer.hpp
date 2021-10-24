@@ -9,8 +9,8 @@
 #include <vector>
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include "iostream"  //@todo
 #include "pyyou.hpp"
-#include "iostream" //@todo
 
 namespace gammy {
 
@@ -723,6 +723,9 @@ class Diff_t {
 
    public:
     std::size_t distance(std::size_t max = error_n, bool weight = true) {
+
+        std::cout << "d1_" << std::endl;  //@todo
+
         if(a == b)
             return 0;
 
@@ -735,6 +738,7 @@ class Diff_t {
         if(A == 1 && B == 1)
             return 1ULL + weight;
 
+        std::cout << "d2_" << std::endl;  //@todo
         if(b.kind == 1) {
             /* for ASCII */
             if(B < 8) {
@@ -755,8 +759,10 @@ class Diff_t {
             }
         }
 
+        std::cout << "d3_" << std::endl;  //@todo
         else if(B < 64) {
             if(B < 8) {
+                std::cout << "d4_" << std::endl;  //@todo
                 MappingBlock<uint8_t> fp = {};
                 fp.pair =
                     std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
@@ -779,16 +785,13 @@ class Diff_t {
         }
 
         else {
+            std::cout << "d5_" << std::endl;  //@todo
             /* for Big Size ANY data. */
             std::unordered_map<uint64_t, uint64_t, through_pass_hash<uint64_t>> fp = {};
             return core_distance_bp(fp, max, weight);
         }
     }
-    double similar(double min = -1.0) {
-        std::cout << "s1_" << std::endl; //@todo
-
-         return (double)similar_p((std::size_t)min * 100) / 100.0;
-         }
+    double similar(double min = -1.0) { return (double)similar_p((std::size_t)min * 100) / 100.0; }
 
    protected:
     template <typename Storage>
@@ -897,17 +900,16 @@ class Diff_t {
 
    public:
     std::size_t similar_p(std::size_t min = error_n) {
-        std::cout << "sp1_" << std::endl; //@todo
-
         std::size_t L;
         if((L = A + B) > 0) {
-            std::cout << "sp2_" << std::endl; //@todo
-            if(min == error_n)
+            if(min == error_n) {
+                std::cout << "sp1_" << std::endl;  //@todo
                 return 100 - (100 * distance() / L);
-            else
+            } else {
+                std::cout << "sp2_" << std::endl;  //@todo
                 return 100 - (100 * distance(L - (L * min) / 100) / L);
+            }
         }
-        std::cout << "sp3_" << std::endl; //@todo
         return 0;
     }
 };
@@ -1269,7 +1271,6 @@ class Compare {
     }
 
     void initialize() {
-
         if(keya)
             a = sortWithKey(len_idxa, idxa, a, keya);
         if(keyb)
@@ -1539,18 +1540,15 @@ class Compare {
             Py_INCREF(b);
         }
 
-
         PyObject* cmp = Diff(a, b).compare(diffonly, rep_rate, startidx, condition_value, na_value, DEL_Flag, ADD_Flag);
         if(cmp == NULL || PyErr_Occurred())
             return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
-
 
         Py_ssize_t len = PyObject_Length(cmp);
         if(len == -1) {
             Py_DECREF(cmp);
             return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.");
         }
-
 
         if(len > 0 && (keya || keyb)) {
             std::vector<std::pair<int, PyObject*>> tmp;
@@ -1564,11 +1562,9 @@ class Compare {
                     return PyErr_Format(PyExc_RuntimeError, "Fail get comapre data.\nUnknown Reason.");
                 }
 
-
                 int DispOrder = -1, subseq = 0;
                 PyObject* ptag = PySequence_GetItem(row, 0);
                 const char c_tag = _PyUnicode_AsString(ptag)[0];
-
 
                 PyObject* id_a = PySequence_GetItem(row, 1);
                 if(id_a == NULL) {
@@ -1577,7 +1573,7 @@ class Compare {
                     tmp.clear();
                     return PyErr_Format(PyExc_ValueError, "Fail get comapre data. Not Found arg1 index number");
                 } else if(c_tag == 'i') {
-                // } else if(id_a == na_value) {
+                    // } else if(id_a == na_value) {
                     subseq = 2;
                     PySequence_SetItem(row, 1, id_a);
                 } else {
@@ -1587,10 +1583,11 @@ class Compare {
                         Py_DECREF(cmp);
                         Py_DECREF(row);
                         tmp.clear();
-                        return PyErr_Format(PyExc_IndexError, "Fail arg1 data index number is Stack OverRun.\nUnknown reason...");
+                        return PyErr_Format(PyExc_IndexError,
+                                            "Fail arg1 data index number is Stack OverRun.\nUnknown reason...");
                     }
                     PySequence_SetItem(row, 1, PyLong_FromLong(idxa[ia] + startidx));
-                    if (DispOrder == -1)
+                    if(DispOrder == -1)
                         DispOrder = 10 * idxa[ia];
                     DispOrder = 10 * (idxa[ia] < DispOrder ? idxa[ia] : DispOrder);
                     Py_DECREF(id_a);
@@ -1603,7 +1600,7 @@ class Compare {
                     tmp.clear();
                     return PyErr_Format(PyExc_ValueError, "Fail get comapre data. Not Found arg2 index number");
                 } else if(c_tag == 'd') {
-                // } else if(id_b == na_value) {
+                    // } else if(id_b == na_value) {
                     subseq = 1;
                     PySequence_SetItem(row, 2, id_b);
                 } else {
@@ -1614,12 +1611,13 @@ class Compare {
                         Py_DECREF(cmp);
                         Py_DECREF(row);
                         tmp.clear();
-                        return PyErr_Format(PyExc_IndexError, "Fail arg2 data index number is Stack OverRun.\nUnknown reason...");
+                        return PyErr_Format(PyExc_IndexError,
+                                            "Fail arg2 data index number is Stack OverRun.\nUnknown reason...");
                     }
                     PySequence_SetItem(row, 2, PyLong_FromLong(idxb[ib] + startidx));
-                    if (DispOrder == -1)
+                    if(DispOrder == -1)
                         DispOrder = 10 * idxb[ib];
-                    if(subseq == 0) 
+                    if(subseq == 0)
                         DispOrder = (DispOrder + (10 * idxb[ib])) / 2;
                     else
                         DispOrder = (10 * idxb[ib]) < DispOrder ? 10 * idxb[ib] : DispOrder;
@@ -1701,13 +1699,13 @@ class Compare {
                 if(ctag == NULL)
                     return PyErr_Format(PyExc_IndexError, "Failed get tag value.");
                 if(PyObject_RichCompareBool(ctag, DIFFTP[0][need_ommit], Py_NE)) {
-                        Py_DECREF(ctag);
-                        Py_DECREF(ops);
-                        Py_DECREF(df);
-                        Py_DECREF(row);
-                        sortcontainer.clear();
-                        sortcontainer.~vector();
-                        return this->_1d(false);
+                    Py_DECREF(ctag);
+                    Py_DECREF(ops);
+                    Py_DECREF(df);
+                    Py_DECREF(row);
+                    sortcontainer.clear();
+                    sortcontainer.~vector();
+                    return this->_1d(false);
                 }
                 Py_DECREF(ctag);
             }
@@ -1839,8 +1837,8 @@ class Compare {
                 if(da == Py_None) {
                     need_decref_a = false;
                 } else if(PyIter_Check(da) || PyGen_Check(da) || PyRange_Check(da)) {
-                    da = PySequence_Fast(
-                        da, "from `da` iterator");  //@note PySequence_Fast reason : memory leak when PySequence_List or PySequence_Tuple
+                    da = PySequence_Fast(da, "from `da` iterator");  //@note PySequence_Fast reason : memory leak when
+                                                                     // PySequence_List or PySequence_Tuple
                 } else if(PyTuple_Check(da)) {
                     if(PyObject_Length(da) == 0)
                         Py_INCREF(da);
@@ -1870,8 +1868,8 @@ class Compare {
                 if(db == Py_None) {
                     need_decref_b = false;
                 } else if(PyIter_Check(db) || PyGen_Check(db) || PyRange_Check(db)) {
-                    db = PySequence_Fast(
-                        db, "from `db` iterator");  //@note PySequence_Fast reason : memory leak when PySequence_List or PySequence_Tuple
+                    db = PySequence_Fast(db, "from `db` iterator");  //@note PySequence_Fast reason : memory leak when
+                                                                     // PySequence_List or PySequence_Tuple
                 } else if(PyTuple_Check(db)) {
                     if(PyObject_Length(db) == 0)
                         Py_INCREF(db);
