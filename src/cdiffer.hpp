@@ -9,7 +9,6 @@
 #include <vector>
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-#include "iostream"  //@todo
 #include "pyyou.hpp"
 
 namespace gammy {
@@ -872,7 +871,6 @@ class Diff_t {
             if(max < dist - (A - i) * 2)
                 return error_n - max;
             auto ai = a[i];
-            // std::cout << "fp[ai] = " << fp[ai] << std::endl;  //@todo segmentation fault bug reason target
 
             if(ai == b[j]) {
                 dist -= 2;
