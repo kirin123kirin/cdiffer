@@ -66,51 +66,21 @@ PyObject* differ_py(PyObject* self, PyObject* args, PyObject* kwargs) {
 }
 
 PyObject* compare_py(PyObject* self, PyObject* args, PyObject* kwargs) {
-    PyObject* a = NULL;
-    PyObject* b = NULL;
-    PyObject* keya = NULL;
-    PyObject* keyb = NULL;
-    bool header = true;
-    bool diffonly = false;
-    int rep_rate = REPLACEMENT_RATE;
-    int startidx = 0;
-    PyObject* condition_value = NULL;
-    PyObject* na_value = NULL;
-    PyObject* delete_sign_value = NULL;
-    PyObject* insert_sign_value = NULL;
+    PyObject *a, *b;
 
-    const char* kwlist[13] = {"a",
-                              "b",
-                              "keya",
-                              "keyb",
-                              "header",
-                              "diffonly",
-                              "rep_rate",
-                              "startidx",
-                              "condition_value",
-                              "na_value",
-                              "delete_sign_value",
-                              "insert_sign_value",
-                              NULL};
-
-    if(!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|OOiiiiOOOO", (char**)kwlist, &a, &b, &keya, &keyb, &header,
-                                    &diffonly, &rep_rate, &startidx, &condition_value, &na_value, &delete_sign_value,
-                                    &insert_sign_value))
+    if(!PyArg_UnpackTuple(args, (char*)("compare"), 2, 2, &a, &b))
         return NULL;
-
-    gammy::Compare cmp(a, b, keya, keyb, header, diffonly, rep_rate, startidx, condition_value, na_value,
-                       delete_sign_value, insert_sign_value);
 
     if((a == Py_None || b == Py_None) ||
        ((PyUnicode_Check(a) || PyBool_Check(a) || PyNumber_Check(a) || PyBytes_Check(a) || PyByteArray_Check(a)) &&
         (PyUnicode_Check(b) || PyBool_Check(b) || PyNumber_Check(b) || PyBytes_Check(b) || PyByteArray_Check(b)))) {
-        return cmp._1d();
-    }
-    else if(PyDict_Check(a) && PyDict_Check(b)) {
-        return cmp._3d();
-    }
-    else {
-        return cmp._2d();
+        return gammy::Compare(args, kwargs)._1d();
+
+    } else if(PyDict_Check(a) && PyDict_Check(b)) {
+        return gammy::Compare(args, kwargs)._3d();
+
+    } else {
+        return gammy::Compare(args, kwargs)._2d();
     }
 }
 
@@ -226,8 +196,8 @@ PyObject* compare_py(PyObject* self, PyObject* args, PyObject* kwargs) {
     "This Function is compare and prety printing 2 sequence data.\n"                                           \
     "\n"                                                                                                       \
     "# Parameters :\n"                                                                                         \
-    "    a -> object : left comare target data.\n"                                                             \
-    "    b -> object : right comare target data.\n"                                                            \
+    "    arg1 -> iterable : left comare target data.\n"                                                             \
+    "    arg2 -> iterable : right comare target data.\n"                                                            \
     "    keya -> callable one argument function : Using sort and compare with key about `a` object.\n"         \
     "    keyb -> callable one argument function : Using sort and compare with key about `a` object.\n"         \
     "    header -> bool : output data with header(True) or without header(False). <default True>\n"            \

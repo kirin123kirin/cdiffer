@@ -542,8 +542,7 @@ class Diff_t {
 
         PyObject** pyn = new PyObject*[B];
         if(pyn == NULL) {
-            PyErr_NoMemory();
-            return NULL;
+            return PyErr_NoMemory();
         }
         for(std::size_t n = 0; n < B; n++) {
             fp[b[n]] |= uint64_t(1) << n % BITS;
@@ -606,8 +605,8 @@ class Diff_t {
 
         for(; j < B; ++j)
             makelist_pyn(ops, pyn, ED_INSERT, x, j);
-        for(std::size_t n = 0; n < B; n++)
-            Py_DECREF(pyn[n]);
+        // for(std::size_t n = 0; n < B; n++)
+        //     Py_DECREF(pyn[n]);
         delete[] pyn;
         return ops;
     }
@@ -1030,7 +1029,7 @@ class Diff {
             }
         } else if(kind1 == 4)
             return Diff_t<pyview_t<uint32_t>>(a, b).difference(_diffonly, _rep_rate);
-        return NULL;
+        return PyErr_Format(PyExc_ValueError, "Unknown data..");
     }
 
     PyObject* compare(bool _diffonly,
@@ -1125,7 +1124,7 @@ class Diff {
             return Diff_t<pyview_t<uint32_t>>(a, b).compare(_diffonly, _rep_rate, _startidx, _condition_value,
                                                             _na_value, _DEL_Flag, _ADD_Flag);
         }
-        return NULL;
+        return PyErr_Format(PyExc_ValueError, "Unknown data..");
     }
 };
 
@@ -1179,6 +1178,50 @@ class Compare {
           DEL_Flag(NULL),
           ADD_Flag(NULL) {}
 
+    Compare(PyObject* args, PyObject* kwargs)
+        : a(),
+          b(),
+          keya(NULL),
+          keyb(NULL),
+          header(true),
+          diffonly(false),
+          rep_rate(REPLACEMENT_RATE),
+          startidx(0),
+          condition_value(NULL),
+          na_value(NULL),
+          delete_sign_value(NULL),
+          insert_sign_value(NULL),
+          idxa(NULL),
+          idxb(NULL),
+          len_idxa(NULL),
+          len_idxb(NULL),
+          maxcol(0),
+          need_clean_cv(false),
+          need_clean_nv(false),
+          DEL_Flag(NULL),
+          ADD_Flag(NULL) {
+        const char* kwlist[13] = {"a",
+                                  "b",
+                                  "keya",
+                                  "keyb",
+                                  "header",
+                                  "diffonly",
+                                  "rep_rate",
+                                  "startidx",
+                                  "condition_value",
+                                  "na_value",
+                                  "delete_sign_value",
+                                  "insert_sign_value",
+                                  NULL};
+
+        if(!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|OOiiiiOOOO", (char**)kwlist, &a, &b, &keya, &keyb, &header,
+                                        &diffonly, &rep_rate, &startidx, &condition_value, &na_value,
+                                        &delete_sign_value, &insert_sign_value))
+            return;
+
+        initialize();
+    }
+
     Compare(PyObject* _a,
             PyObject* _b,
             PyObject* _keya,
@@ -1191,8 +1234,8 @@ class Compare {
             PyObject* _na_value,
             PyObject* _delete_sign_value,
             PyObject* _insert_sign_value)
-        : a(),
-          b(),
+        : a(_a),
+          b(_b),
           keya(_keya),
           keyb(_keyb),
           header(_header),
@@ -1212,8 +1255,14 @@ class Compare {
           need_clean_nv(false),
           DEL_Flag(NULL),
           ADD_Flag(NULL) {
-        a = keya ? sortWithKey(len_idxa, idxa, _a, keya) : _a;
-        b = keyb ? sortWithKey(len_idxb, idxb, _b, keyb) : _b;
+        initialize();
+    }
+
+    void initialize() {
+        if(keya)
+            a = sortWithKey(len_idxa, idxa, a, keya);
+        if(keyb)
+            b = sortWithKey(len_idxb, idxb, b, keyb);
 
         if(condition_value == NULL) {
             condition_value = PyUnicode_FromString(" ---> ");
@@ -1240,10 +1289,14 @@ class Compare {
             Py_XDECREF(a);
         if(keyb)
             Py_XDECREF(b);
-        if(idxa)
+        if(idxa && *idxa) {
+            *idxa = NULL;
             PyMem_Free(idxa);
-        if(idxb)
+        }
+        if(idxb && *idxb) {
+            *idxb = NULL;
             PyMem_Free(idxb);
+        }
         if(need_clean_cv)
             Py_XDECREF(condition_value);
         if(need_clean_nv)
@@ -1287,7 +1340,7 @@ class Compare {
                 idict[uint64_t(row)] = (int)i;
             }
             if(PyErr_Occurred()) {
-                return NULL;
+                return PyErr_Format(PyExc_TypeError, "Can not append index data.");
             }
         }
 
@@ -1305,7 +1358,7 @@ class Compare {
             Py_DECREF(keyString);
             Py_DECREF(keywords);
             Py_DECREF(argTuple);
-            return NULL;
+            return PyErr_Format(PyExc_TypeError, "Can not call sort method.");
         }
 
         Py_DECREF(result);
@@ -1467,7 +1520,8 @@ class Compare {
    public:
     PyObject* _1d(bool is_initialcall = true) {
         if(a == NULL || b == NULL)
-            return NULL;
+            return PyErr_Format(PyExc_RuntimeError,
+                                "Can not make data.\n Check your `a` or `b` data is stop iteration?");
 
         if(is_initialcall) {
             Py_INCREF(a);
@@ -1506,10 +1560,10 @@ class Compare {
                     PySequence_SetItem(row, 1, id_a);
                 } else {
                     std::size_t ia = (std::size_t)PyLong_AsLong(id_a);
-                    if(len_idxa <= ia)
+                    if (len_idxa <= ia)
                         return PyErr_Format(PyExc_RuntimeError, "Fail Find line index number.\nUnknown reason...");
                     PySequence_SetItem(row, 1, PyLong_FromLong(idxa[ia] + startidx));
-                    if(DispOrder == -1)
+                    if (DispOrder == -1)
                         DispOrder = 10 * idxa[ia];
                     DispOrder = 10 * (idxa[ia] < DispOrder ? idxa[ia] : DispOrder);
                     Py_DECREF(id_a);
@@ -1525,12 +1579,12 @@ class Compare {
                     PySequence_SetItem(row, 2, id_b);
                 } else {
                     std::size_t ib = (std::size_t)PyLong_AsLong(id_b);
-                    if(len_idxb <= ib)
+                    if (len_idxb <= ib)
                         return PyErr_Format(PyExc_RuntimeError, "Fail Find line index number.\nUnknown reason...");
                     PySequence_SetItem(row, 2, PyLong_FromLong(idxb[ib] + startidx));
-                    if(DispOrder == -1)
+                    if (DispOrder == -1)
                         DispOrder = 10 * idxb[ib];
-                    if(subseq == 0)
+                    if(subseq == 0) 
                         DispOrder = (DispOrder + (10 * idxb[ib])) / 2;
                     else
                         DispOrder = (10 * idxb[ib]) < DispOrder ? 10 * idxb[ib] : DispOrder;
@@ -1553,8 +1607,11 @@ class Compare {
                 return Py_BuildValue("[[ssss]]", "tag", "index_a", "index_b", "data");
             }
             PyObject* head = Py_BuildValue("[ssss]", "tag", "index_a", "index_b", "data");
-            if((PyList_Insert(cmp, 0, head)) == -1)
+            if((PyList_Insert(cmp, 0, head)) == -1) {
+                Py_XDECREF(head);
+                Py_XDECREF(cmp);
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _1d() near");
+            }
             Py_DECREF(head);
         }
 
@@ -1563,10 +1620,10 @@ class Compare {
 
     PyObject* _2d() {
         if(a == NULL || b == NULL)
-            return NULL;
+            return PyErr_Format(PyExc_RuntimeError,
+                                "Can not make data.\n Check your `a` or `b` data is stop iteration?");
 
         Py_ssize_t len, i;
-        std::pair<std::size_t, PyObject*> intercompresult;
         bool needsort = keya || keyb;
         PyObject* df = Diff(a, b).difference(diffonly, rep_rate);
 
@@ -1608,21 +1665,25 @@ class Compare {
                 if(ctag == NULL)
                     return PyErr_Format(PyExc_IndexError, "Failed get tag value.");
                 if(PyObject_RichCompareBool(ctag, DIFFTP[0][need_ommit], Py_NE)) {
-                    Py_DECREF(ctag);
-                    Py_DECREF(ops);
-                    Py_DECREF(df);
-                    Py_DECREF(row);
-                    return this->_1d(false);
+                        Py_DECREF(ctag);
+                        Py_DECREF(ops);
+                        Py_DECREF(df);
+                        Py_DECREF(row);
+                        sortcontainer.clear();
+                        sortcontainer.~vector();
+                        return this->_1d(false);
                 }
                 Py_DECREF(ctag);
             }
 
-            intercompresult = intercomplist(row);
+            std::pair<std::size_t, PyObject*> intercompresult = intercomplist(row);
 
             if(intercompresult.first == error_n) {
                 Py_DECREF(ops);
                 Py_DECREF(df);
                 Py_DECREF(row);
+                sortcontainer.clear();
+                sortcontainer.~vector();
                 return this->_1d(false);
             }
 
@@ -1634,8 +1695,12 @@ class Compare {
 
             Py_XDECREF(row);
 
-            if(PyErr_Occurred() != NULL)
+            if(PyErr_Occurred() != NULL) {
+                Py_XDECREF(intercompresult.second);
+                sortcontainer.clear();
+                sortcontainer.~vector();
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() below");
+            }
         }
 
         Py_CLEAR(df);
@@ -1649,8 +1714,12 @@ class Compare {
 
         if(header) {
             PyObject* head = PyList_New(3 + maxcol);
-            if(head == NULL)
+            if(head == NULL) {
+                Py_DECREF(ops);
+                sortcontainer.clear();
+                sortcontainer.~vector();
                 return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+            }
 
             PyList_SetItem(head, 0, PyUnicode_FromString("tag"));
             PyList_SetItem(head, 1, PyUnicode_FromString("index_a"));
@@ -1665,8 +1734,13 @@ class Compare {
                 }
             }
 
-            if((PyList_SetItem(ops, 0, head)) == -1)
+            if((PyList_SetItem(ops, 0, head)) == -1) {
+                Py_DECREF(head);
+                Py_DECREF(ops);
+                sortcontainer.clear();
+                sortcontainer.~vector();
                 return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() header");
+            }
         }
 
         return ops;
@@ -1674,8 +1748,8 @@ class Compare {
 
     PyObject* _3d() {
         if(a == NULL || b == NULL)
-            return NULL;
-
+            return PyErr_Format(PyExc_RuntimeError,
+                                "Can not make data.\n Check your `a` or `b` data is stop iteration?");
         Py_ssize_t len, i, j, slen;
 
         PyObject* la = PyDict_Keys(a);
@@ -1733,8 +1807,8 @@ class Compare {
                 if(da == Py_None) {
                     need_decref_a = false;
                 } else if(PyIter_Check(da) || PyGen_Check(da) || PyRange_Check(da)) {
-                    da = PySequence_Fast(da, "from `da` iterator");  //@note PySequence_Fast reason : memory leak when
-                                                                     //PySequence_List or PySequence_Tuple
+                    da = PySequence_Fast(
+                        da, "from `da` iterator");  //@note PySequence_Fast reason : memory leak when PySequence_List or PySequence_Tuple
                 } else if(PyTuple_Check(da)) {
                     if(PyObject_Length(da) == 0)
                         Py_INCREF(da);
@@ -1764,8 +1838,8 @@ class Compare {
                 if(db == Py_None) {
                     need_decref_b = false;
                 } else if(PyIter_Check(db) || PyGen_Check(db) || PyRange_Check(db)) {
-                    db = PySequence_Fast(db, "from `db` iterator");  //@note PySequence_Fast reason : memory leak when
-                                                                     //PySequence_List or PySequence_Tuple
+                    db = PySequence_Fast(
+                        db, "from `db` iterator");  //@note PySequence_Fast reason : memory leak when PySequence_List or PySequence_Tuple
                 } else if(PyTuple_Check(db)) {
                     if(PyObject_Length(db) == 0)
                         Py_INCREF(db);
@@ -1823,23 +1897,25 @@ class Compare {
                     Py_DECREF(dfs);
                     return PyErr_Format(PyExc_ValueError, "Cannot get a Dictionary Inner array.");
                 }
-                Py_INCREF(content);
+                // Py_INCREF(content);
                 PyList_Insert(row, 0, content);
                 PyList_Append(ops, row);
 
-                Py_XDECREF(row);
+                Py_DECREF(row);
             }
 
             Py_DECREF(arr);
-            Py_DECREF(df);
+            Py_XDECREF(df);
         }
 
         Py_DECREF(dfs);
 
         if(header) {
             PyObject* head = PyList_New(4 + maxcol);
-            if(head == NULL)
+            if(head == NULL) {
+                Py_DECREF(ops);
                 return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
+            }
 
             PyList_SetItem(head, 0, PyUnicode_FromString("group"));
             PyList_SetItem(head, 1, PyUnicode_FromString("tag"));
@@ -1854,8 +1930,11 @@ class Compare {
                     PyList_SetItem(head, 4 + n, PyUnicode_FromString((const char*)colname));
                 }
             }
-            if((PyList_SetItem(ops, 0, head)) == -1)
-                return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _2d() header");
+            if((PyList_SetItem(ops, 0, head)) == -1) {
+                Py_DECREF(head);
+                Py_DECREF(ops);
+                return PyErr_Format(PyExc_RuntimeError, "Unknown Error cdiffer.hpp _3d() header");
+            }
         }
 
         return ops;

@@ -254,7 +254,7 @@ class pyview_t {
         } else if(size() > 0 && index < size()) {
             return PySequence_GetItem(py, (Py_ssize_t)index);
         } else {
-            return NULL;
+            return PyErr_Format(PyExc_IndexError, "Bad Index value.");
         }
     }
 
@@ -503,7 +503,7 @@ class pyview {
         } else if(size() > 0 && index < size()) {
             return PySequence_GetItem(py, (Py_ssize_t)index);
         } else {
-            return NULL;
+            return PyErr_Format(PyExc_IndexError, "Bad Index value.");
         }
     }
     constexpr uint64_t const* data() const noexcept { return data_64; }
