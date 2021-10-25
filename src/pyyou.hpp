@@ -195,12 +195,18 @@ class pyview_t {
         }
 
         data_ = new CharT[size_];
+        
         if(data_ == NULL) {
             PyErr_NoMemory();
             return;
         }
+
+        CharT errval = CharT(-1);
+        
+        std::fill(data_, data_ + size_, errval);
         be_hash_clear = true;
         canonical = false;
+
 
         for(std::size_t i = 0; i < size_; i++) {
             PyObject* item = PySequence_ITEM(py, (Py_ssize_t)i);
@@ -209,7 +215,7 @@ class pyview_t {
             } else {
                 PyObject* tmp = PySequence_Tuple(item);
                 if (tmp == NULL){
-                    data_[i] = NULL;
+                    data_[i] = errval;
                     Py_DECREF(item);
                     continue;
                 }
@@ -221,6 +227,12 @@ class pyview_t {
                 Py_DECREF(tmp);
             }
             Py_DECREF(item);
+
+            //@todo nandoka crash shita
+            if(data_[i] == errval) {
+                PyErr_Format(PyExc_ReferenceError, "Cannot Hash data. Force Stop");
+                return;
+            }
         }
     }
 
@@ -437,12 +449,18 @@ class pyview {
         }
 
         data_64 = new uint64_t[size_];
+
         if(data_64 == NULL) {
             PyErr_NoMemory();
             return;
         }
+
+        uint64_t errval = uint64_t(-1);
+
+        std::fill(data_64, data_64 + size_, errval);
         be_hash_clear = true;
         canonical = false;
+
         for(std::size_t i = 0; i < size_; i++) {
             PyObject* item = PySequence_ITEM(py, (Py_ssize_t)i);
             if(PyHashable_Check(item)) {
@@ -450,7 +468,7 @@ class pyview {
             } else {
                 PyObject* tmp = PySequence_Tuple(item);
                 if (tmp == NULL){
-                    data_64[i] = NULL;
+                    data_64[i] = errval;
                     Py_DECREF(item);
                     continue;
                 }
@@ -463,6 +481,11 @@ class pyview {
                 Py_DECREF(tmp);
             }
             Py_DECREF(item);
+            //@todo nandoka crash shita
+            if(data_64[i] == errval) {
+                PyErr_Format(PyExc_ReferenceError, "Cannot Hash data. Force Stop");
+                return;
+            }
         }
     }
 
