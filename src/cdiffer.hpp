@@ -73,7 +73,7 @@ struct MappingBlock {
         value_type vx = (value_type)x;
         while(pair[0][hash] && pair[1][hash] != vx)
             hash = (hash + size_type(1)) % fraction_size;
-        pair[1][hash] = vx;  //@todo tamani assertion error..... Unknow  Reason.
+        pair[1][hash] = vx;
         return pair[0][hash];
     }
 
@@ -359,28 +359,36 @@ class Diff_t {
             return ops;
         }
 
-        else if(B < 64) {
-            if(B < 8) {
-                MappingBlock<uint8_t> fp = {};
-                fp.pair =
-                    std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
-                return core_difference(fp);
-            } else if(B < 16) {
-                MappingBlock<uint16_t> fp = {};
-                fp.pair =
-                    std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
-                return core_difference(fp);
-            } else if(B < 32) {
-                MappingBlock<uint32_t, 257> fp = {};
-                fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
-                return core_difference(fp);
-            } else {
-                MappingBlock<uint64_t, 521> fp = {};
-                fp.pair = std::array<std::array<uint64_t, 521>, 2>{
-                    {{ZERO_256, ZERO_256, ZERO_8, ZERO_1}, {ZERO_256, ZERO_256, ZERO_8, ZERO_1}}};
-                return core_difference(fp);
-            }
+        else if(B < 32) {
+            MappingBlock<uint32_t, 257> fp = {};
+            fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
+            return core_difference(fp);
         }
+        
+        // else if(B < 64) {
+        //     if(B < 8) {
+        //         MappingBlock<uint8_t> fp = {};
+        //         fp.pair =
+        //             std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2,
+        //             ZERO_1}}};
+        //         return core_difference(fp);
+        //     } else if(B < 16) {
+        //         MappingBlock<uint16_t> fp = {};
+        //         fp.pair =
+        //             std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2,
+        //             ZERO_1}}};
+        //         return core_difference(fp);
+        //     } else if(B < 32) {
+        //         MappingBlock<uint32_t, 257> fp = {};
+        //         fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
+        //         return core_difference(fp);
+        //     } else {
+        //         MappingBlock<uint64_t, 521> fp = {};
+        //         fp.pair = std::array<std::array<uint64_t, 521>, 2>{
+        //             {{ZERO_256, ZERO_256, ZERO_8, ZERO_1}, {ZERO_256, ZERO_256, ZERO_8, ZERO_1}}};
+        //         return core_difference(fp);
+        //     }
+        // }
 
         else {
             /* for Big Size ANY data. */
@@ -433,28 +441,36 @@ class Diff_t {
             return ops;
         }
 
-        else if(B < 64) {
-            if(B < 8) {
-                MappingBlock<uint8_t> fp = {};
-                fp.pair =
-                    std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
-                return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
-            } else if(B < 16) {
-                MappingBlock<uint16_t> fp = {};
-                fp.pair =
-                    std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
-                return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
-            } else if(B < 32) {
-                MappingBlock<uint32_t, 257> fp = {};
-                fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
-                return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
-            } else {
-                MappingBlock<uint64_t, 521> fp = {};
-                fp.pair = std::array<std::array<uint64_t, 521>, 2>{
-                    {{ZERO_256, ZERO_256, ZERO_8, ZERO_1}, {ZERO_256, ZERO_256, ZERO_8, ZERO_1}}};
-                return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
-            }
+        else if(B < 32) {
+            MappingBlock<uint32_t, 257> fp = {};
+            fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
+            return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
         }
+
+        // else if(B < 64) {
+        //     if(B < 8) {
+        //         MappingBlock<uint8_t> fp = {};
+        //         fp.pair =
+        //             std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2,
+        //             ZERO_1}}};
+        //         return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
+        //     } else if(B < 16) {
+        //         MappingBlock<uint16_t> fp = {};
+        //         fp.pair =
+        //             std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2,
+        //             ZERO_1}}};
+        //         return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
+        //     } else if(B < 32) {
+        //         MappingBlock<uint32_t, 257> fp = {};
+        //         fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
+        //         return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
+        //     } else {
+        //         MappingBlock<uint64_t, 521> fp = {};
+        //         fp.pair = std::array<std::array<uint64_t, 521>, 2>{
+        //             {{ZERO_256, ZERO_256, ZERO_8, ZERO_1}, {ZERO_256, ZERO_256, ZERO_8, ZERO_1}}};
+        //         return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
+        //     }
+        // }
 
         else {
             /* for Big Size ANY data. */
@@ -763,28 +779,36 @@ class Diff_t {
             }
         }
 
-        else if(B < 64) {
-            if(B < 8) {
-                MappingBlock<uint8_t> fp = {};
-                fp.pair =
-                    std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
-                return core_distance_bp_simple(fp, max, weight);
-            } else if(B < 16) {
-                MappingBlock<uint16_t> fp = {};
-                fp.pair =
-                    std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
-                return core_distance_bp_simple(fp, max, weight);
-            } else if(B < 32) {
-                MappingBlock<uint32_t, 257> fp = {};
-                fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
-                return core_distance_bp_simple(fp, max, weight);
-            } else {
-                MappingBlock<uint64_t, 521> fp = {};
-                fp.pair = std::array<std::array<uint64_t, 521>, 2>{
-                    {{ZERO_256, ZERO_256, ZERO_8, ZERO_1}, {ZERO_256, ZERO_256, ZERO_8, ZERO_1}}};
-                return core_distance_bp_simple(fp, max, weight);
-            }
+        else if(B < 32) {
+            MappingBlock<uint32_t, 257> fp = {};
+            fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
+            return core_distance_bp_simple(fp, max, weight);
         }
+
+        // else if(B < 64) {
+        //     if(B < 8) {
+        //         MappingBlock<uint8_t> fp = {};
+        //         fp.pair =
+        //             std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2,
+        //             ZERO_1}}};
+        //         return core_distance_bp_simple(fp, max, weight);
+        //     } else if(B < 16) {
+        //         MappingBlock<uint16_t> fp = {};
+        //         fp.pair =
+        //             std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2,
+        //             ZERO_1}}};
+        //         return core_distance_bp_simple(fp, max, weight);
+        //     } else if(B < 32) {
+        //         MappingBlock<uint32_t, 257> fp = {};
+        //         fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
+        //         return core_distance_bp_simple(fp, max, weight);
+        //     } else {
+        //         MappingBlock<uint64_t, 521> fp = {};
+        //         fp.pair = std::array<std::array<uint64_t, 521>, 2>{
+        //             {{ZERO_256, ZERO_256, ZERO_8, ZERO_1}, {ZERO_256, ZERO_256, ZERO_8, ZERO_1}}};
+        //         return core_distance_bp_simple(fp, max, weight);
+        //     }
+        // }
 
         else {
             /* for Big Size ANY data. */
