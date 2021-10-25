@@ -1,7 +1,7 @@
 
 
 # Python C Extention 2 Sequence Compare
-[![Upload pypi.org](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml/badge.svg?branch=v0.6.12)](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml)
+[![Upload pypi.org](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml/badge.svg?branch=v0.7.1)](https://github.com/kirin123kirin/cdiffer/actions/workflows/pypi.yml)
 
 **Edit distance, Similarity and 2 sequence differences printing.**
 
@@ -118,19 +118,61 @@ differ(source_sequence, destination_sequence, diffonly=False, rep_rate=60)
 ```
 
 # cdiffer.compare
-
-compare and prety printing 2 sequence data.
+This Function is compare and prety printing 2 sequence data.
 
 ## Usage
 compare(source_sequence, destination_sequence, diffonly=False, rep_rate=60, condition_value=" ---> ")
 
-## Examples
+### Parameters :
+    arg1 -> iterable : left comare target data.
+    arg2 -> iterable : right comare target data.
+    keya -> callable one argument function : Using sort and compare with key about `a` object.
+    keyb -> callable one argument function : Using sort and compare with key about `a` object.
+    header -> bool : output data with header(True) or without header(False). <default True>
+    diffonly -> bool : output data with equal data(False) or without equal data(True). <default False>
+    rep_rate -> int: Threshold to be considered as replacement.(-1 ~ 100). -1: allways replacement.
+    startidx -> int: output record index starting number. <default `0`>
+    condition_value -> str : Conjunctions for comparison.
+    na_value -> str: if not found data when filled value.
+    delete_sign_value -> str: if deleted data when adding sign value.
+    insert_sign_value ->  str: if insert data when adding sign value.
+
+### Return : Lists of List
+    1st column -> matching rate (0 ~ 100).
+    2nd column -> matching tagname (unicode string).
+    3rd over   -> compare data.
+
+### Examples
 
 ```python
->>> from cdiffer import compare
+In [1]: from cdiffer import compare
 ... compare('coffee', 'cafe')
-[[60, 'insert', 'c', 'a', 'f', 'e'],
- [60, 'delete', 'c', 'o', 'f', 'f', 'e', 'e']]
+[['tag', 'index_a', 'index_b', 'data'],
+ ['equal', 0, 0, 'c'],
+ ['insert', '-', 1, 'ADD ---> a'],
+ ['delete', 1, '-', 'o ---> DEL'],
+ ['equal', 2, 2, 'f'],
+ ['delete', 3, '-', 'f ---> DEL'],
+ ['equal', 4, 3, 'e'],
+ ['delete', 5, '-', 'e ---> DEL']]
+
+In [2]: compare([list("abc"), list("abc")], [list("abc"), list("acc"), list("xtz")], rep_rate=50)
+[['tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03'],
+ ['equal', 0, 0, 'a', 'b', 'c'],
+ ['replace', 1, 1, 'a', 'b ---> DEL', 'ADD ---> c', 'c'],
+ ['insert', '-', 2, 'ADD ---> x', 'ADD ---> t', 'ADD ---> z']]
+
+In [3]: compare(["abc", "abc"], ["abc", "acc", "xtz"], rep_rate=40)
+[['tag', 'index_a', 'index_b', 'data'],
+ ['equal', 0, 0, 'abc'],
+ ['replace', 1, 1, 'abc ---> acc'],
+ ['insert', '-', 2, 'ADD ---> xtz']]
+
+In [4]: compare(["abc", "abc"], ["abc", "acc", "xtz"], rep_rate=50)
+[['tag', 'index_a', 'index_b', 'data'],
+ ['equal', 0, 0, 'abc'],
+ ['replace', 1, 1, 'abc ---> acc'],
+ ['insert', '-', 2, 'ADD ---> xtz']]
 
 ```
 
