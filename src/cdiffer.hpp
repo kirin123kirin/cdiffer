@@ -192,9 +192,6 @@ void complist(PyObject*& ops,
                 ret = PyUnicode_Concat(concat, DEL_Flag);
             } else {
                 forcestr = PyObject_Str(item ? item : a);
-#if PY_MAJOR_VERSION == 2
-                forcestr = PyObject_Unicode(forcestr);
-#endif
                 concat = PyUnicode_Concat(forcestr, condition_value);
                 ret = PyUnicode_Concat(concat, DEL_Flag);
             }
@@ -213,9 +210,6 @@ void complist(PyObject*& ops,
                 ret = PyUnicode_Concat(concat, item);
             } else {
                 forcestr = PyObject_Str(item ? item : b);
-#if PY_MAJOR_VERSION == 2
-                forcestr = PyObject_Unicode(forcestr);
-#endif
                 ret = PyUnicode_Concat(concat, forcestr);
             }
         } else {
@@ -230,9 +224,6 @@ void complist(PyObject*& ops,
             concat = PyUnicode_Concat(item, condition_value);
         } else {
             forcestr = PyObject_Str(item ? item : a);
-#if PY_MAJOR_VERSION == 2
-            forcestr = PyObject_Unicode(forcestr);
-#endif
             concat = PyUnicode_Concat(forcestr, condition_value);
         }
         Py_CLEAR(item);
@@ -242,9 +233,6 @@ void complist(PyObject*& ops,
             ret = PyUnicode_Concat(concat, item);
         } else {
             forcestr = PyObject_Str(item ? item : b);
-#if PY_MAJOR_VERSION == 2
-            forcestr = PyObject_Unicode(forcestr);
-#endif
             ret = PyUnicode_Concat(concat, forcestr);
         }
     } else {
@@ -571,7 +559,7 @@ class Diff_t {
         x = 0;
 
         while(i < A && j < B) {
-            auto ai = a[i];
+            auto ai = a[x];
 
             if(ai == b[j]) {
                 if(!diffonly)
@@ -588,7 +576,7 @@ class Diff_t {
                     }
                     if(!diffonly)
                         makelist_pyn(ops, pyn, ED_EQUAL, x, j);
-                } else if(i < A) {
+                } else if(x < A) {
                     if(rep_rate > 0 &&
                        ((a.canonical && b.canonical) ||
                         Diff_t<pyview>(a.getitem(x), b.getitem(j), true).similar(rep_rate) * 100 < rep_rate)) {
@@ -671,7 +659,7 @@ class Diff_t {
         x = 0;
 
         while(i < A && j < B) {
-            auto ai = a[i];
+            auto ai = a[x];
 
             if(ai == b[j]) {
                 if(!diffonly)
@@ -691,7 +679,7 @@ class Diff_t {
                     if(!diffonly && j < B)
                         complist(ops, ED_EQUAL, x, j, a.py, b.py, swapflag, startidx, condition_value, _na_value,
                                  _DEL_Flag, _ADD_Flag);
-                } else if(i < A) {
+                } else if(x < A) {
                     if(rep_rate > 0 &&
                        ((a.canonical && b.canonical) ||
                         Diff_t<pyview>(a.getitem(x), b.getitem(j), true).similar(rep_rate) * 100 < rep_rate)) {
@@ -1887,8 +1875,8 @@ class Compare {
                     da = PySequence_Fast(da, "from `da` iterator");  //@note PySequence_Fast reason : memory leak when
                                                                      // PySequence_List or PySequence_Tuple
                 } else if(PyTuple_Check(da)) {
-                    // if(PyObject_Length(da) == 0)
-                    //     Py_INCREF(da);
+                    if(PyObject_Length(da) == 0)
+                        Py_INCREF(da);
                     need_decref_a = false;
                 } else if(PyList_Check(da)) {
                     if(PyObject_Length(da) == 0)
@@ -1896,12 +1884,12 @@ class Compare {
                     else
                         Py_INCREF(da);
                 } else if(PyNumber_Check(da)) {
-                    // Py_INCREF(da);
+                    Py_INCREF(da);
                     need_decref_a = false;
                 }
             } else {
                 if(PyObject_Length(da) == 0) {
-                    // Py_INCREF(da);
+                    Py_INCREF(da);
                     need_decref_a = false;
                 } else {
                     da = Py_BuildValue("[O]", da);
@@ -1927,12 +1915,12 @@ class Compare {
                     else
                         Py_INCREF(db);
                 } else if(PyNumber_Check(db)) {
-                    // Py_INCREF(db);
+                    Py_INCREF(db);
                     need_decref_b = false;
                 }
             } else {
                 if(PyObject_Length(db) == 0) {
-                    // Py_INCREF(db);
+                    Py_INCREF(db);
                     need_decref_b = false;
                 } else {
                     db = Py_BuildValue("[O]", db);
@@ -1945,9 +1933,9 @@ class Compare {
             df = cmp._2d();
 
             if(need_decref_a)
-                Py_XDECREF(da);
+                Py_CLEAR(da);
             if(need_decref_b)
-                Py_XDECREF(db);
+                Py_CLEAR(db);
 
             if(maxcol < cmp.maxcol)
                 maxcol = cmp.maxcol;
@@ -1955,15 +1943,17 @@ class Compare {
             if(c_tag == 'r') {
                 concat = PyUnicode_Concat(sa, condition_value);
                 content = PyUnicode_Concat(concat, sb);
-                Py_XDECREF(concat);
+                Py_CLEAR(concat);
             } else if(c_tag == 'i') {
                 content = sb;
             } else {
                 content = sa;
             }
 
-            Py_XDECREF(sa);
-            Py_XDECREF(sb);
+            if (sa)
+                Py_CLEAR(sa);
+            if (sb)
+                Py_CLEAR(sb);
 
             for(j = 0, slen = PyObject_Length(df); j < slen; ++j) {
                 if((row = PySequence_GetItem(df, j)) == NULL) {
@@ -1981,8 +1971,9 @@ class Compare {
                 Py_DECREF(row);
             }
 
-            Py_DECREF(arr);
-            Py_XDECREF(df);
+            Py_CLEAR(arr);
+            if (df)
+                Py_CLEAR(df);
         }
 
         Py_CLEAR(dfs);
