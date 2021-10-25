@@ -920,9 +920,9 @@ def test_compare_number_and_perf():
            'sheet1', 'delete', 100, '-', '1 ---> DEL'], ['sheet1', 'insert', '-', 100, 'ADD ---> 2']])
     runtimeit('compare(aa, ab, rep_rate=-1)', 'aa = {aa};ab = {ab}'.format(aa=aa, ab=ab))
     # condition_value
+    print("hoge", compare(aa, ab, rep_rate=-1, condition_value="@@changed@@")) #@todo gomi
     assert(compare(aa, ab, rep_rate=-1, condition_value="@@changed@@") ==
            [['group', 'tag', 'index_a', 'index_b'], ['sheet1', 'replace', 0, 0, '1@@changed@@2']])
-    print("hoge", compare(aa, ab, rep_rate=-1, condition_value="@@changed@@"))
     runtimeit('compare(aa, ab, rep_rate=-1, condition_value="@@changed@@")', 'aa = {aa};ab = {ab}'.format(aa=aa, ab=ab))
     # na_value
     assert(compare(aa, ab, header=False, na_value="@@") == [['sheet1', 'delete', 0, '@@', '1 ---> DEL'], ['sheet1', 'insert', '@@', 0, 'ADD ---> 2']])
