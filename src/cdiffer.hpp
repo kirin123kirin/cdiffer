@@ -191,7 +191,11 @@ void complist(PyObject*& ops,
                 concat = PyUnicode_Concat(item, condition_value);
                 ret = PyUnicode_Concat(concat, DEL_Flag);
             } else {
+#if PY_MAJOR_VERSION >= 3
                 forcestr = PyObject_Str(item ? item : a);
+#else
+                forcestr = PyObject_Unicode(item ? item : a);
+#endif
                 concat = PyUnicode_Concat(forcestr, condition_value);
                 ret = PyUnicode_Concat(concat, DEL_Flag);
             }
@@ -209,7 +213,11 @@ void complist(PyObject*& ops,
             if(item && PyUnicode_Check(item)) {
                 ret = PyUnicode_Concat(concat, item);
             } else {
+#if PY_MAJOR_VERSION >= 3
                 forcestr = PyObject_Str(item ? item : b);
+#else
+                forcestr = PyObject_Unicode(item ? item : b);
+#endif
                 ret = PyUnicode_Concat(concat, forcestr);
             }
         } else {
@@ -223,16 +231,24 @@ void complist(PyObject*& ops,
         if(item && PyUnicode_Check(item)) {
             concat = PyUnicode_Concat(item, condition_value);
         } else {
+#if PY_MAJOR_VERSION >= 3
             forcestr = PyObject_Str(item ? item : a);
+#else
+            forcestr = PyObject_Unicode(item ? item : a);
+#endif
             concat = PyUnicode_Concat(forcestr, condition_value);
         }
-        Py_XDECREF(item);
-        Py_XDECREF(forcestr);
+        Py_CLEAR(item);
+        Py_CLEAR(forcestr);
         item = PySequence_GetItem(b, (Py_ssize_t)y);
         if(item && PyUnicode_Check(item)) {
             ret = PyUnicode_Concat(concat, item);
         } else {
+#if PY_MAJOR_VERSION >= 3
             forcestr = PyObject_Str(item ? item : b);
+#else
+            forcestr = PyObject_Unicode(item ? item : b);
+#endif
             ret = PyUnicode_Concat(concat, forcestr);
         }
     } else {
