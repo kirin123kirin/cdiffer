@@ -559,7 +559,7 @@ class Diff_t {
         x = 0;
 
         while(i < A && j < B) {
-            auto ai = a[x];
+            auto ai = a[i];
 
             if(ai == b[j]) {
                 if(!diffonly)
@@ -568,7 +568,7 @@ class Diff_t {
                 adat = fp[ai];  //@todo tamani assertion error..... Unknow  Reason.
                 mj = j % BITS;
                 trb = (adat << (BITS - mj + 1)) | (adat >> mj);
-                if(x > 0 && (found = trb & (~trb + 1)) != 0) {
+                if(i > 0 && (found = trb & (~trb + 1)) != 0) {
                     while(found > 1 && j < B) {
                         found >>= 1;
                         makelist_pyn(ops, pyn, ED_INSERT, x, j);
@@ -576,7 +576,7 @@ class Diff_t {
                     }
                     if(!diffonly)
                         makelist_pyn(ops, pyn, ED_EQUAL, x, j);
-                } else if(x < A) {
+                } else if(i < A) {
                     if(rep_rate > 0 &&
                        ((a.canonical && b.canonical) ||
                         Diff_t<pyview>(a.getitem(x), b.getitem(j), true).similar(rep_rate) * 100 < rep_rate)) {
@@ -609,6 +609,8 @@ class Diff_t {
 
         for(; j < B; ++j)
             makelist_pyn(ops, pyn, ED_INSERT, x, j);
+        for(; i < A; ++i)
+            makelist_pyn(ops, pyn, ED_DELETE, x, j);
 
         delete[] pyn;
         return ops;
@@ -716,6 +718,11 @@ class Diff_t {
 
         for(; j < B; ++j) {
             complist(ops, ED_INSERT, x, j, a.py, b.py, swapflag, startidx, condition_value, _na_value, _DEL_Flag,
+                     _ADD_Flag);
+        }
+
+        for(; i < A; ++i) {
+            complist(ops, ED_DELETE, x, j, a.py, b.py, swapflag, startidx, condition_value, _na_value, _DEL_Flag,
                      _ADD_Flag);
         }
 
@@ -1575,7 +1582,7 @@ class Compare {
             tmp.reserve((std::size_t)len + 10);
 
             for(Py_ssize_t i = 0; i < len; i++) {
-                PyObject* row = PySequence_GetItem(cmp, i), *ptag;
+                PyObject *row = PySequence_GetItem(cmp, i), *ptag;
                 if(row == NULL) {
                     Py_DECREF(cmp);
                     tmp.clear();
@@ -1685,7 +1692,6 @@ class Compare {
 
         Py_ssize_t len, i;
         bool needsort = keya || keyb;
-
         PyObject* df = Diff(a, b).difference(diffonly, rep_rate);
 
         if(df == NULL) {
@@ -1950,9 +1956,9 @@ class Compare {
                 content = sa;
             }
 
-            if (sa)
+            if(sa)
                 Py_CLEAR(sa);
-            if (sb)
+            if(sb)
                 Py_CLEAR(sb);
 
             for(j = 0, slen = PyObject_Length(df); j < slen; ++j) {
@@ -1972,7 +1978,7 @@ class Compare {
             }
 
             Py_CLEAR(arr);
-            if (df)
+            if(df)
                 Py_CLEAR(df);
         }
 

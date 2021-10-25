@@ -408,13 +408,7 @@ class pyview {
             if(PyUnicode_Check(o)) {
 #if PY_MAJOR_VERSION >= 3
                 kind = PyUnicode_KIND(o);
-                if (kind == 1) {
-                    data_8 = (uint8_t*)PyUnicode_DATA(o);
-                } else if (kind == 2){
-                    data_16 = (uint16_t*)PyUnicode_DATA(o);
-                } else if (kind == 4) {
-                    data_32 = (uint32_t*)PyUnicode_DATA(o);
-                }
+                data_32 = (uint32_t*)PyUnicode_DATA(o);
 #else
                 kind = 2;  // unicode
                 data_16 = (uint16_t*)PyUnicode_AsUnicode(py);
