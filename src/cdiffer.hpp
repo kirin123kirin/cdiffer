@@ -191,10 +191,9 @@ void complist(PyObject*& ops,
                 concat = PyUnicode_Concat(item, condition_value);
                 ret = PyUnicode_Concat(concat, DEL_Flag);
             } else {
-#if PY_MAJOR_VERSION >= 3
                 forcestr = PyObject_Str(item ? item : a);
-#else
-                forcestr = PyObject_Unicode(item ? item : a);
+#if PY_MAJOR_VERSION == 2
+                forcestr = PyObject_Unicode(forcestr);
 #endif
                 concat = PyUnicode_Concat(forcestr, condition_value);
                 ret = PyUnicode_Concat(concat, DEL_Flag);
@@ -213,10 +212,9 @@ void complist(PyObject*& ops,
             if(item && PyUnicode_Check(item)) {
                 ret = PyUnicode_Concat(concat, item);
             } else {
-#if PY_MAJOR_VERSION >= 3
                 forcestr = PyObject_Str(item ? item : b);
-#else
-                forcestr = PyObject_Unicode(item ? item : b);
+#if PY_MAJOR_VERSION == 2
+                forcestr = PyObject_Unicode(forcestr);
 #endif
                 ret = PyUnicode_Concat(concat, forcestr);
             }
@@ -231,10 +229,9 @@ void complist(PyObject*& ops,
         if(item && PyUnicode_Check(item)) {
             concat = PyUnicode_Concat(item, condition_value);
         } else {
-#if PY_MAJOR_VERSION >= 3
             forcestr = PyObject_Str(item ? item : a);
-#else
-            forcestr = PyObject_Unicode(item ? item : a);
+#if PY_MAJOR_VERSION == 2
+            forcestr = PyObject_Unicode(forcestr);
 #endif
             concat = PyUnicode_Concat(forcestr, condition_value);
         }
@@ -244,10 +241,9 @@ void complist(PyObject*& ops,
         if(item && PyUnicode_Check(item)) {
             ret = PyUnicode_Concat(concat, item);
         } else {
-#if PY_MAJOR_VERSION >= 3
             forcestr = PyObject_Str(item ? item : b);
-#else
-            forcestr = PyObject_Unicode(item ? item : b);
+#if PY_MAJOR_VERSION == 2
+            forcestr = PyObject_Unicode(forcestr);
 #endif
             ret = PyUnicode_Concat(concat, forcestr);
         }
