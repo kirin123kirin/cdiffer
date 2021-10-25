@@ -260,9 +260,12 @@ void complist(PyObject*& ops,
 
     result = PyList_SetItem(list, 3, ret);
 
-    Py_XDECREF(item);
-    Py_XDECREF(forcestr);
-    Py_XDECREF(concat);
+    if(item)
+        Py_CLEAR(item);
+    if(forcestr)
+        Py_CLEAR(forcestr);
+    if(concat)
+        Py_CLEAR(concat);
 
     if(result == -1 || (PyList_Append(ops, list)) == -1) {
         Py_CLEAR(ops);
