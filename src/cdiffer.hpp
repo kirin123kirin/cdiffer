@@ -1387,12 +1387,11 @@ class Compare {
             return PyErr_Format(PyExc_TypeError, "Can not call sort method.");
         }
 
-        Py_DECREF(result);
-        Py_DECREF(sortMethod);
-
         idxlen = (std::size_t)len;
         indexes = (int*)PyMem_Malloc(idxlen * sizeof(int));
         if(indexes == NULL) {
+            Py_DECREF(result);
+            Py_DECREF(sortMethod);
             Py_DECREF(newlist);
             Py_DECREF(keyString);
             Py_DECREF(keywords);
@@ -1406,6 +1405,8 @@ class Compare {
             if(row == NULL) {
                 Py_DECREF(row);
                 Py_DECREF(newlist);
+                Py_DECREF(result);
+                Py_DECREF(sortMethod);
                 Py_DECREF(keyString);
                 Py_DECREF(keywords);
                 Py_DECREF(argTuple);
@@ -1415,6 +1416,8 @@ class Compare {
             Py_DECREF(row);
         }
 
+        Py_DECREF(result);
+        Py_DECREF(sortMethod);
         Py_DECREF(keyString);
         Py_DECREF(keywords);
         Py_DECREF(argTuple);
