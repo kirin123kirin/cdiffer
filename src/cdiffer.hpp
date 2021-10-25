@@ -359,24 +359,16 @@ class Diff_t {
             return ops;
         }
 
-        else if(B < 32) {
-            MappingBlock<uint32_t, 257> fp = {};
-            fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
-            return core_difference(fp);
-        }
-        
         // else if(B < 64) {
         //     if(B < 8) {
         //         MappingBlock<uint8_t> fp = {};
         //         fp.pair =
-        //             std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2,
-        //             ZERO_1}}};
+        //             std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
         //         return core_difference(fp);
         //     } else if(B < 16) {
         //         MappingBlock<uint16_t> fp = {};
         //         fp.pair =
-        //             std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2,
-        //             ZERO_1}}};
+        //             std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
         //         return core_difference(fp);
         //     } else if(B < 32) {
         //         MappingBlock<uint32_t, 257> fp = {};
@@ -441,24 +433,16 @@ class Diff_t {
             return ops;
         }
 
-        else if(B < 32) {
-            MappingBlock<uint32_t, 257> fp = {};
-            fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
-            return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
-        }
-
         // else if(B < 64) {
         //     if(B < 8) {
         //         MappingBlock<uint8_t> fp = {};
         //         fp.pair =
-        //             std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2,
-        //             ZERO_1}}};
+        //             std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
         //         return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
         //     } else if(B < 16) {
         //         MappingBlock<uint16_t> fp = {};
         //         fp.pair =
-        //             std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2,
-        //             ZERO_1}}};
+        //             std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
         //         return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
         //     } else if(B < 32) {
         //         MappingBlock<uint32_t, 257> fp = {};
@@ -779,24 +763,16 @@ class Diff_t {
             }
         }
 
-        else if(B < 32) {
-            MappingBlock<uint32_t, 257> fp = {};
-            fp.pair = std::array<std::array<uint32_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
-            return core_distance_bp_simple(fp, max, weight);
-        }
-
         // else if(B < 64) {
         //     if(B < 8) {
         //         MappingBlock<uint8_t> fp = {};
         //         fp.pair =
-        //             std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2,
-        //             ZERO_1}}};
+        //             std::array<std::array<uint8_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
         //         return core_distance_bp_simple(fp, max, weight);
         //     } else if(B < 16) {
         //         MappingBlock<uint16_t> fp = {};
         //         fp.pair =
-        //             std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2,
-        //             ZERO_1}}};
+        //             std::array<std::array<uint16_t, 131>, 2>{{{ZERO_128, ZERO_2, ZERO_1}, {ZERO_128, ZERO_2, ZERO_1}}};
         //         return core_distance_bp_simple(fp, max, weight);
         //     } else if(B < 32) {
         //         MappingBlock<uint32_t, 257> fp = {};
