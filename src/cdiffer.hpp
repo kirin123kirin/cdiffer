@@ -517,7 +517,7 @@ class Diff_t {
         if(ops == NULL)
             return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
 
-        if(a == b) {
+        if(a == b && A == B) {
             if(!diffonly)
                 for(x = 0; x < A; x++)
                     makelist(ops, ED_EQUAL, x, x, a.py, b.py, false);
@@ -629,7 +629,7 @@ class Diff_t {
         if(ops == NULL)
             return PyErr_Format(PyExc_MemoryError, "Failed making list array.");
 
-        if(a == b) {
+        if(a == b && A == B) {
             if(!diffonly) {
                 for(x = 0; x < A; x++)
                     complist(ops, ED_EQUAL, x, x, a.py, b.py, false, startidx, condition_value, _na_value, _DEL_Flag,
@@ -731,7 +731,7 @@ class Diff_t {
 
    public:
     std::size_t distance(std::size_t max = error_n, bool weight = true) {
-        if(a == b)
+        if(a == b && A == B)
             return 0;
 
         if(A == 0)
@@ -1398,7 +1398,7 @@ class Compare {
             Py_DECREF(argTuple);
             return PyErr_Format(PyExc_TypeError, "Can not call sort method.");
         }
-        std::fill(indexes, indexes + idxlen, 0);
+        std::fill(indexes, indexes + idxlen, -1);
 
         for(Py_ssize_t i = 0; i < len; ++i) {
             PyObject* row = PySequence_GetItem(newlist, i);
