@@ -84,45 +84,45 @@ jobs:
                path:           dist
                retention-days: 1
 
-   build_arm64_python:
-      runs-on: ubuntu-20.04
-      continue-on-error: true
-      name:    Build on ubuntu-20.04 aarch64
-      strategy:
-         max-parallel: 5
-         matrix:
-            python-version: [ 
-                  # python27,
-                  python36,
-                  python37,
-                  python38,
-                  python39,
-            ]
-      steps:
-         -
-            uses: actions/checkout@v2.1.0
-         -
-            uses: kirin123kirin/run-on-arch-action@master
-            name: Run commands
-            id:   runcmd
-            with:
-               arch:        aarch64
-               distro:      ${{ matrix.python-version }}
-               githubToken: ${{ github.token }}
-               run:         |
-                            pip install twine psutil gnureadline
-                            pip uninstall -y readline
-                            pip install -e .
-                            python test/test_cdiffer.py
-                            python setup.py bdist_wheel
-                            twine check dist/*
-         -
-            name: Save whl file to artifact
-            uses: actions/upload-artifact@v2
-            with:
-               name:           dist
-               path:           dist
-               retention-days: 1
+   # build_arm64_python:
+   #    runs-on: ubuntu-20.04
+   #    continue-on-error: true
+   #    name:    Build on ubuntu-20.04 aarch64
+   #    strategy:
+   #       max-parallel: 5
+   #       matrix:
+   #          python-version: [ 
+   #                # python27,
+   #                python36,
+   #                python37,
+   #                python38,
+   #                python39,
+   #          ]
+   #    steps:
+   #       -
+   #          uses: actions/checkout@v2.1.0
+   #       -
+   #          uses: kirin123kirin/run-on-arch-action@master
+   #          name: Run commands
+   #          id:   runcmd
+   #          with:
+   #             arch:        aarch64
+   #             distro:      ${{ matrix.python-version }}
+   #             githubToken: ${{ github.token }}
+   #             run:         |
+   #                          pip install twine psutil gnureadline
+   #                          pip uninstall -y readline
+   #                          pip install -e .
+   #                          python test/test_cdiffer.py
+   #                          python setup.py bdist_wheel
+   #                          twine check dist/*
+   #       -
+   #          name: Save whl file to artifact
+   #          uses: actions/upload-artifact@v2
+   #          with:
+   #             name:           dist
+   #             path:           dist
+   #             retention-days: 1
 
    # publish:
    #    needs: [ build_python, build_arm64_python ]
