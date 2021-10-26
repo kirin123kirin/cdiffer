@@ -31,7 +31,10 @@ ext_modules = [
         sources=['src/cdiffer.cpp'],
         language="c++",
         include_dirs=["src"],
-        extra_compile_args=["-std=c++14"]
+        extra_compile_args=[
+            "/std:c++14" if os.name == "nt" else "-std=c++14",
+            # "/IC:/usr/lib/boost",
+        ]
     )]
 
 if any("--debug" in x or "-g" in x for x in sys.argv) and get_default_compiler() == "msvc":
@@ -50,6 +53,7 @@ if any("--debug" in x or "-g" in x for x in sys.argv) and get_default_compiler()
                 # Reason IDE warning link crash #
                 "/FC",
                 "/std:c++14",
+                # "/IC:/usr/lib/boost",
             ],
             language="c++",
             include_dirs=["src"]
