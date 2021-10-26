@@ -58,35 +58,36 @@ struct through_pass_hash {
     }
 };
 
-template <typename BitTy = uint64_t, std::size_t fraction_size = 131>
-struct MappingBlock {
-    using value_type = BitTy;
-    using size_type = typename std::make_unsigned<BitTy>::type;
+//@note future todo [need faster mapping and No collision.]
+// template <typename BitTy = uint64_t, std::size_t fraction_size = 131>
+// struct MappingBlock {
+//     using value_type = BitTy;
+//     using size_type = typename std::make_unsigned<BitTy>::type;
 
-    std::array<std::array<value_type, fraction_size>, 2> pair;
+//     std::array<std::array<value_type, fraction_size>, 2> pair;
 
-    MappingBlock() : pair() {}
+//     MappingBlock() : pair() {}
 
-    template <typename Tval>
-    constexpr value_type const& operator[](const Tval x) const noexcept {
-        size_type hash = (size_type)x % fraction_size;
-        value_type vx = (value_type)x;
-        while(pair[0][hash] && pair[1][hash] != vx)
-            hash = (hash + size_type(1)) % fraction_size;
-        pair[1][hash] = vx;
-        return pair[0][hash];
-    }
+//     template <typename Tval>
+//     constexpr value_type const& operator[](const Tval x) const noexcept {
+//         size_type hash = (size_type)x % fraction_size;
+//         value_type vx = (value_type)x;
+//         while(pair[0][hash] && pair[1][hash] != vx)
+//             hash = (hash + size_type(1)) % fraction_size;
+//         pair[1][hash] = vx;
+//         return pair[0][hash];
+//     }
 
-    template <typename Tval>
-    constexpr value_type& operator[](Tval x) noexcept {
-        size_type hash = (size_type)x % fraction_size;
-        value_type vx = (value_type)x;
-        while(pair[0][hash] && pair[1][hash] != vx)
-            hash = (hash + size_type(1)) % fraction_size;
-        pair[1][hash] = vx;
-        return pair[0][hash];
-    }
-};
+//     template <typename Tval>
+//     constexpr value_type& operator[](Tval x) noexcept {
+//         size_type hash = (size_type)x % fraction_size;
+//         value_type vx = (value_type)x;
+//         while(pair[0][hash] && pair[1][hash] != vx)
+//             hash = (hash + size_type(1)) % fraction_size;
+//         pair[1][hash] = vx;
+//         return pair[0][hash];
+//     }
+// };
 
 PyObject* makelist(int dtype, std::size_t x, std::size_t y, PyObject*& a, PyObject*& b, bool swapflag = false) {
     std::size_t len1 = PyAny_Length(a);
@@ -359,29 +360,7 @@ class Diff_t {
             return ops;
         }
 
-        else if(B < 64) {
-            if(B < 8) {
-                MappingBlock<uint8_t, 257> fp = {};
-                fp.pair = std::array<std::array<uint8_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
-                return core_difference(fp);
-            } else if(B < 16) {
-                MappingBlock<uint16_t, 257> fp = {};
-                fp.pair = std::array<std::array<uint16_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
-                return core_difference(fp);
-            } else if(B < 32) {
-                MappingBlock<uint32_t, 521> fp = {};
-                fp.pair = std::array<std::array<uint32_t, 521>, 2>{
-                    {{ZERO_256, ZERO_256, ZERO_8, ZERO_1}, {ZERO_256, ZERO_256, ZERO_8, ZERO_1}}};
-                return core_difference(fp);
-            } else {
-                MappingBlock<uint64_t, 1009> fp = {};
-                fp.pair = std::array<std::array<uint64_t, 1009>, 2>{
-                    {{ZERO_256, ZERO_256, ZERO_256, ZERO_128, ZERO_64, ZERO_32, ZERO_16, ZERO_1},
-                     {ZERO_256, ZERO_256, ZERO_256, ZERO_128, ZERO_64, ZERO_32, ZERO_16, ZERO_1}}};
-                return core_difference(fp);
-            }
-        }
-
+        //@note future todo [need faster mapping and No collision.]
         // else if(B < 64) {
         //     if(B < 8) {
         //         MappingBlock<uint8_t> fp = {};
@@ -458,29 +437,7 @@ class Diff_t {
             return ops;
         }
 
-        else if(B < 64) {
-            if(B < 8) {
-                MappingBlock<uint8_t, 257> fp = {};
-                fp.pair = std::array<std::array<uint8_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
-                return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
-            } else if(B < 16) {
-                MappingBlock<uint16_t, 257> fp = {};
-                fp.pair = std::array<std::array<uint16_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
-                return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
-            } else if(B < 32) {
-                MappingBlock<uint32_t, 521> fp = {};
-                fp.pair = std::array<std::array<uint32_t, 521>, 2>{
-                    {{ZERO_256, ZERO_256, ZERO_8, ZERO_1}, {ZERO_256, ZERO_256, ZERO_8, ZERO_1}}};
-                return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
-            } else {
-                MappingBlock<uint64_t, 1009> fp = {};
-                fp.pair = std::array<std::array<uint64_t, 1009>, 2>{
-                    {{ZERO_256, ZERO_256, ZERO_256, ZERO_128, ZERO_64, ZERO_32, ZERO_16, ZERO_1},
-                     {ZERO_256, ZERO_256, ZERO_256, ZERO_128, ZERO_64, ZERO_32, ZERO_16, ZERO_1}}};
-                return core_compare(fp, _startidx, _condition_value, _na_value, _DEL_Flag, _ADD_Flag);
-            }
-        }
-
+        //@note future todo [need faster mapping and No collision.]
         // else if(B < 64) {
         //     if(B < 8) {
         //         MappingBlock<uint8_t> fp = {};
@@ -615,7 +572,7 @@ class Diff_t {
                 if(!diffonly)
                     makelist_pyn(ops, pyn, ED_EQUAL, x, j);
             } else {
-                adat = fp[ai];  //@todo tamani assertion error..... Unknow  Reason.
+                adat = fp[ai];
                 mj = j % BITS;
                 trb = (adat << (BITS - mj + 1)) | (adat >> mj);
                 if(i > 0 && (found = trb & (~trb + 1)) != 0) {
@@ -813,29 +770,7 @@ class Diff_t {
             }
         }
 
-        else if(B < 64) {
-            if(B < 8) {
-                MappingBlock<uint8_t, 257> fp = {};
-                fp.pair = std::array<std::array<uint8_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
-                return core_distance_bp_simple(fp, max, weight);
-            } else if(B < 16) {
-                MappingBlock<uint16_t, 257> fp = {};
-                fp.pair = std::array<std::array<uint16_t, 257>, 2>{{{ZERO_256, ZERO_1}, {ZERO_256, ZERO_1}}};
-                return core_distance_bp_simple(fp, max, weight);
-            } else if(B < 32) {
-                MappingBlock<uint32_t, 521> fp = {};
-                fp.pair = std::array<std::array<uint32_t, 521>, 2>{
-                    {{ZERO_256, ZERO_256, ZERO_8, ZERO_1}, {ZERO_256, ZERO_256, ZERO_8, ZERO_1}}};
-                return core_distance_bp_simple(fp, max, weight);
-            } else {
-                MappingBlock<uint64_t, 1009> fp = {};
-                fp.pair = std::array<std::array<uint64_t, 1009>, 2>{
-                    {{ZERO_256, ZERO_256, ZERO_256, ZERO_128, ZERO_64, ZERO_32, ZERO_16, ZERO_1},
-                     {ZERO_256, ZERO_256, ZERO_256, ZERO_128, ZERO_64, ZERO_32, ZERO_16, ZERO_1}}};
-                return core_distance_bp_simple(fp, max, weight);
-            }
-        }
-
+        //@note future todo [need faster mapping and No collision.]
         // else if(B < 64) {
         //     if(B < 8) {
         //         MappingBlock<uint8_t> fp = {};

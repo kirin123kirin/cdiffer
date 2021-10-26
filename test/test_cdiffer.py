@@ -234,7 +234,7 @@ def test_dist_Notype():
 def test_dist_complex_Nottype():
     assert(dist([None], None) == 2)
     assert(dist([None], "") == 1)
-    assert(dist([None], []) == 1)  # @todo tamani 0 ninaru genin fumei
+    assert(dist([None], []) == 1)
 
 def test_similar_Notype():
     assert(similar(None, None) == 1.0)
@@ -247,7 +247,7 @@ def test_similar_Notype():
 def test_similar_complex_Nottype():
     assert(similar([None], None) == 0.0)
     assert(similar([None], "") == 0.0)
-    assert(similar([None], []) == 0.0)  # @todo tamani 0 ninaru genin fumei
+    assert(similar([None], []) == 0.0)
 
 def test_differ_Notype():
     assert(differ(None, None) == [['equal', 0, 0, None, None]])
@@ -669,7 +669,7 @@ def test_compare_list_and_perf():
     assert(compare(aa, aa, diffonly=True) == [['group', 'tag', 'index_a', 'index_b']])
     assert(compare(aa, aa, header=False, diffonly=True) == [])
     runtimeit('compare(aa, ab, diffonly=True)', 'aa = {aa};ab = {ab}'.format(aa=aa, ab=ab))
-    # rep_rate ##@note 2d array inner rep_rate forcus.
+    # rep_rate ##2d array inner rep_rate forcus tests.
     assert(compare(aa, ab, rep_rate=100) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02'], ['sheet1', 'delete', 0, '-', 'a ---> DEL', 'b ---> DEL', 'c ---> DEL'], [
            'sheet1', 'insert', '-', 0, 'ADD ---> a', 'ADD ---> c', 'ADD ---> c'], ['sheet1', 'equal', 1, 1, 'a', 'b', 'c'], ['sheet1', 'insert', '-', 2, 'ADD ---> x', 'ADD ---> t', 'ADD ---> z']])
     assert(compare(aa, ab, rep_rate=68) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02'], ['sheet1', 'delete', 0, '-', 'a ---> DEL', 'b ---> DEL', 'c ---> DEL'], [
@@ -721,7 +721,7 @@ def test_compare_unicode_of_list_and_perf():
     assert(compare(aa, ab, diffonly=False) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03', 'COL_04'], [
            'hoge', 'equal', 0, 0, 'あ', 'い', 'う', 'え', 'お'], ['hoge', 'replace', 1, 1, 'あ', 'い', 'う', 'え ---> あ', 'お']])
     runtimeit('compare(aa, ab, diffonly=True)', 'aa = {aa};ab = {ab}'.format(aa=aa, ab=ab))
-    # #rep_rate ##@note 2d array inner rep_rate forcus.
+    # #rep_rate ##2d array inner rep_rate forcus tests.
     assert(compare(aa, ab, rep_rate=100) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03', 'COL_04'], ['hoge', 'equal', 0, 0, 'あ', 'い', 'う', 'え', 'お'], [
            'hoge', 'delete', 1, '-', 'あ ---> DEL', 'い ---> DEL', 'う ---> DEL', 'え ---> DEL', 'お ---> DEL'], ['hoge', 'insert', '-', 1, 'ADD ---> あ', 'ADD ---> い', 'ADD ---> う', 'ADD ---> あ', 'ADD ---> お']])
     assert(compare(aa, ab, rep_rate=81) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02', 'COL_03', 'COL_04'], ['hoge', 'equal', 0, 0, 'あ', 'い', 'う', 'え', 'お'], [
@@ -773,7 +773,7 @@ def test_compare_tuple_and_perf():
     assert(compare(aa, ab, diffonly=False) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02'], [
            'sheet1', 'replace', 0, 0, 'a', 'b ---> c', 'c'], ['sheet1', 'equal', 1, 1, 'a', 'b', 'c'], ['sheet1', 'insert', '-', 2, 'ADD ---> x', 'ADD ---> t', 'ADD ---> z']])
     runtimeit('compare(aa, ab, diffonly=True)', 'aa = {aa};ab = {ab}'.format(aa=aa, ab=ab))
-    # rep_rate ##@note 2d array inner rep_rate forcus.
+    # rep_rate ##2d array inner rep_rate forcus tests.
     assert(compare(aa, ab, rep_rate=100) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02'], ['sheet1', 'delete', 0, '-', 'a ---> DEL', 'b ---> DEL', 'c ---> DEL'], [
            'sheet1', 'insert', '-', 0, 'ADD ---> a', 'ADD ---> c', 'ADD ---> c'], ['sheet1', 'equal', 1, 1, 'a', 'b', 'c'], ['sheet1', 'insert', '-', 2, 'ADD ---> x', 'ADD ---> t', 'ADD ---> z']])
     assert(compare(aa, ab, rep_rate=68) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02'], ['sheet1', 'delete', 0, '-', 'a ---> DEL', 'b ---> DEL', 'c ---> DEL'], [
@@ -821,7 +821,7 @@ def test_compare_Nonetype_and_perf():
     assert(compare(aa, ab, diffonly=True) == [['group', 'tag', 'index_a', 'index_b']])
     assert(compare(aa, ab, diffonly=False) == [['group', 'tag', 'index_a', 'index_b'], ['sheet1', 'equal', 0, 0, None]])
     runtimeit('compare(aa, ab, diffonly=True)', 'aa = {aa};ab = {ab}'.format(aa=aa, ab=ab))
-    # rep_rate ##@note 2d array inner rep_rate forcus.
+    # rep_rate ##2d array inner rep_rate forcus tests.
     assert(compare(aa, ab, rep_rate=100) == [['group', 'tag', 'index_a', 'index_b'], ['sheet1', 'equal', 0, 0, None]])
     assert(compare(aa, ab, rep_rate=50) == [['group', 'tag', 'index_a', 'index_b'], ['sheet1', 'equal', 0, 0, None]])
     assert(compare(aa, ab, rep_rate=-1) == [['group', 'tag', 'index_a', 'index_b'], ['sheet1', 'equal', 0, 0, None]])
@@ -858,7 +858,7 @@ def test_compare_iterator_and_perf():
     assert(compare(aa, ab, diffonly=False) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02'], [
            'sheet1', 'replace', 0, 0, 'a', 'b ---> c', 'c'], ['sheet1', 'equal', 1, 1, 'a', 'b', 'c'], ['sheet1', 'insert', '-', 2, 'ADD ---> x', 'ADD ---> t', 'ADD ---> z']])
     runtimeit('compare(aa, ab, diffonly=True)', 'aa = {aa};ab = {ab}'.format(aa=aa, ab=ab))
-    # rep_rate ##@note 2d array inner rep_rate forcus.
+    # rep_rate ##2d array inner rep_rate forcus tests.
     assert(compare(aa, ab, rep_rate=100) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02'], ['sheet1', 'delete', 0, '-', 'a ---> DEL', 'b ---> DEL', 'c ---> DEL'], [
            'sheet1', 'insert', '-', 0, 'ADD ---> a', 'ADD ---> c', 'ADD ---> c'], ['sheet1', 'equal', 1, 1, 'a', 'b', 'c'], ['sheet1', 'insert', '-', 2, 'ADD ---> x', 'ADD ---> t', 'ADD ---> z']])
     assert(compare(aa, ab, rep_rate=68) == [['group', 'tag', 'index_a', 'index_b', 'COL_00', 'COL_01', 'COL_02'], ['sheet1', 'delete', 0, '-', 'a ---> DEL', 'b ---> DEL', 'c ---> DEL'], [
@@ -907,7 +907,7 @@ def test_compare_number_and_perf():
     assert(compare(aa, ab, diffonly=True) == [['group', 'tag', 'index_a', 'index_b'], ['sheet1', 'replace', 0, 0, '1 ---> 2']])
     assert(compare(aa, ab, diffonly=False) == [['group', 'tag', 'index_a', 'index_b'], ['sheet1', 'replace', 0, 0, '1 ---> 2']])
     runtimeit('compare(aa, ab, diffonly=True)', 'aa = {aa};ab = {ab}'.format(aa=aa, ab=ab))
-    # rep_rate ##@note 2d array inner rep_rate forcus.
+    # rep_rate ##2d array inner rep_rate forcus tests.
     assert(compare(aa, ab, rep_rate=100) == [['group', 'tag', 'index_a', 'index_b'], [
            'sheet1', 'delete', 0, '-', '1 ---> DEL'], ['sheet1', 'insert', '-', 0, 'ADD ---> 2']])
     assert(compare(aa, ab, rep_rate=50) == [['group', 'tag', 'index_a', 'index_b'], [
@@ -945,7 +945,7 @@ def test_compare_1d_string_and_perf():
     assert(compare(aa, ab, diffonly=True) == [['group', 'tag', 'index_a', 'index_b'], ['sheet1', 'replace', 0, 0, 'foo ---> bar']])
     assert(compare(aa, ab, diffonly=False) == [['group', 'tag', 'index_a', 'index_b'], ['sheet1', 'replace', 0, 0, 'foo ---> bar']])
     runtimeit('compare(aa, ab, diffonly=True)', 'aa = {aa};ab = {ab}'.format(aa=aa, ab=ab))
-    # rep_rate ##@note 2d array inner rep_rate forcus.
+    # rep_rate ##2d array inner rep_rate forcus tests.
     assert(compare(aa, ab, rep_rate=100) == [['group', 'tag', 'index_a', 'index_b'], [
            'sheet1', 'delete', 0, '-', 'foo ---> DEL'], ['sheet1', 'insert', '-', 0, 'ADD ---> bar']])
     assert(compare(aa, ab, rep_rate=50) == [['group', 'tag', 'index_a', 'index_b'], [
@@ -983,7 +983,7 @@ def test_compare_1d_bytes_and_perf():
     assert(compare(aa, ab, diffonly=True) == [['group', 'tag', 'index_a', 'index_b'], ['sheet1', 'replace', 0, 0, "b'foo' ---> b'bar'"]])
     assert(compare(aa, ab, diffonly=False) == [['group', 'tag', 'index_a', 'index_b'], ['sheet1', 'replace', 0, 0, "b'foo' ---> b'bar'"]])
     runtimeit('compare(aa, ab, diffonly=True)', 'aa = {aa};ab = {ab}'.format(aa=aa, ab=ab))
-    # rep_rate ##@note 2d array inner rep_rate forcus.
+    # rep_rate ##2d array inner rep_rate forcus tests.
     assert(compare(aa, ab, rep_rate=100) == [['group', 'tag', 'index_a', 'index_b'], [
            'sheet1', 'delete', 0, '-', "b'foo' ---> DEL"], ['sheet1', 'insert', '-', 0, "ADD ---> b'bar'"]])
     assert(compare(aa, ab, rep_rate=50) == [['group', 'tag', 'index_a', 'index_b'], [
